@@ -17,12 +17,16 @@ readme = Path(__file__).parent / 'README.rst'
 
 # Core dependencies
 install_requires = [
+    'aiodns==1.1.1',
+    'aiohttp==3.5.0',
+    'cchardet==2.1.4',
 ]
 
 # Test dependencies
 tests_require = [
     'pytest==4.0.2',
     'pytest-flake8==1.0.2',
+    'aiohttp-devtools==0.11',
 ]
 tests_require += install_requires
 
