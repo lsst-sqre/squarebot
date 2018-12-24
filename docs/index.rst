@@ -8,3 +8,8 @@ Other microservices in api.lsst.codes can subscribe to those topics and act on o
 Typically those microservices will use Slack's Web API to post responses.
 This architecture separates the Slack bot itself from the domain-specific concerns of user-facing SQuaRE Bot, Jr features.
 You can deploy new ChatOps automations without having to update or modify SQuaRE Bot, Jr's codebase.
+
+.. toctree::
+   :maxdepth: 2
+
+   changelog
