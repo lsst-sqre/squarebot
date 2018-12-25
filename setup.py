@@ -20,6 +20,8 @@ install_requires = [
     'aiodns==1.1.1',
     'aiohttp==3.5.0',
     'cchardet==2.1.4',
+    'structlog==18.2.0',
+    'colorama==0.4.1',  # used by structlog
 ]
 
 # Test dependencies
