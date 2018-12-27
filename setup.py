@@ -22,6 +22,7 @@ install_requires = [
     'cchardet==2.1.4',
     'structlog==18.2.0',
     'colorama==0.4.1',  # used by structlog
+    'click>=6.7,<7.0',
 ]
 
 # Test dependencies
@@ -65,6 +66,8 @@ setup(
     setup_requires=setup_requires,
     extras_require=extras_require,
     entry_points={
-        'console_scripts': []
+        'console_scripts': [
+            'sqrbot = sqrbot.cli:main'
+        ]
     }
 )
