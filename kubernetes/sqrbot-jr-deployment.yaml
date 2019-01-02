@@ -22,11 +22,6 @@ spec:
         - containerPort: 8080
           name: sqrbot-jr-app
         env:
-        - name: SQRBOTJR_SLACK_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: sqrbot-jr
-              key: SQRBOTJR_SLACK_TOKEN
         - name: SQRBOTJR_SIGNING
           valueFrom:
             secretKeyRef:

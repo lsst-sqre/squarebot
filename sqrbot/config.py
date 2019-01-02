@@ -44,9 +44,6 @@ def create_config():
         'info' if c['api.lsst.codes/profile'] == 'production' else 'debug'
     ).upper()
 
-    # Slack verification token
-    c['sqrbot-jr/slackVerificationToken'] = os.getenv('SQRBOTJR_SLACK_TOKEN')
-
     # Slack signing secret
     c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SIGNING')
 
