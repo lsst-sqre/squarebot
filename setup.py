@@ -23,6 +23,7 @@ install_requires = [
     'structlog==18.2.0',
     'colorama==0.4.1',  # used by structlog
     'click>=6.7,<7.0',
+    'fastavro==0.21.16',
 ]
 
 # Test dependencies

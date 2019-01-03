@@ -1,8 +1,9 @@
 """Utilities for formatting Slack event messages as Avro-encoded messages.
 """
 
-__all__ = ('load_event_schema', 'validate_avro_schema')
+__all__ = ('load_event_schema', 'validate_avro_schema', 'encode_slack_message')
 
+from io import BytesIO
 import json
 from pathlib import Path
 
@@ -72,3 +73,33 @@ def validate_avro_schema(schema):
         Raised if the schema is not valid.
     """
     fastavro.parse_schema(schema)
+
+
+def encode_slack_message(message):
+    """Encode a Slack message in Avro, using a schema that is automatically
+    picked for the message's type.
+
+    Parameters
+    ----------
+    message : `dict`
+        A Slack message (parsed from JSON into a dictionary).
+
+    Returns
+    -------
+    encoded : `bytes`
+        The Avro-encoded message.
+    """
+    if message['type'] != 'event_callback':
+        raise RuntimeError(f"message type is {message['type']}")
+
+    event_type = message['event']['type']
+    schema = fastavro.parse_schema(load_event_schema(event_type))
+
+    binary_fh = BytesIO()
+    fastavro.schemaless_writer(
+        binary_fh,
+        schema,
+        message
+    )
+    binary_fh.seek(0)
+    return binary_fh.read()
