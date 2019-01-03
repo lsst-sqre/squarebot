@@ -1,0 +1,50 @@
+{
+  "type": "record",
+  "name": "message",
+  "namespace": "com.slack.events",
+  "doc": "A message was posted. There are several types of messages depending on where they are posted. https://api.slack.com/events/message",
+  "fields": [
+    {
+      "name": "type",
+      "doc": "The specific name of the event",
+      "type": "string"
+    },
+    {
+      "name": "event_ts",
+      "doc": "When the event was dispatched",
+      "type": "string"
+    },
+    {
+      "name": "user",
+      "doc": "The ID of the user that sent the message (eg U061F7AUR).",
+      "type": "string"
+    },
+    {
+      "name": "text",
+      "doc": "Content of the message.",
+      "type": "string"
+    },
+    {
+      "name": "ts",
+      "doc": "Timestamp of the message.",
+      "type": "string"
+    },
+    {
+      "name": "channel",
+      "doc": "ID of the channel where the message was sent (eg C0LAN2Q65).",
+      "type": "string"
+    },
+    {
+      "name": "channel_type",
+      "doc": "The type of channel.",
+      "type": [
+        "null",
+        {
+          "type": "enum",
+          "name": "channel_types",
+          "symbols": ["im", "channel", "group", "mpim"]
+        }
+      ]
+    }
+  ]
+}
