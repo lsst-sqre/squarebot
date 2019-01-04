@@ -35,6 +35,7 @@ def test_load_event_schema(event_type):
         'message.channels.json',
         'message.groups.json',
         'message.mpim.json',
+        'app_mention.json',
     ]
 )
 def test_encode_message(message_filename):
