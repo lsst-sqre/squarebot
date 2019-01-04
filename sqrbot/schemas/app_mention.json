@@ -37,6 +37,7 @@
     {
       "name": "channel_type",
       "doc": "The type of channel.",
+      "default": null,
       "type": [
         "null",
         {
