@@ -46,6 +46,31 @@
           "symbols": ["im", "channel", "group", "mpim"]
         }
       ]
+    },
+    {
+      "name": "edited",
+      "doc": "Indicates that the message has been edited, if not null.",
+      "type": [
+        "null",
+        {
+          "name": "edited",
+          "namespace": "com.slack.events.messages",
+          "doc": "Information about how a message was edited.",
+          "type": "record",
+          "fields": [
+            {
+              "name": "user",
+              "type": "string",
+              "doc": "The ID of the user that edited the message."
+            },
+            {
+              "name": "ts",
+              "type": "string",
+              "doc": "The timestamp of when the message was edited."
+            }
+          ]
+        }
+      ]
     }
   ]
 }
