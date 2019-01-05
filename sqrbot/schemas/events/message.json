@@ -71,6 +71,18 @@
           ]
         }
       ]
+    },
+    {
+      "name": "subtype",
+      "doc": "Subtype of the message.",
+      "default": null,
+      "type": ["null", "string"]
+    },
+    {
+      "name": "hidden",
+      "doc": "Whether the message is considered hidden, or not.",
+      "default": false,
+      "type": "boolean"
     }
   ]
 }
