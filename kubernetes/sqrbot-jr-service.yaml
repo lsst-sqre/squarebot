@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqrbot-jr
+  labels:
+    app: sqrbot-jr
+spec:
+  type: NodePort
+  ports:
+    - name: sqrbot-jr-http
+      protocol: TCP
+      port: 8080
+      # FIXME change to sqrbot-jr-nginx when available.
+      targetPort: sqrbot-jr-app
+  selector:
+    app: sqrbot-jr
