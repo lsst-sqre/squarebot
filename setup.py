@@ -69,5 +69,6 @@ setup(
         'console_scripts': [
             'sqrbot = sqrbot.cli:main'
         ]
-    }
+    },
+    use_scm_version=True
 )
