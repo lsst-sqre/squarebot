@@ -6,7 +6,7 @@ __all__ = ('create_app',)
 import logging
 import sys
 
-from aiohttp import web
+from aiohttp import web, ClientSession
 import structlog
 
 from .config import create_config
@@ -26,6 +26,7 @@ def create_app():
     root_app = web.Application()
     root_app.update(config)
     root_app.add_routes(init_root_routes())
+    root_app.cleanup_ctx.append(init_http_session)
 
     # Create sub-app for the app's public APIs at the correct prefix
     prefix = '/' + root_app['api.lsst.codes/name']
@@ -81,3 +82,35 @@ def configure_logging(profile='development', log_level='info',
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
+
+
+async def init_http_session(app):
+    """Create an aiohttp.ClientSession and make it available as a
+    ``'api.lsst.codes/httpSession'`` key on the application.
+
+    Notes
+    -----
+    Use this function as a `cleanup context`_:
+
+    .. code-block:: python
+
+       python.cleanup_ctx.append(init_http_session)
+
+    The session is automatically closed on shut down.
+
+    Access the session:
+
+    .. code-block:: python
+
+        session = app['api.lsst.codes/httpSession']
+
+    .. cleanup context:
+       https://aiohttp.readthedocs.io/en/stable/web_reference.html#aiohttp.web.Application.cleanup_ctx
+    """
+    # Startup phase
+    session = ClientSession()
+    app['api.lsst.codes/httpSession'] = session
+    yield
+
+    # Cleanup phase
+    await app['api.lsst.codes/httpSession'].close()
