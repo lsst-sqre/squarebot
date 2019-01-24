@@ -1,13 +1,64 @@
 """Utilities for formatting Slack event messages as Avro-encoded messages.
 """
 
-__all__ = ('load_event_schema', 'validate_avro_schema', 'encode_slack_message')
+__all__ = ('SlackEventSerializer', 'load_event_schema', 'validate_avro_schema',
+           'encode_slack_message')
 
 from io import BytesIO
 import json
 from pathlib import Path
 
 import fastavro
+from kafkit.registry.serializer import PolySerializer
+
+
+class SlackEventSerializer:
+    """An Avro (Confluent Wire Format) serializer for Slack Events.
+
+    Parameters
+    ----------
+    registry : `kafkit.registry.aiohttp.RegistryApi`
+        Client for the Confluent Schema Registry.
+
+    Notes
+    -----
+    This serializer takes the JSON body of an Event payload from the Slack API
+    and emits an Avro-encoded message in the Confluent Wire Format (which
+    includes a prefix that identifies the schema used to encode the message).
+
+    It follows this algorithm:
+
+    1. Identifies the type of the event based on the `event.type` fields of the
+       event payload.
+    2. Gets the Avro schema for that event type from the app's data. This way
+       the app always serializes data in a format it is tested with.
+    3. Through the `kafkit.registry.serializer.PolySerializer`, the schema is
+       registered with the broker so a unique ID is known.
+    4. The serializer encodes the message.
+    """
+
+    def __init__(self, *, registry):
+        self._serializer = PolySerializer(registry=registry)
+
+    def serialize(self, message):
+        """Serialize a Slack event.
+
+        Parameters
+        ----------
+        message : `dict`
+            The original JSON payload of a Slack Event, including the wrapper.
+            See https://api.slack.com/types/event.
+
+        Returns
+        -------
+        data : `bytes
+            Data encoded in the `Confluent Wire Format
+            <https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#wire-format>`_,
+            ready to be sent to a Kafka broker.
+        """
+        event_type = message['event']['type']
+        schema = load_event_schema(event_type)
+        return self._serializer.serialize(message, schema=schema)
 
 
 def load_event_schema(event_type):

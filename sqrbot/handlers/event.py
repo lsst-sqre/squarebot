@@ -18,12 +18,22 @@ async def post_event(request):
     await _verify_request(request)
 
     slack_event = await request.json()
-    logger.info('Got event', payload=slack_event)
+    logger = logger.bind(payload=slack_event)
+    logger.info('Got event')
 
     if slack_event['type'] == 'url_verification':
         return _handle_url_verification(request, slack_event)
-
-    return web.json_response(status=200)
+    else:
+        try:
+            # TODO do something with the data returned by serialize
+            request.app['sqrbot-jr/serializer'].serialize(slack_event)
+        except Exception as e:
+            logger.error(
+                "Failed to serialize event",
+                error=str(e))
+        finally:
+            # Always return a 200 so Slack knows we're still listening.
+            return web.json_response(status=200)
 
 
 def _handle_url_verification(request, slack_event):

@@ -8,10 +8,12 @@ import sys
 
 from aiohttp import web, ClientSession
 import structlog
+from kafkit.registry.aiohttp import RegistryApi
 
 from .config import create_config
 from .routes import init_root_routes, init_routes
 from .middleware import setup_middleware
+from .avroformat import SlackEventSerializer
 
 
 def create_app():
@@ -34,9 +36,11 @@ def create_app():
     setup_middleware(app)
     app.add_routes(init_routes())
     root_app.add_subapp(prefix, app)
+    app.cleanup_ctx.append(init_serializer)
 
     logger = structlog.get_logger(root_app['api.lsst.codes/loggerName'])
     logger.info('Started sqrbot')
+
     return root_app
 
 
@@ -114,3 +118,34 @@ async def init_http_session(app):
 
     # Cleanup phase
     await app['api.lsst.codes/httpSession'].close()
+
+
+async def init_serializer(app):
+    """Initialize the Avro serializer.
+
+    Notes
+    -----
+    Use this function as a `cleanup context
+    <https://aiohttp.readthedocs.io/en/stable/web_reference.html#aiohttp.web.Application.cleanup_ctx>`_.
+
+    To access the serializer:
+
+    .. code-block:: python
+
+       app['sqrbot-jr/serializer']
+    """
+    # Start up phase
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+    logger.info('Setting up Avro serializer')
+    registry = RegistryApi(
+        session=app['api.lsst.codes/httpSession'],
+        url=app['sqrbot-jr/registryUrl'])
+
+    serializer = SlackEventSerializer(
+        registry=registry)
+    app['sqrbot-jr/serializer'] = serializer
+    logger.info('Finished setting up Avro serializer')
+    yield
+
+    # Cleanup phase
+    # (Nothing to do)

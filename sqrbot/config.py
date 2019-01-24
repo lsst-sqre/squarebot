@@ -47,4 +47,7 @@ def create_config():
     # Slack signing secret
     c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SIGNING')
 
+    # Schema Registry hostname
+    c['sqrbot-jr/registryUrl'] = os.getenv('SQRBOTJR_REGISTRY')
+
     return c
