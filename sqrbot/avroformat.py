@@ -87,6 +87,11 @@ def load_event_schema(event_type):
     also sets the wrapper schemas name to the name of the event, such as
     ``message``.
     """
+    # Normalize similar event types that share a common schema
+    if event_type in ('app_mention', 'message', 'message.channels',
+                      'message.im', 'message.groups', 'message.mpim'):
+        event_type = 'message'
+
     schemas_dir = Path(__file__).parent / 'schemas'
     wrapper_path = schemas_dir / 'event.json'
     event_path = schemas_dir / 'events' / f'{event_type}.json'
