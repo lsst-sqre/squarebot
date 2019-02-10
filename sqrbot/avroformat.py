@@ -4,6 +4,7 @@
 __all__ = ('SlackEventSerializer', 'load_event_schema', 'validate_avro_schema',
            'encode_slack_message')
 
+import functools
 from io import BytesIO
 import json
 from pathlib import Path
@@ -61,9 +62,12 @@ class SlackEventSerializer:
         return await self._serializer.serialize(message, schema=schema)
 
 
+@functools.lru_cache()
 def load_event_schema(event_type):
     """Load an Avro schema for a Slack Events API event from the local app
     data.
+
+    This function is memoized so that repeated calls are fast.
 
     Parameters
     ----------
@@ -112,7 +116,7 @@ def load_event_schema(event_type):
     # Make the overall schema take on the name of the event record.
     schema['name'] = event_schema['name']
 
-    return schema
+    return fastavro.parse_schema(schema)
 
 
 def validate_avro_schema(schema):

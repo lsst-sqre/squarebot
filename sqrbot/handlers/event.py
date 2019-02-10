@@ -26,10 +26,13 @@ async def post_event(request):
     else:
         try:
             serializer = request.app['sqrbot-jr/serializer']
+            producer = request.app['sqrbot-jr/producer']
             data = await serializer.serialize(slack_event)
+            topic_name = f'sqrbot-{slack_event["event"]["type"]}'
+            await producer.send(topic_name, value=data)
         except Exception as e:
             logger.error(
-                "Failed to serialize event",
+                "Failed to serialize and send event",
                 error=str(e))
         finally:
             # Always return a 200 so Slack knows we're still listening.
