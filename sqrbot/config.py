@@ -50,4 +50,7 @@ def create_config():
     # Schema Registry hostname
     c['sqrbot-jr/registryUrl'] = os.getenv('SQRBOTJR_REGISTRY')
 
+    # Kafka broker host
+    c['sqrbot-jr/brokerUrl'] = os.getenv('SQRBOTJR_BROKER')
+
     return c

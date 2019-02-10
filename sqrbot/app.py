@@ -3,10 +3,12 @@
 
 __all__ = ('create_app',)
 
+import asyncio
 import logging
 import sys
 
 from aiohttp import web, ClientSession
+from aiokafka import AIOKafkaProducer
 import structlog
 from kafkit.registry.aiohttp import RegistryApi
 
@@ -37,6 +39,7 @@ def create_app():
     app.add_routes(init_routes())
     root_app.add_subapp(prefix, app)
     app.cleanup_ctx.append(init_serializer)
+    app.cleanup_ctx.append(init_producer)
 
     logger = structlog.get_logger(root_app['api.lsst.codes/loggerName'])
     logger.info('Started sqrbot')
@@ -149,3 +152,35 @@ async def init_serializer(app):
 
     # Cleanup phase
     # (Nothing to do)
+
+
+async def init_producer(app):
+    """Initialize and cleanup the aiokafka Producer instance
+
+    Notes
+    -----
+    Use this function as a `cleanup context
+    <https://aiohttp.readthedocs.io/en/stable/web_reference.html#aiohttp.web.Application.cleanup_ctx>`_.
+
+    To access the producer:
+
+    .. code-block:: python
+
+       producer = app['sqrbot-jr/producer']
+    """
+    # Startup phase
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+    logger.info('Starting Kafka producer')
+    loop = asyncio.get_running_loop()
+    producer = AIOKafkaProducer(
+        loop=loop,
+        bootstrap_servers=app['sqrbot-jr/brokerUrl'])
+    await producer.start()
+    app['sqrbot-jr/producer'] = producer
+    logger.info('Finished starting Kafka producer')
+
+    yield
+
+    # cleanup phase
+    logger.info('Shutting down Kafka producer')
+    await producer.stop()
