@@ -25,8 +25,8 @@ async def post_event(request):
         return _handle_url_verification(request, slack_event)
     else:
         try:
-            # TODO do something with the data returned by serialize
-            request.app['sqrbot-jr/serializer'].serialize(slack_event)
+            serializer = request.app['sqrbot-jr/serializer']
+            data = await serializer.serialize(slack_event)
         except Exception as e:
             logger.error(
                 "Failed to serialize event",

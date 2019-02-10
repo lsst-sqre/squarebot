@@ -40,7 +40,7 @@ class SlackEventSerializer:
     def __init__(self, *, registry):
         self._serializer = PolySerializer(registry=registry)
 
-    def serialize(self, message):
+    async def serialize(self, message):
         """Serialize a Slack event.
 
         Parameters
@@ -58,7 +58,7 @@ class SlackEventSerializer:
         """
         event_type = message['event']['type']
         schema = load_event_schema(event_type)
-        return self._serializer.serialize(message, schema=schema)
+        return await self._serializer.serialize(message, schema=schema)
 
 
 def load_event_schema(event_type):
