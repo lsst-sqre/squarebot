@@ -25,8 +25,6 @@ def test_load_event_schema(event_type):
     schema = load_event_schema(event_type)
     validate_avro_schema(schema)
 
-    assert schema['name'] == event_type
-
 
 @pytest.mark.parametrize(
     'message_filename',

@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "name": "message",
+  "name": "message-dev1",
   "namespace": "com.slack.events",
   "doc": "A message was posted. There are several types of messages depending on where they are posted. https://api.slack.com/events/message",
   "fields": [
