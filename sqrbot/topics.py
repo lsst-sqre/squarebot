@@ -40,7 +40,7 @@ def name_topic(slack_event_type, app):
 
             sqrbot-{{slack_event_type}}-{{stagingVersion}}
     """
-    if app['sqrbot-jr/stagingVersion'] is not None:
+    if app['sqrbot-jr/stagingVersion']:
         topic_name = (
             f'sqrbot-{slack_event_type}'
             f'-{app["sqrbot-jr/stagingVersion"]}'

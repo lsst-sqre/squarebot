@@ -238,10 +238,10 @@ def get_desired_compatibility(app):
             the subjects must have ``"FORWARD_TRANSITIVE"`` compatibility,
             following the SQuaRE Events best practices.
     """
-    if app['sqrbot-jr/stagingVersion'] is not None:
-        return 'NONE'
-    else:
+    if app['sqrbot-jr/stagingVersion'] == '':
         return 'FORWARD_TRANSITIVE'
+    else:
+        return 'NONE'
 
 
 def validate_avro_schema(schema):

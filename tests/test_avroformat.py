@@ -41,7 +41,7 @@ def test_get_desired_compatibility():
     """Test the get_desired_compatibility.
     """
     # Mock app (just a configuration)
-    mockapp = {'sqrbot-jr/stagingVersion': None}
+    mockapp = {'sqrbot-jr/stagingVersion': ''}
     assert get_desired_compatibility(mockapp) == 'FORWARD_TRANSITIVE'
 
     mockapp = {'sqrbot-jr/stagingVersion': 'dev'}
