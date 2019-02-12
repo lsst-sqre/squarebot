@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: sqrbot-jr-app
-        image: lsstsqre/sqrbot-jr:tickets-DM-17024
+        image: lsstsqre/sqrbot-jr:tickets-DM-17054
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
