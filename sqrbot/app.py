@@ -15,7 +15,7 @@ from kafkit.registry.aiohttp import RegistryApi
 from .config import create_config
 from .routes import init_root_routes, init_routes
 from .middleware import setup_middleware
-from .avroformat import SlackEventSerializer
+from .avroformat import SlackEventSerializer, preregister_schemas
 
 
 def create_app():
@@ -136,18 +136,25 @@ async def init_serializer(app):
     .. code-block:: python
 
        app['sqrbot-jr/serializer']
+
+    This function also pregisters schemas and subject compatibility
+    configurations. See `sqrbot.avroformat.preregister_schemas`.
     """
     # Start up phase
     logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
     logger.info('Setting up Avro serializer')
+
     registry = RegistryApi(
         session=app['api.lsst.codes/httpSession'],
         url=app['sqrbot-jr/registryUrl'])
+
+    await preregister_schemas(registry, app)
 
     serializer = SlackEventSerializer(
         registry=registry,
         staging_version=app['sqrbot-jr/stagingVersion'])
     app['sqrbot-jr/serializer'] = serializer
+
     logger.info('Finished setting up Avro serializer')
     yield
 

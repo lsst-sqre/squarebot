@@ -2,6 +2,7 @@
 """
 
 __all__ = ('SlackEventSerializer', 'load_event_schema', 'validate_avro_schema',
+           'list_event_schemas', 'preregister_schemas',
            'encode_slack_message')
 
 import functools
@@ -9,6 +10,7 @@ from io import BytesIO
 import json
 from pathlib import Path
 
+import structlog
 import fastavro
 from kafkit.registry.serializer import PolySerializer
 
@@ -130,6 +132,116 @@ def load_event_schema(event_type, suffix=None):
         schema['name'] = '-'.join((schema['name'], suffix))
 
     return fastavro.parse_schema(schema)
+
+
+@functools.lru_cache()
+def list_event_schemas():
+    """List the events with schemas in the local package.
+
+    Returns
+    -------
+    events : `list` [`str`]
+        List of Slack event names with available schemas.
+
+    Notes
+    -----
+    This function looks for schema json files in the
+    ``sqrbot/schemas/events`` directory of the package. Each schema is named
+    after a Slack event type.
+
+    This function is cached, so repeated calls consume no additional IO.
+    """
+    event_schemas_dir = Path(__file__).parent / 'schemas' / 'events'
+    schema_paths = event_schemas_dir.glob('*.json')
+    return [p.stem for p in schema_paths]
+
+
+async def preregister_schemas(registry, app):
+    """Register schemas and ensure compatibility requirements.
+
+    Parameters
+    ----------
+    registry : `kafkit.registry.aiohttp.RegistryApi`
+        A Schema Registry client.
+    app : `aiohttp.web.Application`
+        The application instance.
+
+    Notes
+    -----
+    This function iterates through all available schemas (`list_event_schemas`)
+    and ensures that those schemas are registered under subjects in the schema
+    registry. Subject names are determined from the fully-qualified ``name``
+    field of the schema. Finally this function also ensures that the
+    compatibility requirement on the subject is at the desired level
+    (see `get_desired_compatibility`).
+
+    This function responds to the ``sqrbot-jr/stagingVersion`` configuration
+    variable. If that configuration is set (not `None`):
+
+    - Schemas names have the value of ``sqrbot-jr/stagingVersion`` as suffix
+      on the name.
+    - Subjects names likewise have the suffix.
+    - The compatibility requirements are ``"NONE"``. See
+      `get_desired_compatibility`.
+    """
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+
+    desired_compat = get_desired_compatibility(app)
+
+    for name in list_event_schemas():
+        schema = load_event_schema(
+            name,
+            suffix=app['sqrbot-jr/stagingVersion'])
+
+        schema_id = await registry.register_schema(schema)
+        logger.info('Registered schema', subject=schema['name'], id=schema_id)
+
+        subject_name = schema['name']
+        subject_config = await registry.get('/config{/subject}')
+
+        if subject_config['compatibility'] != desired_compat:
+            await registry.put(
+                '/config{/subject}',
+                url_vars={'subject': subject_name},
+                data={'compatibility': desired_compat})
+            logger.info(
+                'Reset subject compatibility level',
+                subject=schema['name'],
+                level=desired_compat)
+        else:
+            logger.info(
+                'Existing subject compatibility level is good',
+                subject=schema['name'],
+                level=subject_config['compatibility'])
+
+
+def get_desired_compatibility(app):
+    """Get the desired compatibility configuration for subjects given the
+    application configuration.
+
+    Parameters
+    ----------
+    app : `aiohttp.web.Application`
+        The application instance.
+
+    Returns
+    -------
+    compatibility : `str`
+        The Schema Registry compatibility level. The value is one of:
+
+        ``"NONE"``
+            If the ``sqrbot-jr/stagingVersion`` app config is set, then no
+            compatiblility is required on the subject since it's a
+            "staging" subject used for testing.
+        ``"FORWARD_TRANSITIVE"``
+            If ``sqrbot-jr/stagingVersion`` app config **is not** set, then
+            the subjects must have ``"FORWARD_TRANSITIVE"`` compatibility,
+            following the SQuaRE Events best practices.
+    """
+    if app['sqrbot-jr/stagingVersion'] is not None:
+        return 'NONE'
+    else:
+        return 'FORWARD_TRANSITIVE'
 
 
 def validate_avro_schema(schema):

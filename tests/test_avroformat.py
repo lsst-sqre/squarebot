@@ -9,6 +9,7 @@ import pytest
 import fastavro
 
 from sqrbot.avroformat import (load_event_schema, validate_avro_schema,
+                               get_desired_compatibility, list_event_schemas,
                                encode_slack_message)
 
 
@@ -34,6 +35,22 @@ def test_load_event_schema_staging_version():
 
     schema2 = load_event_schema('message', suffix='dev1')
     assert schema2['name'].endswith('-dev1')
+
+
+def test_get_desired_compatibility():
+    """Test the get_desired_compatibility.
+    """
+    # Mock app (just a configuration)
+    mockapp = {'sqrbot-jr/stagingVersion': None}
+    assert get_desired_compatibility(mockapp) == 'FORWARD_TRANSITIVE'
+
+    mockapp = {'sqrbot-jr/stagingVersion': 'dev'}
+    assert get_desired_compatibility(mockapp) == 'NONE'
+
+
+def test_list_event_schemas():
+    event_names = list_event_schemas()
+    assert 'message' in event_names
 
 
 @pytest.mark.parametrize(
