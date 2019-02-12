@@ -188,6 +188,9 @@ async def preregister_schemas(registry, app):
 
     desired_compat = get_desired_compatibility(app)
 
+    logger.info(
+        'Internally supported event schemas',
+        names=list_event_schemas())
     for name in list_event_schemas():
         schema = load_event_schema(
             name,
