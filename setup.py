@@ -74,5 +74,6 @@ setup(
             'sqrbot = sqrbot.cli:main'
         ]
     },
-    use_scm_version=True
+    use_scm_version=True,
+    include_package_data=True
 )
