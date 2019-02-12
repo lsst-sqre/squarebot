@@ -32,6 +32,9 @@ def create_app():
     root_app.update(config)
     root_app.add_routes(init_root_routes())
     root_app.cleanup_ctx.append(init_http_session)
+    root_app.cleanup_ctx.append(init_serializer)
+    root_app.cleanup_ctx.append(init_topics)
+    root_app.cleanup_ctx.append(init_producer)
 
     # Create sub-app for the app's public APIs at the correct prefix
     prefix = '/' + root_app['api.lsst.codes/name']
@@ -39,9 +42,6 @@ def create_app():
     setup_middleware(app)
     app.add_routes(init_routes())
     root_app.add_subapp(prefix, app)
-    app.cleanup_ctx.append(init_serializer)
-    app.cleanup_ctx.append(init_topics)
-    app.cleanup_ctx.append(init_producer)
 
     logger = structlog.get_logger(root_app['api.lsst.codes/loggerName'])
     logger.info('Started sqrbot')
