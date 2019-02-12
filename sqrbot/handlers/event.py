@@ -6,7 +6,9 @@ import math
 import time
 
 from aiohttp import web
+
 from sqrbot.routes import routes
+from sqrbot.topics import name_topic
 
 
 @routes.post('/event')
@@ -28,7 +30,7 @@ async def post_event(request):
             serializer = request.app['sqrbot-jr/serializer']
             producer = request.app['sqrbot-jr/producer']
             data = await serializer.serialize(slack_event)
-            topic_name = f'sqrbot-{slack_event["event"]["type"]}'
+            topic_name = name_topic(slack_event["event"]["type"], request.app)
             await producer.send(topic_name, value=data)
         except Exception as e:
             logger.error(
