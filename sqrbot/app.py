@@ -16,6 +16,7 @@ from .config import create_config
 from .routes import init_root_routes, init_routes
 from .middleware import setup_middleware
 from .avroformat import SlackEventSerializer, preregister_schemas
+from .topics import configure_topics
 
 
 def create_app():
@@ -39,6 +40,7 @@ def create_app():
     app.add_routes(init_routes())
     root_app.add_subapp(prefix, app)
     app.cleanup_ctx.append(init_serializer)
+    app.cleanup_ctx.append(init_topics)
     app.cleanup_ctx.append(init_producer)
 
     logger = structlog.get_logger(root_app['api.lsst.codes/loggerName'])
@@ -160,6 +162,22 @@ async def init_serializer(app):
 
     # Cleanup phase
     # (Nothing to do)
+
+
+async def init_topics(app):
+    """Initialize Kafka topics.
+
+    See `sqrbot.topics.configure_topics`.
+    """
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+    logger.info('Configuring Kafka topics')
+
+    configure_topics(app)
+
+    logger.info('Finished configuring Kafka topics')
+    yield
+
+    # Cleanup phase (nothing to do)
 
 
 async def init_producer(app):

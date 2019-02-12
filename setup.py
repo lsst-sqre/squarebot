@@ -26,6 +26,7 @@ install_requires = [
     'fastavro==0.21.16',
     'kafkit==0.1.0',
     'aiokafka==0.5.0',
+    'confluent-kafka==0.11.6',
 ]
 
 # Test dependencies

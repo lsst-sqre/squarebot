@@ -3,6 +3,9 @@
 
 __all__ = ('name_topic', 'KNOWN_SLACK_EVENTS')
 
+from confluent_kafka.admin import AdminClient, NewTopic
+import structlog
+
 
 KNOWN_SLACK_EVENTS = set([
     'app_mention', 'message.im', 'message.mpim', 'message.groups',
@@ -46,3 +49,57 @@ def name_topic(slack_event_type, app):
         topic_name = f'sqrbot-{slack_event_type}'
 
     return topic_name
+
+
+def configure_topics(app):
+    """Create Kafka topics.
+
+    This function is generally called at app startup.
+
+    Parameters
+    ----------
+    app : `aiohttp.web.Application`
+        The application instance.
+
+    Notes
+    -----
+    This function registers any topics that SQuaRE Bot Jr produces that don't
+    already exist. The topics correspond one-to-one with Slack events that
+    SQuaRE Bot Jr listens to. These topics are hard-coded at
+    `KNOWN_SLACK_EVENTS`
+
+    If the ``sqrbot-jr/stagingVersion`` is set, any topics created will have
+    that staging version as a name suffix.
+    """
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+
+    client = AdminClient({'bootstrap.servers': app['sqrbot-jr/brokerUrl']})
+
+    # First list existing topics
+    metadata = client.list_topics(timeout=10)
+    existing_topic_names = [t for t in metadata.topics.keys()]
+
+    # Create any topics that don't already exist
+    new_topics = []
+    for slack_event in KNOWN_SLACK_EVENTS:
+        topic_name = name_topic(slack_event, app)
+        if topic_name in existing_topic_names:
+            # topic already exists
+            continue
+
+        new_topics.append(NewTopic(
+            topic_name,
+            num_partitions=1,
+            replication_factor=3))
+
+    if len(new_topics) > 0:
+        fs = client.create_topics(new_topics)
+        for topic_name, f in fs.items():
+            try:
+                f.result()  # The result itself is None
+                logger.info('Created topic', topic=topic_name)
+            except Exception as e:
+                logger.error(
+                    'Failed to create topic',
+                    topic=topic_name, error=str(e))
+                raise
