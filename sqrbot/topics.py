@@ -73,6 +73,9 @@ def configure_topics(app):
     """
     logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
 
+    default_num_partitions = 1
+    default_replication_factor = 3
+
     client = AdminClient({'bootstrap.servers': app['sqrbot-jr/brokerUrl']})
 
     # First list existing topics
@@ -84,20 +87,28 @@ def configure_topics(app):
     for slack_event in KNOWN_SLACK_EVENTS:
         topic_name = name_topic(slack_event, app)
         if topic_name in existing_topic_names:
-            # topic already exists
+            topic = metadata.topics[topic_name]
+            partitions = [p for p in iter(topic.partitions.values())]
+            logger.info(
+                'Topic exists',
+                topic=topic_name,
+                partitions=len(topic.partitions),
+                replication_factor=len(partitions[0].replicas))
             continue
-
         new_topics.append(NewTopic(
             topic_name,
-            num_partitions=1,
-            replication_factor=3))
+            num_partitions=default_num_partitions,
+            replication_factor=default_replication_factor))
 
     if len(new_topics) > 0:
         fs = client.create_topics(new_topics)
         for topic_name, f in fs.items():
             try:
                 f.result()  # The result itself is None
-                logger.info('Created topic', topic=topic_name)
+                logger.info(
+                    'Created topic',
+                    topic=topic_name,
+                    partitions=default_num_partitions)
             except Exception as e:
                 logger.error(
                     'Failed to create topic',
