@@ -26,6 +26,16 @@ def test_load_event_schema(event_type):
     validate_avro_schema(schema)
 
 
+def test_load_event_schema_staging_version():
+    """Test that a suffix gets added to the schema's name.
+    """
+    schema1 = load_event_schema('message')
+    assert schema1['name'].endswith('-dev1') is False
+
+    schema2 = load_event_schema('message', suffix='dev1')
+    assert schema2['name'].endswith('-dev1')
+
+
 @pytest.mark.parametrize(
     'message_filename',
     [

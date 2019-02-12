@@ -145,7 +145,8 @@ async def init_serializer(app):
         url=app['sqrbot-jr/registryUrl'])
 
     serializer = SlackEventSerializer(
-        registry=registry)
+        registry=registry,
+        staging_version=app['sqrbot-jr/stagingVersion'])
     app['sqrbot-jr/serializer'] = serializer
     logger.info('Finished setting up Avro serializer')
     yield

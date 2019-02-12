@@ -53,4 +53,8 @@ def create_config():
     # Kafka broker host
     c['sqrbot-jr/brokerUrl'] = os.getenv('SQRBOTJR_BROKER')
 
+    # Version name, if application is running in a staging environment.
+    # Otherwise, this is None for production
+    c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
+
     return c

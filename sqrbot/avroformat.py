@@ -20,6 +20,11 @@ class SlackEventSerializer:
     ----------
     registry : `kafkit.registry.aiohttp.RegistryApi`
         Client for the Confluent Schema Registry.
+    staging_version `str`, optional
+        If the application is running in a staging environment, this is the
+        name of the staging version. This should be set through the
+        ``sqrbot-jr/stagingVersion`` configuration key on the app. Leave as
+        `None` if the application is not in staging.
 
     Notes
     -----
@@ -38,8 +43,9 @@ class SlackEventSerializer:
     4. The serializer encodes the message.
     """
 
-    def __init__(self, *, registry):
+    def __init__(self, *, registry, staging_version=None):
         self._serializer = PolySerializer(registry=registry)
+        self._staging_version = staging_version
 
     async def serialize(self, message):
         """Serialize a Slack event.
@@ -58,12 +64,13 @@ class SlackEventSerializer:
             ready to be sent to a Kafka broker.
         """
         event_type = message['event']['type']
-        schema = load_event_schema(event_type)
+        schema = load_event_schema(event_type,
+                                   suffix=self._staging_version)
         return await self._serializer.serialize(message, schema=schema)
 
 
 @functools.lru_cache()
-def load_event_schema(event_type):
+def load_event_schema(event_type, suffix=None):
     """Load an Avro schema for a Slack Events API event from the local app
     data.
 
@@ -75,6 +82,9 @@ def load_event_schema(event_type):
         Name of an event type, such as ``"message"``. See
         https://api.slack.com/events for a listing. Not all events have
         Avro schemas in SQuaRE Bot.
+    suffix : `str`, optional
+        A suffix to add to the schema's name. This is typically used to create
+        "staging" schemas, therefore "staging subjects" in the Schema Registry.
 
     Returns
     -------
@@ -115,6 +125,9 @@ def load_event_schema(event_type):
 
     # Make the overall schema take on the name of the event record.
     schema['name'] = event_schema['name']
+
+    if suffix:
+        schema['name'] = '-'.join((schema['name'], suffix))
 
     return fastavro.parse_schema(schema)
 
