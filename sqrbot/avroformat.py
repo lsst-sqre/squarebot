@@ -207,7 +207,7 @@ async def preregister_schemas(registry, app):
             await registry.put(
                 '/config{/subject}',
                 url_vars={'subject': subject_name},
-                data={'compatibilityLevel': desired_compat})
+                data={'compatibility': desired_compat})
             logger.info(
                 'Reset subject compatibility level',
                 subject=schema['name'],
