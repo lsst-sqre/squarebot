@@ -31,10 +31,10 @@ def test_load_event_schema_staging_version():
     """Test that a suffix gets added to the schema's name.
     """
     schema1 = load_event_schema('message')
-    assert schema1['name'].endswith('-dev1') is False
+    assert schema1['name'].endswith('_dev1') is False
 
     schema2 = load_event_schema('message', suffix='dev1')
-    assert schema2['name'].endswith('-dev1')
+    assert schema2['name'].endswith('_dev1')
 
 
 def test_get_desired_compatibility():

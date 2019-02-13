@@ -129,7 +129,7 @@ def load_event_schema(event_type, suffix=None):
     schema['name'] = event_schema['name']
 
     if suffix:
-        schema['name'] = '-'.join((schema['name'], suffix))
+        schema['name'] = '_'.join((schema['name'], suffix))
 
     return fastavro.parse_schema(schema)
 
