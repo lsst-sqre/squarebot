@@ -202,20 +202,21 @@ async def preregister_schemas(registry, app):
         subject_name = schema['name']
         subject_config = await registry.get('/config{/subject}')
 
-        if subject_config['compatibility'] != desired_compat:
+        logger.info('Current subject config', config=subject_config)
+        if subject_config['compatibilityLevel'] != desired_compat:
             await registry.put(
                 '/config{/subject}',
                 url_vars={'subject': subject_name},
-                data={'compatibility': desired_compat})
+                data={'compatibilityLevel': desired_compat})
             logger.info(
                 'Reset subject compatibility level',
                 subject=schema['name'],
-                level=desired_compat)
+                compatibility_level=desired_compat)
         else:
             logger.info(
                 'Existing subject compatibility level is good',
                 subject=schema['name'],
-                level=subject_config['compatibility'])
+                compatibility_level=subject_config['compatibilityLevel'])
 
 
 def get_desired_compatibility(app):
