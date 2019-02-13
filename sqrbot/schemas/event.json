@@ -61,12 +61,6 @@
       "doc": "An array of string-based User IDs. Each member of the collection represents a user that has installed your application/bot and indicates the described event would be visible to those users.",
       "type": ["null", {"type": "array", "items": "string"}],
       "default": null
-    },
-    {
-      "name": "authed_users",
-      "doc": "An array of string-based Team IDs. Each member of the collection represents a team that has installed the application/bot and indicates the described event would be visible to those teams.",
-      "type": ["null", {"type": "array", "items": "string"}],
-      "default": null
     }
   ]
 }
