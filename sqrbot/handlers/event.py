@@ -15,6 +15,8 @@ from sqrbot.topics import name_topic
 async def post_event(request):
     """Handle an event post by the Slack Events API.
     """
+    configs = request.config_dict
+
     logger = request['logger']
     # Verify the Slack signing secret on the request
     await _verify_request(request)
@@ -27,10 +29,10 @@ async def post_event(request):
         return _handle_url_verification(request, slack_event)
     else:
         try:
-            serializer = request.app['sqrbot-jr/serializer']
-            producer = request.app['sqrbot-jr/producer']
+            serializer = configs['sqrbot-jr/serializer']
+            producer = configs['sqrbot-jr/producer']
             data = await serializer.serialize(slack_event)
-            topic_name = name_topic(slack_event["event"]["type"], request.app)
+            topic_name = name_topic(slack_event["event"]["type"], configs)
             await producer.send(topic_name, value=data)
         except Exception as e:
             logger.error(
