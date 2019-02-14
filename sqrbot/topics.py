@@ -1,7 +1,8 @@
 """Kafka topic management.
 """
 
-__all__ = ('name_topic', 'KNOWN_SLACK_EVENTS')
+__all__ = ('map_event_to_topic', 'identify_slack_event', 'event_to_topic_name',
+           'KNOWN_SLACK_EVENTS')
 
 from confluent_kafka.admin import AdminClient, NewTopic
 import structlog
@@ -17,7 +18,63 @@ more information about specific events.
 """
 
 
-def name_topic(slack_event_type, app):
+def map_event_to_topic(event, app):
+    """Map a Slack event object to a Kafka topic name.
+
+    Parameters
+    ----------
+    event : `dict`
+        The Slack event object.
+    app : `aiohttp.web.Application` or `dict`
+        The application instance or just the configuration from it.
+
+    Returns
+    -------
+    topic_name : `str`
+        The name of the topic. The format is generally::
+
+            sqrbot-{{slack_event_type}}
+
+        If the ``sqrbot-jr/stagingVersion`` application configuration is
+        set, then the name is also added as a suffix::
+
+            sqrbot-{{slack_event_type}}-{{stagingVersion}}
+    """
+    event_type = identify_slack_event(event)
+    return event_to_topic_name(event_type, app)
+
+
+def identify_slack_event(event):
+    """Identify the Slack event type given an event object.
+
+    Parameters
+    ----------
+    event : `dict`
+        The Slack event object.
+
+    Returns
+    -------
+    slack_event_type : `str`
+        The name of the slack event, one of https://api.slack.com/events.
+    """
+    primary_type = event['event']['type']
+    if primary_type == 'message':
+        channel_type = event['event']['channel_type']
+        if channel_type == 'channel':
+            return 'message.channels'
+        if channel_type == 'im':
+            return 'message.im'
+        elif channel_type == 'group':
+            return 'message.groups'
+        elif channel_type == 'mpim':
+            return 'message.mpim'
+        else:
+            raise RuntimeError(f'Unknown channel type {channel_type!r}')
+    else:
+        return primary_type
+
+
+def event_to_topic_name(slack_event_type, app):
     """Name the SQuaRE Events Kafka topic for a given Slack event type.
 
     Parameters
@@ -25,8 +82,8 @@ def name_topic(slack_event_type, app):
     slack_event_type : `str`
         The name of the Slack event. This should be an item from
         `KNOWN_SLACK_EVENTS`.
-    app : `aiohttp.web.Application`
-        The application instance.
+    app : `aiohttp.web.Application` or `dict`
+        The application instance or just the configuration from it.
 
     Returns
     -------
@@ -85,7 +142,7 @@ def configure_topics(app):
     # Create any topics that don't already exist
     new_topics = []
     for slack_event in KNOWN_SLACK_EVENTS:
-        topic_name = name_topic(slack_event, app)
+        topic_name = event_to_topic_name(slack_event, app)
         if topic_name in existing_topic_names:
             topic = metadata.topics[topic_name]
             partitions = [p for p in iter(topic.partitions.values())]
