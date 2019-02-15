@@ -2,6 +2,13 @@
 Change log
 ##########
 
+0.2.0 (2019-02-15)
+==================
+
+This release adds the ability to serialize `message events <https://api.slack.com/events/message>`__ into Avro from the `Slack Events API <https://api.slack.com/events-api>`__ and produce Kafka messages to matching topics.
+
+:jirap:`DM-17054`
+
 0.1.0 (2019-01-07)
 ==================
 
@@ -14,4 +21,4 @@ Main initial features:
 - Respond to the `Slack URL challenge <https://api.slack.com/events-api#subscriptions>`__).
 - Implements Slack message verification based on the `signing secret <https://api.slack.com/docs/verifying-requests-from-slack`__.
 
-(`DM-17024 <https://jira.lsstcorp.org/browse/DM-17024>`__)
+:jirap:`DM-17024`
