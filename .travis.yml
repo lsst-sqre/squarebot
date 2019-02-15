@@ -1,10 +1,11 @@
 sudo: required
+dist: xenial
 services:
   - docker
 language: python
 matrix:
   include:
-    - python: "3.7-dev"
+    - python: "3.7.1"
       env: DEPLOY_DOCKER_IMAGE=true
 install:
   - "make install"

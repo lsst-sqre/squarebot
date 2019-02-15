@@ -6,24 +6,41 @@ import math
 import time
 
 from aiohttp import web
+
 from sqrbot.routes import routes
+from sqrbot.topics import map_event_to_topic
 
 
 @routes.post('/event')
 async def post_event(request):
     """Handle an event post by the Slack Events API.
     """
+    configs = request.config_dict
+
     logger = request['logger']
     # Verify the Slack signing secret on the request
     await _verify_request(request)
 
     slack_event = await request.json()
-    logger.info('Got event', payload=slack_event)
+    logger = logger.bind(payload=slack_event)
+    logger.info('Got event')
 
     if slack_event['type'] == 'url_verification':
         return _handle_url_verification(request, slack_event)
-
-    return web.json_response(status=200)
+    else:
+        try:
+            serializer = configs['sqrbot-jr/serializer']
+            producer = configs['sqrbot-jr/producer']
+            data = await serializer.serialize(slack_event)
+            topic_name = map_event_to_topic(slack_event, configs)
+            await producer.send(topic_name, value=data)
+        except Exception as e:
+            logger.error(
+                "Failed to serialize and send event",
+                error=str(e))
+        finally:
+            # Always return a 200 so Slack knows we're still listening.
+            return web.json_response(status=200)
 
 
 def _handle_url_verification(request, slack_event):

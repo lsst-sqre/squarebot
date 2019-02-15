@@ -47,4 +47,14 @@ def create_config():
     # Slack signing secret
     c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SIGNING')
 
+    # Schema Registry hostname
+    c['sqrbot-jr/registryUrl'] = os.getenv('SQRBOTJR_REGISTRY')
+
+    # Kafka broker host
+    c['sqrbot-jr/brokerUrl'] = os.getenv('SQRBOTJR_BROKER')
+
+    # Version name, if application is running in a staging environment.
+    # Otherwise, this is an empty string for production
+    c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
+
     return c

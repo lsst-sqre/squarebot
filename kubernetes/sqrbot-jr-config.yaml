@@ -6,3 +6,6 @@ data:
   # These configurations are injected as environment variables into the
   # sqrbot-jr app container.
   API_LSST_CODES_PROFILE: "production"
+  SQRBOTJR_REGISTRY: "http://events-cp-schema-registry:8081"
+  SQRBOTJR_BROKER: "events-cp-kafka-headless:9092"
+  SQRBOTJR_STAGING_VERSION: "dev1"

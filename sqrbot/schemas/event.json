@@ -1,0 +1,66 @@
+{
+  "name": "event",
+  "namespace": "codes.lsst.api.sqrbot",
+  "type": "record",
+  "doc": "Wrapper for an Event object. https://api.slack.com/types/event",
+  "fields": [
+    {
+      "name": "token",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "A verification token to validate that the event originated from Slack (deprecated)."
+    },
+    {
+      "name": "team_id",
+      "type": "string",
+      "doc": "The unique identifier of the workspace where the event occurred."
+    },
+    {
+      "name": "api_app_id",
+      "type": "string",
+      "doc": "The unique identifier of your installed Slack application. Use this to distinguish which app the event belongs to if you use multiple apps with the same Request URL."
+    },
+    {
+      "name": "event",
+      "doc": "Contents of the event.",
+      "type": {
+        "name": "event",
+        "type": "record",
+        "doc": "Contents of the event",
+        "fields": [
+          {
+            "name": "type",
+            "doc": "The specific name of the event",
+            "type": "string"
+          },
+          {
+            "name": "event_ts",
+            "doc": "When the event was dispatched",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "type",
+      "doc": "Indicates which kind of event dispatch this is, usually `event_callback`",
+      "type": "string"
+    },
+    {
+      "name": "event_id",
+      "doc": "A unique identifier for this specific event, globally unique across all workspaces.",
+      "type": "string"
+    },
+    {
+      "name": "event_time",
+      "doc": "The epoch timestamp in seconds indicating when this event was dispatched.",
+      "type": "int"
+    },
+    {
+      "name": "authed_users",
+      "doc": "An array of string-based User IDs. Each member of the collection represents a user that has installed your application/bot and indicates the described event would be visible to those users.",
+      "type": ["null", {"type": "array", "items": "string"}],
+      "default": null
+    }
+  ]
+}

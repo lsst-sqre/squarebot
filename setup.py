@@ -23,12 +23,16 @@ install_requires = [
     'structlog==18.2.0',
     'colorama==0.4.1',  # used by structlog
     'click>=6.7,<7.0',
+    'fastavro==0.21.16',
+    'kafkit==0.1.1',
+    'aiokafka==0.5.0',
+    'confluent-kafka==0.11.6',
 ]
 
 # Test dependencies
 tests_require = [
-    'pytest==4.0.2',
-    'pytest-flake8==1.0.2',
+    'pytest==4.2.0',
+    'pytest-flake8==1.0.4',
     'aiohttp-devtools==0.11',
 ]
 tests_require += install_requires
@@ -70,5 +74,6 @@ setup(
             'sqrbot = sqrbot.cli:main'
         ]
     },
-    use_scm_version=True
+    use_scm_version=True,
+    include_package_data=True
 )
