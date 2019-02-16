@@ -30,10 +30,8 @@ async def post_event(request):
             data = await serializer.serialize(slack_event)
             topic_name = map_event_to_topic(slack_event, configs)
             await producer.send(topic_name, value=data)
-        except Exception as e:
-            logger.error(
-                "Failed to serialize and send event",
-                error=str(e))
+        except Exception:
+            logger.exception("Failed to serialize and send event")
         finally:
             # Always return a 200 so Slack knows we're still listening.
             return web.json_response(status=200)
