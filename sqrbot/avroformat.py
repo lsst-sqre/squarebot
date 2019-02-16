@@ -200,7 +200,9 @@ async def preregister_schemas(registry, app):
         logger.info('Registered schema', subject=schema['name'], id=schema_id)
 
         subject_name = schema['name']
-        subject_config = await registry.get('/config{/subject}')
+        subject_config = await registry.get(
+            '/config{/subject}',
+            url_vars={'subject': subject_name})
 
         logger.info('Current subject config', config=subject_config)
         if subject_config['compatibilityLevel'] != desired_compat:
