@@ -1,0 +1,94 @@
+{
+  "type": "record",
+  "name": "interaction_v1",
+  "namespace": "com.slack",
+  "doc": "Slack message interaction payload: https://api.slack.com/messaging/interactivity/enabling#understanding-payloads",
+  "fields": [
+    {
+      "name": "type",
+      "type": "string",
+      "doc": "Should be block_interactions"
+    },
+    {
+      "name": "team",
+      "doc": "Information about the Slack team",
+      "type": {
+        "type": "record",
+        "name": "team_node",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "doc": "ID of the team."
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "doc": "Domain name of the team."
+          }
+        ]
+      }
+    },
+    {
+      "name": "user",
+      "doc": "Information about the user who made the interaction.",
+      "type": {
+        "type": "record",
+        "name": "user_node",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "doc": "ID of the user."
+          },
+          {
+            "name": "username",
+            "type": "string",
+            "doc": "Username of the user."
+          },
+          {
+            "name": "team_id",
+            "type": "string",
+            "doc": "ID of the user's team."
+          }
+        ]
+      }
+    },
+    {
+      "name": "token",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "A verification token to validate that the event originated from Slack (deprecated)."
+    },
+    {
+      "name": "api_app_id",
+      "type": "string",
+      "doc": "The unique identifier of your installed Slack application. Use this to distinguish which app the event belongs to if you use multiple apps with the same Request URL."
+    },
+    {
+      "name": "trigger_id",
+      "type": "string",
+      "doc": "ID that can be used to launch dialogs."
+    },
+    {
+      "name": "channel",
+      "doc": "The channel where the interaction occured.",
+      "type": {
+        "type": "record",
+        "name": "channel_node",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "doc": "ID of the channel."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "doc": "Name of the channel."
+          }
+        ]
+      }
+    }
+  ]
+}

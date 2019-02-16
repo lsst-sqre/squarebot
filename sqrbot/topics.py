@@ -108,6 +108,45 @@ def event_to_topic_name(slack_event_type, app):
     return topic_name
 
 
+def get_interaction_topic_name(app):
+    """Get the name of the Kafka topic for Slack interactions.
+
+    Parameters
+    ----------
+    app : `aiohttp.web.Application` or `dict`
+        The application instance or just the configuration from it.
+
+    Returns
+    -------
+    topic_name : `str`
+        The name of the topic. The name is generally::
+
+            sqrbot-interaction
+
+        If the ``sqrbot-jr/stagingVersion`` application configuration is
+        set, then the name is also added as a suffix::
+
+            sqrbot-interaction-{{stagingVersion}}
+    """
+    if app['sqrbot-jr/stagingVersion']:
+        return f'sqrbot-interaction-{app["sqrbot-jr/stagingVersion"]}'
+    else:
+        return 'sqrbot-interaction'
+
+
+def get_all_topic_names(app):
+    """Get the names of all topics that SQuaRE Bot Jr produces.
+
+    These names include the staging version suffix, dependent on the
+    ``sqrbot-jr/stagingVersion`` configuration.
+    """
+    names = []
+    for slack_event in KNOWN_SLACK_EVENTS:
+        names.append(event_to_topic_name(slack_event, app))
+    names.append(get_interaction_topic_name(app))
+    return names
+
+
 def configure_topics(app):
     """Create Kafka topics.
 
@@ -122,8 +161,7 @@ def configure_topics(app):
     -----
     This function registers any topics that SQuaRE Bot Jr produces that don't
     already exist. The topics correspond one-to-one with Slack events that
-    SQuaRE Bot Jr listens to. These topics are hard-coded at
-    `KNOWN_SLACK_EVENTS`
+    SQuaRE Bot Jr listens to. See `get_all_topic_names`.
 
     If the ``sqrbot-jr/stagingVersion`` is set, any topics created will have
     that staging version as a name suffix.
@@ -141,8 +179,7 @@ def configure_topics(app):
 
     # Create any topics that don't already exist
     new_topics = []
-    for slack_event in KNOWN_SLACK_EVENTS:
-        topic_name = event_to_topic_name(slack_event, app)
+    for topic_name in get_all_topic_names(app):
         if topic_name in existing_topic_names:
             topic = metadata.topics[topic_name]
             partitions = [p for p in iter(topic.partitions.values())]

@@ -15,7 +15,8 @@ from kafkit.registry.aiohttp import RegistryApi
 from .config import create_config
 from .routes import init_root_routes, init_routes
 from .middleware import setup_middleware
-from .avroformat import SlackEventSerializer, preregister_schemas
+from .avroformat import (SlackEventSerializer, preregister_schemas,
+                         SlackInteractionSerializer)
 from .topics import configure_topics
 
 
@@ -156,8 +157,15 @@ async def init_serializer(app):
         registry=registry,
         staging_version=app['sqrbot-jr/stagingVersion'])
     app['sqrbot-jr/serializer'] = serializer
+    logger.info('Finished setting up Avro serializer for Slack events')
 
-    logger.info('Finished setting up Avro serializer')
+    interactionSerializer = SlackInteractionSerializer.register(
+        registry=registry,
+        staging_version=app['sqrbot-jr/stagingVersion'])
+    app['sqrbot-jr/interactionSerializer'] = interactionSerializer
+    logger.info(
+        'Finished setting up Avro serializer for Slack interaction payloads.')
+
     yield
 
     # Cleanup phase

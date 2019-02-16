@@ -3,7 +3,7 @@
 
 __all__ = ('SlackEventSerializer', 'load_event_schema', 'validate_avro_schema',
            'list_event_schemas', 'preregister_schemas',
-           'encode_slack_message')
+           'SlackInteractionSerializer', 'encode_slack_message')
 
 import functools
 from io import BytesIO
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import structlog
 import fastavro
-from kafkit.registry.serializer import PolySerializer
+from kafkit.registry.serializer import PolySerializer, Serializer
 
 
 class SlackEventSerializer:
@@ -219,6 +219,99 @@ async def preregister_schemas(registry, app):
                 'Existing subject compatibility level is good',
                 subject=schema['name'],
                 compatibility_level=subject_config['compatibilityLevel'])
+
+
+class SlackInteractionSerializer:
+    """An Avro (Confluent Wire Format) serializer for Slack Interaction
+    messages.
+
+    These are the callbacks from an interactive message, see the
+    `Slack docs
+    <https://api.slack.com/messaging/interactivity/enabling#understanding-payloads>`__.
+
+    Users should use the `setup` method to create a serializer instance.
+    """
+
+    def __init__(self, *, serializer, logger):
+        self._serializer = serializer
+        self._logger = logger
+
+    @classmethod
+    async def setup(cls, *, registry, app):
+        """Create a `SlackInteractionSerializer` while also register the
+        schema and configuring the associated Schema Registry subject.
+
+        Parameters
+        ----------
+        registry : `kafkit.registry.aiohttp.RegistryApi`
+            A Schema Registry client.
+        app : `aiohttp.web.Application`
+            The application instance.
+
+        Returns
+        -------
+        serializer : `SlackInteractionSerializer`
+            An instance.
+        """
+        logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+
+        # Load the schema file
+        schema_path = Path(__file__).parent / 'schemas' / 'interaction.json'
+        schema_data = json.loads(schema_path.read_text())
+
+        # Modify schema name given the stagingVersion config
+        if app['sqrbot-jr/stagingVersion']:
+            schema_data['name'] = '_'.join((
+                schema_data['name'], app['sqrbot-jr/stagingVersion']))
+
+        # Both set up the serializer and register the schema with the registry
+        serializer = await Serializer.register(
+            registry=registry,
+            schema=schema_data)
+
+        desired_compat = get_desired_compatibility(app)
+        if '.' in schema_data['name'] and 'namespace' in schema_data:
+            subject_name = '.'.join((schema_data['namespace'],
+                                     schema_data['name']))
+        else:
+            subject_name = schema_data['name']
+
+        # Check/set compatibility level for subject
+        subject_config = await registry.get(
+            '/config{/subject}',
+            url_vars={'subject': subject_name})
+        logger.info('Current subject config', config=subject_config)
+        if subject_config['compatibilityLevel'] != desired_compat:
+            await registry.put(
+                '/config{/subject}',
+                url_vars={'subject': subject_name},
+                data={'compatibility': desired_compat})
+            logger.info(
+                'Reset subject compatibility level',
+                subject=subject_name,
+                compatibility_level=desired_compat)
+        else:
+            logger.info(
+                'Existing subject compatibility level is good',
+                subject=subject_name,
+                compatibility_level=subject_config['compatibilityLevel'])
+
+        return cls(serializer=serializer, logger=logger)
+
+    def serialize(self, message):
+        """Serialize a payload from a Slack interaction callback.
+
+        Parameters
+        ----------
+        message : `dict`
+            The Slack interaction payload, parsed from JSON.
+
+        Returns
+        -------
+        data : `bytes`
+            Serialized message in the Confluent Wire Format.
+        """
+        return self._serializer(message)
 
 
 def get_desired_compatibility(app):
