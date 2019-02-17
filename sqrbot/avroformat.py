@@ -1,7 +1,7 @@
 """Utilities for formatting Slack event messages as Avro-encoded messages.
 """
 
-__all__ = ('SlackEventSerializer', 'load_event_schema', 'validate_avro_schema',
+__all__ = ('SlackEventSerializer', 'load_event_schema',
            'list_event_schemas', 'preregister_schemas',
            'SlackInteractionSerializer', 'encode_slack_message')
 
@@ -341,22 +341,6 @@ def get_desired_compatibility(app):
         return 'FORWARD_TRANSITIVE'
     else:
         return 'NONE'
-
-
-def validate_avro_schema(schema):
-    """Validate that a schema object is an Avro schema.
-
-    Parameters
-    ----------
-    schema : `dict`
-        A schema object.
-
-    Raises
-    ------
-    fastavro.SchemaParseException
-        Raised if the schema is not valid.
-    """
-    fastavro.parse_schema(schema)
 
 
 def encode_slack_message(message):
