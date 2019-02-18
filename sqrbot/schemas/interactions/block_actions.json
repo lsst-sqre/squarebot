@@ -1,6 +1,6 @@
 {
   "type": "record",
-  "name": "interaction_v1",
+  "name": "block_actions_v1",
   "namespace": "com.slack",
   "doc": "Slack message interaction payload: https://api.slack.com/messaging/interactivity/enabling#understanding-payloads",
   "fields": [

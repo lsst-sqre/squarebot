@@ -159,9 +159,8 @@ async def init_serializer(app):
     app['sqrbot-jr/serializer'] = serializer
     logger.info('Finished setting up Avro serializer for Slack events')
 
-    interactionSerializer = SlackInteractionSerializer.register(
-        registry=registry,
-        staging_version=app['sqrbot-jr/stagingVersion'])
+    interactionSerializer = await SlackInteractionSerializer.setup(
+        registry=registry, app=app)
     app['sqrbot-jr/interactionSerializer'] = interactionSerializer
     logger.info(
         'Finished setting up Avro serializer for Slack interaction payloads.')

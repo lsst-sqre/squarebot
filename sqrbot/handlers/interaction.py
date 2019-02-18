@@ -29,7 +29,7 @@ async def post_interaction(request):
     try:
         serializer = configs['sqrbot-jr/interactionSerializer']
         producer = configs['sqrbot-jr/producer']
-        data = serializer.serialize(payload)
+        data = await serializer.serialize(payload)
         topic_name = get_interaction_topic_name(configs)
         await producer.send(topic_name, value=data)
     except Exception:
