@@ -14,6 +14,7 @@ from pathlib import Path
 import structlog
 import fastavro
 from kafkit.registry.serializer import PolySerializer
+import kafkit.registry.errors
 
 
 class SlackEventSerializer:
@@ -412,10 +413,22 @@ async def register_schema(registry, schema, app):
     schema_id = await registry.register_schema(schema)
     logger.info('Registered schema', subject=schema['name'], id=schema_id)
 
+    subjects = await registry.get('/subjects')
+    logger.info('All subjects', subjects=subjects)
+
     subject_name = schema['name']
-    subject_config = await registry.get(
-        '/config{/subject}',
-        url_vars={'subject': subject_name})
+
+    try:
+        subject_config = await registry.get(
+            '/config{/subject}',
+            url_vars={'subject': subject_name})
+    except kafkit.registry.errors.RegistryBadRequestError:
+        logger.info('No existing configuration for this subject.',
+                    subject=subject_name)
+        # Create a mock config that forces a reset
+        subject_config = {
+            'compatibilityLevel': None
+        }
 
     logger.info('Current subject config', config=subject_config)
     if subject_config['compatibilityLevel'] != desired_compat:
