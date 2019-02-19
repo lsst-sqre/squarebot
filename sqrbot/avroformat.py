@@ -280,12 +280,15 @@ class SlackInteractionSerializer:
         for interaction_type in list_interaction_types():
             schema = load_interaction_schema(
                 interaction_type,
-                app['sqrbot-jr/stagingVersion'])
+                suffix=app['sqrbot-jr/stagingVersion'])
             await register_schema(registry, schema, app)
 
         serializer = PolySerializer(registry=registry)
 
-        return cls(serializer=serializer, logger=logger)
+        return cls(
+            serializer=serializer,
+            logger=logger,
+            staging_version=app['sqrbot-jr/stagingVersion'])
 
     async def serialize(self, message):
         """Serialize a payload from a Slack interaction callback.
@@ -303,6 +306,10 @@ class SlackInteractionSerializer:
         interaction_type = message['type']
         schema = load_interaction_schema(interaction_type,
                                          suffix=self._staging_version)
+        self._logger.info(
+            'Serializing interaction',
+            interaction_type=message['type'],
+            schema=schema)
         return await self._serializer.serialize(message, schema=schema)
 
 
