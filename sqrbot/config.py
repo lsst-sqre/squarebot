@@ -57,4 +57,7 @@ def create_config():
     # Otherwise, this is an empty string for production
     c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
 
+    # Slack bot token
+    c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_TOKEN')
+
     return c

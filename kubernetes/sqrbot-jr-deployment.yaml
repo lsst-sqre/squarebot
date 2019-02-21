@@ -27,6 +27,11 @@ spec:
             secretKeyRef:
               name: sqrbot-jr
               key: SQRBOTJR_SIGNING
+        - name: SQRBOTJR_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sqrbot-jr
+              key: SQRBOTJR_TOKEN
         envFrom:
         - configMapRef:
             name: sqrbot-jr
