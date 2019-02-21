@@ -25,7 +25,7 @@ async def post_event(request):
         return _handle_url_verification(request, slack_event)
     else:
         try:
-            serializer = configs['sqrbot-jr/serializer']
+            serializer = configs['sqrbot-jr/eventSerializer']
             producer = configs['sqrbot-jr/producer']
             data = await serializer.serialize(slack_event)
             topic_name = map_event_to_topic(slack_event, configs)
