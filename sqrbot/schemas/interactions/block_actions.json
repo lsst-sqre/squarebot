@@ -1,0 +1,240 @@
+{
+  "type": "record",
+  "name": "block_actions_v1",
+  "namespace": "com.slack",
+  "doc": "Slack message interaction payload: https://api.slack.com/messaging/interactivity/enabling#understanding-payloads",
+  "fields": [
+    {
+      "name": "type",
+      "type": "string",
+      "doc": "Should be block_actions"
+    },
+    {
+      "name": "team",
+      "doc": "Information about the Slack team",
+      "type": {
+        "type": "record",
+        "name": "team_node",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "doc": "ID of the team."
+          },
+          {
+            "name": "domain",
+            "type": "string",
+            "doc": "Domain name of the team."
+          }
+        ]
+      }
+    },
+    {
+      "name": "user",
+      "doc": "Information about the user who made the interaction.",
+      "type": {
+        "type": "record",
+        "name": "user_node",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "doc": "ID of the user."
+          },
+          {
+            "name": "username",
+            "type": "string",
+            "doc": "Username of the user."
+          },
+          {
+            "name": "team_id",
+            "type": "string",
+            "doc": "ID of the user's team."
+          }
+        ]
+      }
+    },
+    {
+      "name": "token",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "A verification token to validate that the event originated from Slack (deprecated)."
+    },
+    {
+      "name": "api_app_id",
+      "type": "string",
+      "doc": "The unique identifier of your installed Slack application. Use this to distinguish which app the event belongs to if you use multiple apps with the same Request URL."
+    },
+    {
+      "name": "trigger_id",
+      "type": "string",
+      "doc": "ID that can be used to launch dialogs."
+    },
+    {
+      "name": "channel",
+      "doc": "The channel where the interaction occured.",
+      "type": {
+        "type": "record",
+        "name": "channel_node",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "doc": "ID of the channel."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "doc": "Name of the channel."
+          }
+        ]
+      }
+    },
+    {
+      "name": "response_url",
+      "doc": "If you want to respond to the interaction with a message immediately after receiving the payload, this URL should be used.",
+      "type": "string"
+    },
+    {
+      "name": "container",
+      "doc": "Summary information about the message where the interaction took place",
+      "type": {
+        "name": "container_node",
+        "type": "record",
+        "fields": [
+          {
+            "name": "type",
+            "doc": "Type of message container, such as ``message``.",
+            "type": "string"
+          },
+          {
+            "name": "message_ts",
+            "doc": "Timestamp that identifies the message/container.",
+            "type": "string"
+          },
+          {
+            "name": "channel_id",
+            "doc": "ID of the channel where the message/container resides.",
+            "type": "string"
+          },
+          {
+            "name": "is_ephemeral",
+            "doc": "true if the message is ephemeral",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "name": "actions",
+      "doc": "An array of actions emitted from a message.",
+      "type": {
+        "type": "array",
+        "items": {
+          "name": "actions_node",
+          "type": "record",
+          "fields": [
+            {
+              "name": "action_id",
+              "doc": "Identifier of the action, set on the message itself.",
+              "type": "string"
+            },
+            {
+              "name": "action_ts",
+              "doc": "Timestamp of the action.",
+              "type": "string"
+            },
+            {
+              "name": "block_id",
+              "doc": "Identifier of the block in the the message where the action occured.",
+              "type": "string"
+            },
+            {
+              "name": "type",
+              "doc": "The type of the selected interactive component. Can be ``static_select``, ``button``, ...",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "doc": "The ``value`` of a ``button``-type interaction. Defaults to null for any other type of interaction.",
+              "type": ["null", "string"],
+              "default": null
+            },
+            {
+              "name": "text",
+              "doc": "Text of the selected interaction component for ``button`` interactions.",
+              "default": null,
+              "type": [
+                "null",
+                {
+                  "name": "text_node",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "type",
+                      "doc": "The type of text.",
+                      "type": "string"
+                    },
+                    {
+                      "name": "text",
+                      "doc": "The actual text of the component.",
+                      "type": "string"
+                    },
+                    {
+                      "name": "emoji",
+                      "doc": "Whether the text might have emojis or not.",
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "selected_option",
+              "doc": "The selected option from a ``static_select``.",
+              "type": [
+                "null",
+                {
+                  "name": "selected_option_node",
+                  "type": "record",
+                  "fields": [
+                    {
+                      "name": "text",
+                      "doc": "The human-readable label of the selected item.",
+                      "type": {
+                        "name": "selected_option_text_node",
+                        "type": "record",
+                        "fields": [
+                          {
+                            "name": "type",
+                            "doc": "The type of text.",
+                            "type": "string"
+                          },
+                          {
+                            "name": "text",
+                            "doc": "The actual text of the component.",
+                            "type": "string"
+                          },
+                          {
+                            "name": "emoji",
+                            "doc": "Whether the text might have emojis or not.",
+                            "type": "boolean"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "value",
+                      "doc": "The ``value`` of the selected item.",
+                      "type": "string"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

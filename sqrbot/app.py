@@ -15,7 +15,7 @@ from kafkit.registry.aiohttp import RegistryApi
 from .config import create_config
 from .routes import init_root_routes, init_routes
 from .middleware import setup_middleware
-from .avroformat import SlackEventSerializer, preregister_schemas
+from .avroformat import SlackEventSerializer, SlackInteractionSerializer
 from .topics import configure_topics
 
 
@@ -32,7 +32,7 @@ def create_app():
     root_app.update(config)
     root_app.add_routes(init_root_routes())
     root_app.cleanup_ctx.append(init_http_session)
-    root_app.cleanup_ctx.append(init_serializer)
+    root_app.cleanup_ctx.append(init_serializers)
     root_app.cleanup_ctx.append(init_topics)
     root_app.cleanup_ctx.append(init_producer)
 
@@ -125,39 +125,45 @@ async def init_http_session(app):
     await app['api.lsst.codes/httpSession'].close()
 
 
-async def init_serializer(app):
-    """Initialize the Avro serializer.
+async def init_serializers(app):
+    """Initialize the Avro serializers for Slack events and interactions.
 
     Notes
     -----
     Use this function as a `cleanup context
     <https://aiohttp.readthedocs.io/en/stable/web_reference.html#aiohttp.web.Application.cleanup_ctx>`_.
 
-    To access the serializer:
+    To access the Events API serializer:
 
     .. code-block:: python
 
-       app['sqrbot-jr/serializer']
+       app['sqrbot-jr/eventSerializer']
+
+    To access the interaction callback serializer::
+
+       app['sqrbot-jr/interactionSerializer']
 
     This function also pregisters schemas and subject compatibility
-    configurations. See `sqrbot.avroformat.preregister_schemas`.
+    configurations. See `sqrbot.avroformat.register`.
     """
     # Start up phase
     logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
-    logger.info('Setting up Avro serializer')
+    logger.info('Setting up Avro serializers')
 
     registry = RegistryApi(
         session=app['api.lsst.codes/httpSession'],
         url=app['sqrbot-jr/registryUrl'])
 
-    await preregister_schemas(registry, app)
+    serializer = await SlackEventSerializer.setup(registry=registry, app=app)
+    app['sqrbot-jr/eventSerializer'] = serializer
+    logger.info('Finished setting up Avro serializer for Slack events')
 
-    serializer = SlackEventSerializer(
-        registry=registry,
-        staging_version=app['sqrbot-jr/stagingVersion'])
-    app['sqrbot-jr/serializer'] = serializer
+    interactionSerializer = await SlackInteractionSerializer.setup(
+        registry=registry, app=app)
+    app['sqrbot-jr/interactionSerializer'] = interactionSerializer
+    logger.info(
+        'Finished setting up Avro serializer for Slack interaction payloads.')
 
-    logger.info('Finished setting up Avro serializer')
     yield
 
     # Cleanup phase

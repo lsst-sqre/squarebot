@@ -1,9 +1,9 @@
 """Utilities for formatting Slack event messages as Avro-encoded messages.
 """
 
-__all__ = ('SlackEventSerializer', 'load_event_schema', 'validate_avro_schema',
-           'list_event_schemas', 'preregister_schemas',
-           'encode_slack_message')
+__all__ = ('SlackEventSerializer', 'load_event_schema', 'list_event_schemas',
+           'load_interaction_schema', 'list_interaction_types',
+           'SlackInteractionSerializer', 'register_schema')
 
 import functools
 from io import BytesIO
@@ -13,15 +13,21 @@ from pathlib import Path
 import structlog
 import fastavro
 from kafkit.registry.serializer import PolySerializer
+import kafkit.registry.errors
 
 
 class SlackEventSerializer:
     """An Avro (Confluent Wire Format) serializer for Slack Events.
 
+    Always use the `SlackEventSerializer.setup` method to create a
+    serializer instance.
+
     Parameters
     ----------
     registry : `kafkit.registry.aiohttp.RegistryApi`
         Client for the Confluent Schema Registry.
+    logger
+        Logger instance.
     staging_version `str`, optional
         If the application is running in a staging environment, this is the
         name of the staging version. This should be set through the
@@ -45,9 +51,42 @@ class SlackEventSerializer:
     4. The serializer encodes the message.
     """
 
-    def __init__(self, *, registry, staging_version=None):
-        self._serializer = PolySerializer(registry=registry)
+    def __init__(self, *, serializer, logger, staging_version=None):
+        self._serializer = serializer
+        self._logger = logger
         self._staging_version = staging_version
+
+    @classmethod
+    async def setup(cls, *, registry, app):
+        """Create a `SlackEventSerializer` while also registering the
+        schemas and configuring the associated subjects in the Schema Registry.
+
+        Parameters
+        ----------
+        registry : `kafkit.registry.aiohttp.RegistryApi`
+            A Schema Registry client.
+        app : `aiohttp.web.Application`
+            The application instance.
+
+        Returns
+        -------
+        serializer : `SlackEventSerializer`
+            An instance of the serializer.
+        """
+        logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+
+        for event_type in list_event_schemas():
+            schema = load_event_schema(
+                event_type,
+                suffix=app['sqrbot-jr/stagingVersion'])
+            await register_schema(registry, schema, app)
+
+        serializer = PolySerializer(registry=registry)
+
+        return cls(
+            serializer=serializer,
+            logger=logger,
+            staging_version=app['sqrbot-jr/stagingVersion'])
 
     async def serialize(self, message):
         """Serialize a Slack event.
@@ -156,67 +195,146 @@ def list_event_schemas():
     return [p.stem for p in schema_paths]
 
 
-async def preregister_schemas(registry, app):
-    """Register schemas and ensure compatibility requirements.
+class SlackInteractionSerializer:
+    """An Avro (Confluent Wire Format) serializer for Slack interaction
+    messages.
+
+    Always use the `SlackInteractionSerialier.setup` method to create a
+    serializer instance.
 
     Parameters
     ----------
     registry : `kafkit.registry.aiohttp.RegistryApi`
-        A Schema Registry client.
-    app : `aiohttp.web.Application`
-        The application instance.
+        Client for the Confluent Schema Registry.
+    logger
+        Logger instance.
+    staging_version `str`, optional
+        If the application is running in a staging environment, this is the
+        name of the staging version. This should be set through the
+        ``sqrbot-jr/stagingVersion`` configuration key on the app. Leave as
+        `None` if the application is not in staging.
 
     Notes
     -----
-    This function iterates through all available schemas (`list_event_schemas`)
-    and ensures that those schemas are registered under subjects in the schema
-    registry. Subject names are determined from the fully-qualified ``name``
-    field of the schema. Finally this function also ensures that the
-    compatibility requirement on the subject is at the desired level
-    (see `get_desired_compatibility`).
-
-    This function responds to the ``sqrbot-jr/stagingVersion`` configuration
-    variable. If that configuration is set (not `None`):
-
-    - Schemas names have the value of ``sqrbot-jr/stagingVersion`` as suffix
-      on the name.
-    - Subjects names likewise have the suffix.
-    - The compatibility requirements are ``"NONE"``. See
-      `get_desired_compatibility`.
+    Interaction messages are the callbacks sent to SQuaRE Bot Jr's **Request
+    URL** by Slack when an user interacts with a message. These include:
+    `interactive messages
+    <https://api.slack.com/messaging/interactivity/enabling#understanding-payloads>`__,
+    `slash commands <https://api.slack.com/slash-commands>`__,
+    `dialogs <https://api.slack.com/dialogs>`__, and
+    `message actions <https://api.slack.com/actions>`__.
     """
-    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
 
-    desired_compat = get_desired_compatibility(app)
+    def __init__(self, *, serializer, logger, staging_version=None):
+        self._serializer = serializer
+        self._logger = logger
+        self._staging_version = staging_version
 
-    logger.info(
-        'Internally supported event schemas',
-        names=list_event_schemas())
-    for name in list_event_schemas():
-        schema = load_event_schema(
-            name,
-            suffix=app['sqrbot-jr/stagingVersion'])
+    @classmethod
+    async def setup(cls, *, registry, app):
+        """Create a `SlackInteractionSerializer` while also register the
+        schemas and configuring the associated subjects in the Schema Registry.
 
-        schema_id = await registry.register_schema(schema)
-        logger.info('Registered schema', subject=schema['name'], id=schema_id)
+        Parameters
+        ----------
+        registry : `kafkit.registry.aiohttp.RegistryApi`
+            A Schema Registry client.
+        app : `aiohttp.web.Application`
+            The application instance.
 
-        subject_name = schema['name']
-        subject_config = await registry.get('/config{/subject}')
+        Returns
+        -------
+        serializer : `SlackInteractionSerializer`
+            An instance.
+        """
+        logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
 
-        logger.info('Current subject config', config=subject_config)
-        if subject_config['compatibilityLevel'] != desired_compat:
-            await registry.put(
-                '/config{/subject}',
-                url_vars={'subject': subject_name},
-                data={'compatibility': desired_compat})
-            logger.info(
-                'Reset subject compatibility level',
-                subject=schema['name'],
-                compatibility_level=desired_compat)
-        else:
-            logger.info(
-                'Existing subject compatibility level is good',
-                subject=schema['name'],
-                compatibility_level=subject_config['compatibilityLevel'])
+        for interaction_type in list_interaction_types():
+            schema = load_interaction_schema(
+                interaction_type,
+                suffix=app['sqrbot-jr/stagingVersion'])
+            await register_schema(registry, schema, app)
+
+        serializer = PolySerializer(registry=registry)
+
+        return cls(
+            serializer=serializer,
+            logger=logger,
+            staging_version=app['sqrbot-jr/stagingVersion'])
+
+    async def serialize(self, message):
+        """Serialize a payload from a Slack interaction callback.
+
+        Parameters
+        ----------
+        message : `dict`
+            The Slack interaction payload, parsed from JSON.
+
+        Returns
+        -------
+        data : `bytes`
+            Serialized message in the Confluent Wire Format.
+        """
+        interaction_type = message['type']
+        schema = load_interaction_schema(interaction_type,
+                                         suffix=self._staging_version)
+        self._logger.info(
+            'Serializing interaction',
+            interaction_type=message['type'],
+            schema=schema)
+        return await self._serializer.serialize(message, schema=schema)
+
+
+@functools.lru_cache()
+def list_interaction_types():
+    """List all Slack interactions with available schemas.
+
+    Returns
+    -------
+    interaction_types : `list` [`str`]
+        List of Slack event names with available schemas.
+
+    Notes
+    -----
+    This function looks for schema json files in the
+    ``sqrbot/schemas/interactions`` directory of the package. Each schema is
+    named after a Slack interaction type.
+
+    This function is cached, so repeated calls consume no additional IO.
+    """
+    schema_dir = Path(__file__).parent / 'schemas' / 'interactions'
+    schema_paths = schema_dir.glob('*.json')
+    return [p.stem for p in schema_paths]
+
+
+@functools.lru_cache()
+def load_interaction_schema(interaction_type, suffix=None):
+    """Load an Avro schema for a Slack interaction message.
+
+    This function is memoized so that repeated calls are fast.
+
+    Parameters
+    ----------
+    interaction_type : `str`
+        Name of the interaction type. Typically this string matches the
+        ``type`` field of the Slack payload.
+    suffix : `str`, optional
+        A suffix to add to the schema's name. This is typically used to create
+        "staging" schemas, therefore "staging subjects" in the Schema Registry.
+
+    Returns
+    -------
+    schema : `dict`
+        A schema object, preparsed by ``fastavro``.
+    """
+    schema_dir = Path(__file__).parent / 'schemas' / 'interactions'
+    schema_path = schema_dir / f'{interaction_type}.json'
+    if not schema_path.is_file():
+        raise RuntimeError(f"Can't find schema at {schema_path!r}")
+    schema = json.loads(schema_path.read_text())
+    if suffix:
+        schema['name'] = '_'.join((schema['name'], suffix))
+    return fastavro.parse_schema(schema)
 
 
 def get_desired_compatibility(app):
@@ -248,20 +366,64 @@ def get_desired_compatibility(app):
         return 'NONE'
 
 
-def validate_avro_schema(schema):
-    """Validate that a schema object is an Avro schema.
+async def register_schema(registry, schema, app):
+    """Register a schema and configure subject compatibility.
 
     Parameters
     ----------
+    registry : `kafkit.registry.aiohttp.RegistryApi`
+        A Schema Registry client.
     schema : `dict`
-        A schema object.
+        The Avro schema. Note that the schema should already be versioned with
+        a staging suffix, if necessary.
+    app : `aiohttp.web.Application` or `dict`
+        The application instance, or the application's config dictionary.
 
-    Raises
-    ------
-    fastavro.SchemaParseException
-        Raised if the schema is not valid.
+    Notes
+    -----
+    This function registers a schema, and then ensures that the associated
+    subject in the Schema Registry has the appropriate compatibility level.
+    See `get_desired_compatibility`.
     """
-    fastavro.parse_schema(schema)
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+
+    desired_compat = get_desired_compatibility(app)
+
+    schema_id = await registry.register_schema(schema)
+    logger.info('Registered schema', subject=schema['name'], id=schema_id)
+
+    subjects = await registry.get('/subjects')
+    logger.info('All subjects', subjects=subjects)
+
+    subject_name = schema['name']
+
+    try:
+        subject_config = await registry.get(
+            '/config{/subject}',
+            url_vars={'subject': subject_name})
+    except kafkit.registry.errors.RegistryBadRequestError:
+        logger.info('No existing configuration for this subject.',
+                    subject=subject_name)
+        # Create a mock config that forces a reset
+        subject_config = {
+            'compatibilityLevel': None
+        }
+
+    logger.info('Current subject config', config=subject_config)
+    if subject_config['compatibilityLevel'] != desired_compat:
+        await registry.put(
+            '/config{/subject}',
+            url_vars={'subject': subject_name},
+            data={'compatibility': desired_compat})
+        logger.info(
+            'Reset subject compatibility level',
+            subject=schema['name'],
+            compatibility_level=desired_compat)
+    else:
+        logger.info(
+            'Existing subject compatibility level is good',
+            subject=schema['name'],
+            compatibility_level=subject_config['compatibilityLevel'])
 
 
 def encode_slack_message(message):

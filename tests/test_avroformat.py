@@ -7,10 +7,18 @@ from pathlib import Path
 
 import pytest
 import fastavro
+import avro.schema  # official Avro library (for testing only)
 
-from sqrbot.avroformat import (load_event_schema, validate_avro_schema,
-                               get_desired_compatibility, list_event_schemas,
-                               encode_slack_message)
+from sqrbot.avroformat import (
+    load_event_schema, get_desired_compatibility, list_event_schemas,
+    list_interaction_types, load_interaction_schema, encode_slack_message)
+
+
+def validate_avro_schema(schema_object):
+    """Validate an Avro schema using the avro package, which is stricter
+    than fastavro.
+    """
+    avro.schema.Parse(json.dumps(schema_object))
 
 
 @pytest.mark.parametrize(
@@ -46,6 +54,14 @@ def test_get_desired_compatibility():
 
     mockapp = {'sqrbot-jr/stagingVersion': 'dev'}
     assert get_desired_compatibility(mockapp) == 'NONE'
+
+
+def test_interaction_schemas():
+    """Test schemas/interaction.json."""
+    for interaction_type in list_interaction_types():
+        print(f'interaction_type: {interaction_type}')
+        schema = load_interaction_schema(interaction_type)
+        validate_avro_schema(schema)
 
 
 def test_list_event_schemas():

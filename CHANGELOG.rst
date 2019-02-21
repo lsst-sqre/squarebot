@@ -2,6 +2,24 @@
 Change log
 ##########
 
+0.3.0 (2019-02-21)
+==================
+
+- SQuaRE Bot Jr now serializes the messages from user actions that are send to SQuaRE Bot Jr's Request URL.
+  The supported interactions are:
+
+  - ``block_actions`` (a user pressed a button or selected a menu item on a message)
+  - ``dialog_submission`` (a user submitted a Slack dialog)
+  - ``dialog_cancellation`` (a user cancelled a Slack dialog)
+
+  Note that the Avro schema for ``block_actions`` currently only supports ``button`` and ``static_select`` actions.
+
+- Avro schemas are now validated using the official Avro package, ``avro-python3``.
+
+- The Kubernetes deployment includes a ``SQRBOTJR_TOKEN`` secret that other apps in api.lsst.codes can use to send messages to Slack as SQuaRE Bot Jr through Slack's Web API.
+
+:jirap:`DM-17941`
+
 0.2.0 (2019-02-15)
 ==================
 
