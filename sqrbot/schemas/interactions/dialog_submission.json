@@ -11,8 +11,8 @@
     },
     {
       "name": "submission",
-      "type": {"type": "map", "values": "string"},
-      "doc": "A hash of key/value pairs representing the user's submission. Each key is a name field your app provided when composing the form. Each value is the user's submitted value, or in the case of a static select menu, the value you assigned to a specific response. The selection from a dynamic menu, the value can be a channel ID, user ID, etc."
+      "type": {"type": "map", "values": ["null", "string"]},
+      "doc": "A hash of key/value pairs representing the user's submission. Each key is a name field your app provided when composing the form. Each value is the user's submitted value, or in the case of a static select menu, the value you assigned to a specific response. The selection from a dynamic menu, the value can be a channel ID, user ID, etc.. If the field is optional, and unset, the value is null."
     },
     {
       "name": "team",
