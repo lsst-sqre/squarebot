@@ -2,6 +2,14 @@
 Change log
 ##########
 
+0.3.1 (2019-03-15)
+==================
+
+The ``com.slack.dialog_submission_v1`` schema now permits the value from a field to be ``null``.
+This is true if a Slack dialog field is optional and the user does not set a value.
+
+:jirap:`DM-18503`
+
 0.3.0 (2019-02-21)
 ==================
 
