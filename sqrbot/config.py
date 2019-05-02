@@ -60,4 +60,8 @@ def create_config():
     # Slack bot token
     c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_TOKEN')
 
+    # Kafka retention of Slack events in minutes
+    c['sqrbot-jr/retentionMinutes'] = \
+        os.getenv('SQRBOTJR_RETENTION_MINUTES', '30')
+
     return c

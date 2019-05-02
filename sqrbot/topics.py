@@ -189,10 +189,14 @@ def configure_topics(app):
                 partitions=len(topic.partitions),
                 replication_factor=len(partitions[0].replicas))
             continue
+        retention_ms = int(app['sqrbot-jr/retentionMinutes']) * 60000
         new_topics.append(NewTopic(
             topic_name,
             num_partitions=default_num_partitions,
-            replication_factor=default_replication_factor))
+            replication_factor=default_replication_factor,
+            config={
+                'retention.ms': str(retention_ms)
+            }))
 
     if len(new_topics) > 0:
         fs = client.create_topics(new_topics)
