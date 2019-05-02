@@ -29,6 +29,7 @@ async def post_event(request):
             producer = configs['sqrbot-jr/producer']
             data = await serializer.serialize(slack_event)
             topic_name = map_event_to_topic(slack_event, configs)
+            logger.info('Sending Kafka message', topic=topic_name)
             await producer.send(topic_name, value=data)
         except Exception:
             logger.exception("Failed to serialize and send event")
