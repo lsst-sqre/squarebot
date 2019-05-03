@@ -2,6 +2,12 @@
 Change log
 ##########
 
+0.4.0 (2019-05-03)
+==================
+
+There is a new configuration environment variable, ``SQRBOTJR_RETENTION_MINUTES``, which configures how long a Slack messages are retained in Kafka topics.
+The default is 30 minutes so that consumers can query recent history for context, but brokers will still not have too much data that could be potentially exposed.
+
 0.3.1 (2019-03-15)
 ==================
 
