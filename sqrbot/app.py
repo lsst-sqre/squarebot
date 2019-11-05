@@ -206,7 +206,9 @@ async def init_producer(app):
     loop = asyncio.get_running_loop()
     producer = AIOKafkaProducer(
         loop=loop,
-        bootstrap_servers=app['sqrbot-jr/brokerUrl'])
+        bootstrap_servers=app['sqrbot-jr/brokerUrl'],
+        sasl_mechanism=app['sqrbot-jr/kafkaSasl'],
+        security_protocol=app['sqrbot-jr/kafkaProtocol'])
     await producer.start()
     app['sqrbot-jr/producer'] = producer
     logger.info('Finished starting Kafka producer')

@@ -64,4 +64,11 @@ def create_config():
     c['sqrbot-jr/retentionMinutes'] = \
         os.getenv('SQRBOTJR_RETENTION_MINUTES', '30')
 
+    # Kafka security protocol: PLAINTEXT or SSL
+    c['sqrbot-jr/kafkaProtocol'] = os.getenv('SQRBOTJR_KAFKA_PROTOCOL')
+
+    # Kafka security authentication mechanism:
+    # PLAIN or GSSAPI
+    c['sqrbot-jr/kafkaSasl'] = os.getenv('SQRBOTJR_KAFKA_SASL')
+
     return c
