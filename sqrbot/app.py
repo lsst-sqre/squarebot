@@ -5,6 +5,9 @@ __all__ = ('create_app',)
 
 import asyncio
 import logging
+import os
+from pathlib import Path
+import ssl
 import sys
 
 from aiohttp import web, ClientSession
@@ -35,6 +38,7 @@ def create_app():
     root_app.cleanup_ctx.append(init_serializers)
     root_app.cleanup_ctx.append(init_topics)
     root_app.cleanup_ctx.append(init_producer)
+    root_app.cleanup_ctx.append(configure_kafka_ssl)
 
     # Create sub-app for the app's public APIs at the correct prefix
     prefix = '/' + root_app['api.lsst.codes/name']
@@ -91,6 +95,64 @@ def configure_logging(profile='development', log_level='info',
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=True,
     )
+
+
+async def configure_kafka_ssl(app):
+    """Configure an SSL context for the Kafka client (if appropriate).
+
+    Notes
+    -----
+    Use this function as a `cleanup context`_:
+
+    .. code-block:: python
+
+       app.cleanup_ctx.append(init_http_session)
+    """
+    logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
+
+    ssl_context_key = 'sqrbot-jr/kafkaSslContext'
+
+    if app['sqrbot-jr/kafkaProtocol'] != 'SSL':
+        app[ssl_context_key] = None
+        return
+
+    cluster_ca_cert_path = app['sqrbot-jr/clusterCaPath']
+    client_ca_cert_path = app['sqrbot-jr/clientCaPath']
+    client_cert_path = app['sqrbot-jr/clientCertPath']
+    client_key_path = app['sqrbot-jr/clientKeyPath']
+
+    if cluster_ca_cert_path is None:
+        raise RuntimeError('Kafka protocol is SSL but cluster CA is not set')
+    if client_cert_path is None:
+        raise RuntimeError('Kafka protocol is SSL but client cert is not set')
+    if client_key_path is None:
+        raise RuntimeError('Kafka protocol is SSL but client key is not set')
+
+    if client_ca_cert_path is not None:
+        logger.info('Contatenating Kafka client CA and certificate files.')
+        # Need to contatenate the client cert and CA certificates. This is
+        # typical for Strimzi-based Kafka clusters.
+        client_ca = Path(client_ca_cert_path).read_text()
+        client_cert = Path(client_cert_path).read_text()
+        new_client_cert = '\n'.join([client_cert, client_ca])
+        new_client_cert_path = Path(os.getenv('APPDIR', '.')) / 'client.crt'
+        new_client_cert_path.write_text(new_client_cert)
+        client_cert_path = str(new_client_cert_path)
+
+    # Create a SSL context on the basis that we're the client authenticating
+    # the server (the Kafka broker).
+    ssl_context = ssl.create_default_context(
+        purpose=ssl.Purpose.SERVER_AUTH,
+        cafile=cluster_ca_cert_path)
+    # Add the certificates that the Kafka broker uses to authenticate us.
+    ssl_context.load_cert_chain(
+        certfile=client_cert_path,
+        keyfile=client_key_path)
+    app[ssl_context_key] = ssl_context
+
+    logger.info('Created Kafka SSL context')
+
+    yield
 
 
 async def init_http_session(app):
@@ -207,6 +269,7 @@ async def init_producer(app):
     producer = AIOKafkaProducer(
         loop=loop,
         bootstrap_servers=app['sqrbot-jr/brokerUrl'],
+        ssl_context=app['sqrbot-jr/kafkaSslContext'],
         sasl_mechanism=app['sqrbot-jr/kafkaSasl'],
         security_protocol=app['sqrbot-jr/kafkaProtocol'])
     await producer.start()

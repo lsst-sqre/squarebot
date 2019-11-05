@@ -71,4 +71,10 @@ def create_config():
     # PLAIN or GSSAPI
     c['sqrbot-jr/kafkaSasl'] = os.getenv('SQRBOTJR_KAFKA_SASL')
 
+    # TLS certificates for cluster + client for use with the SSL Kafka protocol
+    c['sqrbot-jr/clusterCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLUSTER_CA')
+    c['sqrbot-jr/clientCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CA')
+    c['sqrbot-jr/clientCertPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CERT')
+    c['sqrbot-jr/clientKeyPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_KEY')
+
     return c
