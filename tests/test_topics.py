@@ -7,11 +7,13 @@ from sqrbot.topics import event_to_topic_name, identify_slack_event
 def test_event_to_topic_name():
     """Test the sqrbot.topics.event_to_topic_name function.
     """
-    app = {'sqrbot-jr/stagingVersion': ''}
-    assert event_to_topic_name('app_mention', app) == 'sqrbot-app_mention'
+    app = {'sqrbot-jr/stagingVersion': '',
+           'sqrbot-jr/appMentionTopic': 'sqrbot.app_mention'}
+    assert event_to_topic_name('app_mention', app) == 'sqrbot.app_mention'
 
-    app = {'sqrbot-jr/stagingVersion': 'dev'}
-    assert event_to_topic_name('app_mention', app) == 'sqrbot-app_mention-dev'
+    app = {'sqrbot-jr/stagingVersion': 'dev',
+           'sqrbot-jr/appMentionTopic': 'sqrbot.app_mention'}
+    assert event_to_topic_name('app_mention', app) == 'sqrbot.app_mention'
 
 
 def test_identify_app_mention():

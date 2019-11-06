@@ -53,10 +53,6 @@ def create_config():
     # Kafka broker host
     c['sqrbot-jr/brokerUrl'] = os.getenv('SQRBOTJR_BROKER')
 
-    # Version name, if application is running in a staging environment.
-    # Otherwise, this is an empty string for production
-    c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
-
     # Slack bot token
     c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_TOKEN')
 
@@ -76,5 +72,24 @@ def create_config():
     c['sqrbot-jr/clientCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CA')
     c['sqrbot-jr/clientCertPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CERT')
     c['sqrbot-jr/clientKeyPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_KEY')
+
+    # Version name, if application is running in a staging environment.
+    # Otherwise, this is an empty string for production
+    # Used as a suffix for schemas
+    c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
+
+    # Topic names
+    c['sqrbot-jr/appMentionTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_APP_MENTION', 'sqrbot.app_mention')
+    c['sqrbot-jr/messageChannelsTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_CHANNELS', 'sqrbot.message.channels')
+    c['sqrbot-jr/messageImTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_IM', 'sqrbot.message.im')
+    c['sqrbot-jr/messageGroupsTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_GROUPS', 'sqrbot.message.groups')
+    c['sqrbot-jr/messageMpimTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_MPIM', 'sqrbot.message.mpim')
+    c['sqrbot-jr/interactionTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_INTERACTION', 'sqrbot.interaction')
 
     return c
