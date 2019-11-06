@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqrbot
+  labels:
+    app: sqrbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sqrbot
+  template:
+    metadata:
+      labels:
+        app: sqrbot
+    spec:
+      containers:
+      - name: sqrbot-app
+        image: lsstsqre/sqrbot-jr:tickets-DM-22099
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: sqrbot-app
+        env:
+        - name: SQRBOTJR_SIGNING
+          valueFrom:
+            secretKeyRef:
+              name: sqrbot
+              key: SQRBOTJR_SIGNING
+        - name: SQRBOTJR_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: sqrbot
+              key: SQRBOTJR_TOKEN
+        envFrom:
+        - configMapRef:
+            name: sqrbot

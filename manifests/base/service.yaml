@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqrbot
+  labels:
+    app: sqrbot
+spec:
+  ports:
+    - name: sqrbot-http
+      protocol: TCP
+      port: 8080
+      targetPort: sqrbot-app
+  selector:
+    app: sqrbot
