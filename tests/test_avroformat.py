@@ -35,13 +35,13 @@ def test_load_event_schema(event_type):
     validate_avro_schema(schema)
 
 
-def test_load_event_schema_staging_version():
+def test_load_event_schema_subject_suffix():
     """Test that a suffix gets added to the schema's name.
     """
     schema1 = load_event_schema('message')
     assert schema1['name'].endswith('_dev1') is False
 
-    schema2 = load_event_schema('message', suffix='dev1')
+    schema2 = load_event_schema('message', suffix='_dev1')
     assert schema2['name'].endswith('_dev1')
 
 
@@ -49,10 +49,14 @@ def test_get_desired_compatibility():
     """Test the get_desired_compatibility.
     """
     # Mock app (just a configuration)
-    mockapp = {'sqrbot-jr/stagingVersion': ''}
+    mockapp = {
+        'sqrbot-jr/subjectSuffix': '',
+        'sqrbot-jr/subjectCompatibility': 'FORWARD_TRANSITIVE'}
     assert get_desired_compatibility(mockapp) == 'FORWARD_TRANSITIVE'
 
-    mockapp = {'sqrbot-jr/stagingVersion': 'dev'}
+    mockapp = {
+        'sqrbot-jr/subjectSuffix': '',
+        'sqrbot-jr/subjectCompatibility': 'NONE'}
     assert get_desired_compatibility(mockapp) == 'NONE'
 
 

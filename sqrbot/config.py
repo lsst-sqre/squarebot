@@ -73,10 +73,16 @@ def create_config():
     c['sqrbot-jr/clientCertPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CERT')
     c['sqrbot-jr/clientKeyPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_KEY')
 
-    # Version name, if application is running in a staging environment.
-    # Otherwise, this is an empty string for production
-    # Used as a suffix for schemas
-    c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
+    # Suffix to add to Schema Registry suffix names. This is useful when
+    # deploying sqrbot-jr for testing/staging and you do not want to affect
+    # the production subject and its compatibility lineage.
+    c['sqrbot-jr/subjectSuffix'] = os.getenv('SQRBOTJR_SUBJECT_SUFFIX', '')
+
+    # Compatibility level to apply to Schema Registry subjects. Use
+    # NONE for testing and development, but prefer FORWARD_TRANSITIVE for
+    # production.
+    c['sqrbot-jr/subjectCompatibility'] \
+        = os.getenv('SQRBOTJR_SUBJECT_COMPATIBILITY', 'FORWARD_TRANSITIVE')
 
     # Topic names
     c['sqrbot-jr/appMentionTopic'] = os.getenv(

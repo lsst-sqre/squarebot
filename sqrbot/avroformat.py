@@ -28,11 +28,11 @@ class SlackEventSerializer:
         Client for the Confluent Schema Registry.
     logger
         Logger instance.
-    staging_version `str`, optional
+    subject_suffix : `str`, optional
         If the application is running in a staging environment, this is the
         name of the staging version. This should be set through the
-        ``sqrbot-jr/stagingVersion`` configuration key on the app. Leave as
-        `None` if the application is not in staging.
+        ``sqrbot-jr/subjectSuffix`` configuration key on the app. Leave as
+        an empty string if the application is not in staging.
 
     Notes
     -----
@@ -51,10 +51,10 @@ class SlackEventSerializer:
     4. The serializer encodes the message.
     """
 
-    def __init__(self, *, serializer, logger, staging_version=None):
+    def __init__(self, *, serializer, logger, subject_suffix=''):
         self._serializer = serializer
         self._logger = logger
-        self._staging_version = staging_version
+        self._subject_suffix = subject_suffix
 
     @classmethod
     async def setup(cls, *, registry, app):
@@ -78,7 +78,7 @@ class SlackEventSerializer:
         for event_type in list_event_schemas():
             schema = load_event_schema(
                 event_type,
-                suffix=app['sqrbot-jr/stagingVersion'])
+                suffix=app['sqrbot-jr/subjectSuffix'])
             await register_schema(registry, schema, app)
 
         serializer = PolySerializer(registry=registry)
@@ -86,7 +86,7 @@ class SlackEventSerializer:
         return cls(
             serializer=serializer,
             logger=logger,
-            staging_version=app['sqrbot-jr/stagingVersion'])
+            subject_suffix=app['sqrbot-jr/subjectSuffix'])
 
     async def serialize(self, message):
         """Serialize a Slack event.
@@ -106,7 +106,7 @@ class SlackEventSerializer:
         """
         event_type = message['event']['type']
         schema = load_event_schema(event_type,
-                                   suffix=self._staging_version)
+                                   suffix=self._subject_suffix)
         return await self._serializer.serialize(message, schema=schema)
 
 
@@ -208,11 +208,11 @@ class SlackInteractionSerializer:
         Client for the Confluent Schema Registry.
     logger
         Logger instance.
-    staging_version `str`, optional
+    subject_suffix : `str`, optional
         If the application is running in a staging environment, this is the
         name of the staging version. This should be set through the
-        ``sqrbot-jr/stagingVersion`` configuration key on the app. Leave as
-        `None` if the application is not in staging.
+        ``sqrbot-jr/subjectSuffix`` configuration key on the app. Leave as
+        an empty string if the application is not in staging.
 
     Notes
     -----
@@ -225,10 +225,10 @@ class SlackInteractionSerializer:
     `message actions <https://api.slack.com/actions>`__.
     """
 
-    def __init__(self, *, serializer, logger, staging_version=None):
+    def __init__(self, *, serializer, logger, subject_suffix=''):
         self._serializer = serializer
         self._logger = logger
-        self._staging_version = staging_version
+        self._subject_suffix = subject_suffix
 
     @classmethod
     async def setup(cls, *, registry, app):
@@ -252,7 +252,7 @@ class SlackInteractionSerializer:
         for interaction_type in list_interaction_types():
             schema = load_interaction_schema(
                 interaction_type,
-                suffix=app['sqrbot-jr/stagingVersion'])
+                suffix=app['sqrbot-jr/subjectSuffix'])
             await register_schema(registry, schema, app)
 
         serializer = PolySerializer(registry=registry)
@@ -260,7 +260,7 @@ class SlackInteractionSerializer:
         return cls(
             serializer=serializer,
             logger=logger,
-            staging_version=app['sqrbot-jr/stagingVersion'])
+            subject_suffix=app['sqrbot-jr/subjectSuffix'])
 
     async def serialize(self, message):
         """Serialize a payload from a Slack interaction callback.
@@ -277,7 +277,7 @@ class SlackInteractionSerializer:
         """
         interaction_type = message['type']
         schema = load_interaction_schema(interaction_type,
-                                         suffix=self._staging_version)
+                                         suffix=self._subject_suffix)
         self._logger.info(
             'Serializing interaction',
             interaction_type=message['type'],
@@ -333,7 +333,7 @@ def load_interaction_schema(interaction_type, suffix=None):
         raise RuntimeError(f"Can't find schema at {schema_path!r}")
     schema = json.loads(schema_path.read_text())
     if suffix:
-        schema['name'] = '_'.join((schema['name'], suffix))
+        schema['name'] = f"{schema['name']}{suffix}"
     return fastavro.parse_schema(schema)
 
 
@@ -349,21 +349,9 @@ def get_desired_compatibility(app):
     Returns
     -------
     compatibility : `str`
-        The Schema Registry compatibility level. The value is one of:
-
-        ``"NONE"``
-            If the ``sqrbot-jr/stagingVersion`` app config is set, then no
-            compatiblility is required on the subject since it's a
-            "staging" subject used for testing.
-        ``"FORWARD_TRANSITIVE"``
-            If ``sqrbot-jr/stagingVersion`` app config **is not** set, then
-            the subjects must have ``"FORWARD_TRANSITIVE"`` compatibility,
-            following the SQuaRE Events best practices.
+        The Schema Registry compatibility level.
     """
-    if app['sqrbot-jr/stagingVersion'] == '':
-        return 'FORWARD_TRANSITIVE'
-    else:
-        return 'NONE'
+    return app['sqrbot-jr/subjectCompatibility']
 
 
 async def register_schema(registry, schema, app):
