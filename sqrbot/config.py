@@ -44,6 +44,18 @@ def create_config():
         'info' if c['api.lsst.codes/profile'] == 'production' else 'debug'
     ).upper()
 
+    # Enable schema management
+    c['sqrbot-jr/enableSchemas'] \
+        = bool(int(os.getenv('SQRBOTJR_ENABLE_SCHEMAS', "1")))
+
+    # Enable producers
+    c['sqrbot-jr/enableTopicConfig'] \
+        = bool(int(os.getenv('SQRBOTJR_ENABLE_TOPIC_CONFIG', "1")))
+
+    # Enable producers
+    c['sqrbot-jr/enableProducers'] \
+        = bool(int(os.getenv('SQRBOTJR_ENABLE_PRODUCERS', "1")))
+
     # Slack signing secret
     c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SIGNING')
 

@@ -20,3 +20,7 @@ data:
   SQRBOTJR_TOPIC_MESSAGE_GROUPS: "sqrbot.message.groups"
   SQRBOTJR_TOPIC_MESSAGE_MPIM: "sqrbot.message.mpim"
   SQRBOTJR_TOPIC_INTERACTION: "sqrbot.interaction"
+  # Feature flags ("1"=enabled, "0"=disabled)
+  SQRBOTJR_ENABLE_SCHEMAS: "1"
+  SQRBOTJR_ENABLE_TOPIC_CONFIG: "1"
+  SQRBOTJR_ENABLE_PRODUCERS: "1"
