@@ -56,17 +56,11 @@ def create_config():
     c['sqrbot-jr/enableProducers'] \
         = bool(int(os.getenv('SQRBOTJR_ENABLE_PRODUCERS', "1")))
 
-    # Slack signing secret
-    c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SIGNING')
-
     # Schema Registry hostname
     c['sqrbot-jr/registryUrl'] = os.getenv('SQRBOTJR_REGISTRY')
 
     # Kafka broker host
     c['sqrbot-jr/brokerUrl'] = os.getenv('SQRBOTJR_BROKER')
-
-    # Slack bot token
-    c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_TOKEN')
 
     # Kafka retention of Slack events in minutes
     c['sqrbot-jr/retentionMinutes'] = \
@@ -109,5 +103,11 @@ def create_config():
         'SQRBOTJR_TOPIC_MESSAGE_MPIM', 'sqrbot.message.mpim')
     c['sqrbot-jr/interactionTopic'] = os.getenv(
         'SQRBOTJR_TOPIC_INTERACTION', 'sqrbot.interaction')
+
+    # Slack signing secret
+    c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SLACK_SIGNING')
+
+    # Slack bot token
+    c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_SLACK_TOKEN')
 
     return c
