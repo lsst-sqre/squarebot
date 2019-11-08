@@ -32,6 +32,11 @@ spec:
             secretKeyRef:
               name: sqrbot
               key: SQRBOTJR_SLACK_TOKEN
+        - name: SQRBOTJR_SLACK_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: sqrbot
+              key: SQRBOTJR_SLACK_APP_ID
         envFrom:
         - configMapRef:
             name: sqrbot

@@ -110,4 +110,7 @@ def create_config():
     # Slack bot token
     c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_SLACK_TOKEN')
 
+    # Slack App ID
+    c['sqrbot-jr/slackAppId'] = os.getenv('SQRBOTJR_SLACK_APP_ID')
+
     return c
