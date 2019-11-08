@@ -31,6 +31,13 @@ def create_app():
         log_level=config['api.lsst.codes/logLevel'],
         logger_name=config['api.lsst.codes/loggerName'])
 
+    logger = structlog.get_logger(config['api.lsst.codes/loggerName'])
+    logger.info(
+        'Features',
+        enable_schemas=config['sqrbot-jr/enableSchemas'],
+        enable_topic_config=config['sqrbot-jr/enableTopicConfig'],
+        enable_producers=config['sqrbot-jr/enableProducers'])
+
     root_app = web.Application()
     root_app.update(config)
     root_app.add_routes(init_root_routes())
@@ -50,7 +57,6 @@ def create_app():
     app.add_routes(init_routes())
     root_app.add_subapp(prefix, app)
 
-    logger = structlog.get_logger(root_app['api.lsst.codes/loggerName'])
     logger.info('Started sqrbot')
 
     return root_app
