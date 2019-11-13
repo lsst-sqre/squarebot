@@ -279,7 +279,6 @@ async def init_producer(app):
         loop=loop,
         bootstrap_servers=app['sqrbot-jr/brokerUrl'],
         ssl_context=app['sqrbot-jr/kafkaSslContext'],
-        sasl_mechanism=app['sqrbot-jr/kafkaSasl'],
         security_protocol=app['sqrbot-jr/kafkaProtocol'])
     await producer.start()
     app['sqrbot-jr/producer'] = producer

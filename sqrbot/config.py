@@ -69,10 +69,6 @@ def create_config():
     # Kafka security protocol: PLAINTEXT or SSL
     c['sqrbot-jr/kafkaProtocol'] = os.getenv('SQRBOTJR_KAFKA_PROTOCOL')
 
-    # Kafka security authentication mechanism:
-    # PLAIN or GSSAPI
-    c['sqrbot-jr/kafkaSasl'] = os.getenv('SQRBOTJR_KAFKA_SASL')
-
     # TLS certificates for cluster + client for use with the SSL Kafka protocol
     c['sqrbot-jr/clusterCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLUSTER_CA')
     c['sqrbot-jr/clientCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CA')
