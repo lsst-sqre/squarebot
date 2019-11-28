@@ -13,7 +13,7 @@ data:
   SQRBOTJR_SUBJECT_SUFFIX: ""
   SQRBOTJR_SUBJECT_COMPATIBILITY: "FORWARD_TRANSITIVE"
   # Topic names
-  SQRBOTJR_TOPIC_APP_MENTION: "sqrbot.app_mention"
+  SQRBOTJR_TOPIC_APP_MENTION: "sqrbot.app.mention"
   SQRBOTJR_TOPIC_MESSAGE_CHANNELS: "sqrbot.message.channels"
   SQRBOTJR_TOPIC_MESSAGE_IM: "sqrbot.message.im"
   SQRBOTJR_TOPIC_MESSAGE_GROUPS: "sqrbot.message.groups"
