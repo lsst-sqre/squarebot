@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "message_key_v1",
+  "namespace": "codes.lsst.roundtable.sqrbot",
+  "doc": "Key for a message topic that partitions based on Slack channel.",
+  "fields": [
+    {
+      "name": "channel",
+      "doc": "ID of the channel where the message was sent (eg C0LAN2Q65).",
+      "type": "string"
+    },
+    {
+      "name": "team_id",
+      "type": "string",
+      "doc": "The unique identifier of the workspace where the event occurred."
+    }
+  ]
+}
