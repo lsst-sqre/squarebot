@@ -13,7 +13,7 @@ from pathlib import Path
 
 import structlog
 import fastavro
-from kafkit.registry.serializer import PolySerializer
+from kafkit.registry.serializer import PolySerializer, Serializer
 import kafkit.registry.errors
 
 
@@ -25,8 +25,10 @@ class SlackEventSerializer:
 
     Parameters
     ----------
-    registry : `kafkit.registry.aiohttp.RegistryApi`
-        Client for the Confluent Schema Registry.
+    serializer : `kafkit.registry.PolySerializer`
+        Serializer for event payloads (values in Kafka topics).
+    key_serializer : `kafkit.registry.Serializer`
+        Serializer for the topic key.
     logger
         Logger instance.
     subject_suffix : `str`, optional
@@ -52,8 +54,10 @@ class SlackEventSerializer:
     4. The serializer encodes the message.
     """
 
-    def __init__(self, *, serializer, logger, subject_suffix=''):
+    def __init__(self, *, serializer, key_serializer, logger,
+                 subject_suffix=''):
         self._serializer = serializer
+        self._key_serializer = key_serializer
         self._logger = logger
         self._subject_suffix = subject_suffix
 
@@ -76,16 +80,27 @@ class SlackEventSerializer:
         """
         logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
 
+        # Set up a serializer for the events, registering those schemas too
         for event_type in list_event_schemas():
             schema = load_event_schema(
                 event_type,
                 suffix=app['sqrbot-jr/subjectSuffix'])
             await register_schema(registry, schema, app)
-
         serializer = PolySerializer(registry=registry)
+
+        # Set up a serializer for the key, and register that schema
+        key_schema = load_key_schema(
+            'event.message',
+            suffix=app['sqrbot-jr/subjectSuffix'])
+        await register_schema(registry, key_schema, app)
+        key_serializer = await Serializer.register(
+            registry=registry,
+            schema=key_schema,
+            subject=key_schema['name'])
 
         return cls(
             serializer=serializer,
+            key_serializer=key_serializer,
             logger=logger,
             subject_suffix=app['sqrbot-jr/subjectSuffix'])
 
@@ -100,7 +115,7 @@ class SlackEventSerializer:
 
         Returns
         -------
-        data : `bytes
+        data : `bytes`
             Data encoded in the `Confluent Wire Format
             <https://docs.confluent.io/current/schema-registry/docs/serializer-formatter.html#wire-format>`_,
             ready to be sent to a Kafka broker.
@@ -109,6 +124,38 @@ class SlackEventSerializer:
         schema = load_event_schema(event_type,
                                    suffix=self._subject_suffix)
         return await self._serializer.serialize(message, schema=schema)
+
+    def serialize_key(self, message):
+        """Serialize the key automatically based on the message.
+
+        Parameters
+        ----------
+        message : `dict`
+            The original JSON payload of a Slack Event, including the wrapper.
+            See https://api.slack.com/types/event.
+
+        Returns
+        -------
+        data : `bytes` or `None`
+            Data encoded in the Confluent Wire Format ready to be sent to a
+            Kafka broker. `None` if the key could not be created from the
+            message.
+
+        Notes
+        -----
+        The serializer attempts to pull data automatically from the message
+        to populate the ``channel`` and ``team_id`` fields of the key's schema.
+        If the message does not have the expected structure, the serialized key
+        is ``None``.
+        """
+        try:
+            return self._key_serializer({
+                'channel': message['event']['channel'],
+                'team_id': message['team_id']
+            })
+        except KeyError as e:
+            self._logger.debug('Could not serialize key.\n%s' % str(e))
+            return None
 
 
 @functools.lru_cache()
@@ -443,3 +490,29 @@ def encode_slack_message(message):
     )
     binary_fh.seek(0)
     return binary_fh.read()
+
+
+def load_key_schema(schema_name, suffix=None):
+    """Load an Avro schema JSON object from the ``schemas/keys`` data
+    directory.
+
+    Parameters
+    ----------
+    schema_name : `str`
+        Name of the schema: ``event.message`` or ``interaction``.
+    suffix : `str`, optional
+        A suffix to add to the schema's name. This is typically used to create
+        "staging" schemas, therefore "staging subjects" in the Schema Registry.
+
+    Returns
+    -------
+    schema : `dict`
+        A schema object, preparsed by ``fastavro``.
+    """
+    p = Path(__file__).parent / 'schemas' / 'keys' / f'{schema_name}.json'
+    if not p.is_file():
+        raise RuntimeError(f"Can't find schema at {p!r}")
+    schema = json.loads(p.read_text())
+    if suffix:
+        schema['name'] = f"{schema['name']}{suffix}"
+    return fastavro.parse_schema(schema)
