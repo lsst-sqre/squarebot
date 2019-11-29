@@ -19,7 +19,7 @@ async def post_event(request):
 
     slack_event = await request.json()
     logger = logger.bind(payload=slack_event)
-    logger.info('Got event')
+    logger.debug('Got event')
 
     if slack_event['type'] == 'url_verification':
         return _handle_url_verification(request, slack_event)

@@ -24,7 +24,7 @@ async def post_interaction(request):
 
     data = await request.post()
     payload = json.loads(data['payload'])
-    logger.info('Parsed interaction request', data=payload)
+    logger.debug('Parsed interaction request', data=payload)
 
     try:
         serializer = configs['sqrbot-jr/interactionSerializer']
