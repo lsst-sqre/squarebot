@@ -3,7 +3,8 @@
 
 __all__ = ('SlackEventSerializer', 'load_event_schema', 'list_event_schemas',
            'load_interaction_schema', 'list_interaction_types',
-           'SlackInteractionSerializer', 'register_schema')
+           'SlackInteractionSerializer', 'register_schema',
+           'load_key_schema')
 
 import functools
 from io import BytesIO

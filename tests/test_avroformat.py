@@ -11,7 +11,8 @@ import avro.schema  # official Avro library (for testing only)
 
 from sqrbot.avroformat import (
     load_event_schema, get_desired_compatibility, list_event_schemas,
-    list_interaction_types, load_interaction_schema, encode_slack_message)
+    list_interaction_types, load_interaction_schema, encode_slack_message,
+    load_key_schema)
 
 
 def validate_avro_schema(schema_object):
@@ -32,6 +33,20 @@ def test_load_event_schema(event_type):
     sqrbot.avroformat.load_event_schema.
     """
     schema = load_event_schema(event_type)
+    validate_avro_schema(schema)
+
+
+@pytest.mark.parametrize(
+    'name',
+    [
+        'event.message'
+    ]
+)
+def test_load_key_schema(name):
+    """Test the validity of key schemas loaded by
+    sqrbot.avroformat.load_key_schema.
+    """
+    schema = load_key_schema(name)
     validate_avro_schema(schema)
 
 
