@@ -33,12 +33,7 @@ def map_event_to_topic(event, app):
     topic_name : `str`
         The name of the topic. The format is generally::
 
-            sqrbot-{{slack_event_type}}
-
-        If the ``sqrbot-jr/stagingVersion`` application configuration is
-        set, then the name is also added as a suffix::
-
-            sqrbot-{{slack_event_type}}-{{stagingVersion}}
+            sqrbot.{{slack_event_type}}
     """
     event_type = identify_slack_event(event)
     return event_to_topic_name(event_type, app)
@@ -90,22 +85,20 @@ def event_to_topic_name(slack_event_type, app):
     topic_name : `str`
         The name of the topic. The format is generally::
 
-            sqrbot-{{slack_event_type}}
-
-        If the ``sqrbot-jr/stagingVersion`` application configuration is
-        set, then the name is also added as a suffix::
-
-            sqrbot-{{slack_event_type}}-{{stagingVersion}}
+            sqrbot.{{slack_event_type}}
     """
-    if app['sqrbot-jr/stagingVersion']:
-        topic_name = (
-            f'sqrbot-{slack_event_type}'
-            f'-{app["sqrbot-jr/stagingVersion"]}'
-        )
+    if slack_event_type == 'app_mention':
+        return app['sqrbot-jr/appMentionTopic']
+    elif slack_event_type == 'message.channels':
+        return app['sqrbot-jr/messageChannelsTopic']
+    elif slack_event_type == 'message.im':
+        return app['sqrbot-jr/messageImTopic']
+    elif slack_event_type == 'message.groups':
+        return app['sqrbot-jr/messageGroupsTopic']
+    elif slack_event_type == 'message.mpim':
+        return app['sqrbot-jr/messageMpimTopic']
     else:
-        topic_name = f'sqrbot-{slack_event_type}'
-
-    return topic_name
+        raise RuntimeError(f'Cannot map event {slack_event_type} to topic')
 
 
 def get_interaction_topic_name(app):
@@ -121,24 +114,13 @@ def get_interaction_topic_name(app):
     topic_name : `str`
         The name of the topic. The name is generally::
 
-            sqrbot-interaction
-
-        If the ``sqrbot-jr/stagingVersion`` application configuration is
-        set, then the name is also added as a suffix::
-
-            sqrbot-interaction-{{stagingVersion}}
+            sqrbot.interaction
     """
-    if app['sqrbot-jr/stagingVersion']:
-        return f'sqrbot-interaction-{app["sqrbot-jr/stagingVersion"]}'
-    else:
-        return 'sqrbot-interaction'
+    return app['sqrbot-jr/interactionTopic']
 
 
 def get_all_topic_names(app):
     """Get the names of all topics that SQuaRE Bot Jr produces.
-
-    These names include the staging version suffix, dependent on the
-    ``sqrbot-jr/stagingVersion`` configuration.
     """
     names = []
     for slack_event in KNOWN_SLACK_EVENTS:
@@ -162,9 +144,6 @@ def configure_topics(app):
     This function registers any topics that SQuaRE Bot Jr produces that don't
     already exist. The topics correspond one-to-one with Slack events that
     SQuaRE Bot Jr listens to. See `get_all_topic_names`.
-
-    If the ``sqrbot-jr/stagingVersion`` is set, any topics created will have
-    that staging version as a name suffix.
     """
     logger = structlog.get_logger(app['api.lsst.codes/loggerName'])
 

@@ -44,8 +44,17 @@ def create_config():
         'info' if c['api.lsst.codes/profile'] == 'production' else 'debug'
     ).upper()
 
-    # Slack signing secret
-    c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SIGNING')
+    # Enable schema management
+    c['sqrbot-jr/enableSchemas'] \
+        = bool(int(os.getenv('SQRBOTJR_ENABLE_SCHEMAS', "1")))
+
+    # Enable producers
+    c['sqrbot-jr/enableTopicConfig'] \
+        = bool(int(os.getenv('SQRBOTJR_ENABLE_TOPIC_CONFIG', "1")))
+
+    # Enable producers
+    c['sqrbot-jr/enableProducers'] \
+        = bool(int(os.getenv('SQRBOTJR_ENABLE_PRODUCERS', "1")))
 
     # Schema Registry hostname
     c['sqrbot-jr/registryUrl'] = os.getenv('SQRBOTJR_REGISTRY')
@@ -53,15 +62,51 @@ def create_config():
     # Kafka broker host
     c['sqrbot-jr/brokerUrl'] = os.getenv('SQRBOTJR_BROKER')
 
-    # Version name, if application is running in a staging environment.
-    # Otherwise, this is an empty string for production
-    c['sqrbot-jr/stagingVersion'] = os.getenv('SQRBOTJR_STAGING_VERSION') or ''
-
-    # Slack bot token
-    c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_TOKEN')
-
     # Kafka retention of Slack events in minutes
     c['sqrbot-jr/retentionMinutes'] = \
         os.getenv('SQRBOTJR_RETENTION_MINUTES', '30')
+
+    # Kafka security protocol: PLAINTEXT or SSL
+    c['sqrbot-jr/kafkaProtocol'] = os.getenv('SQRBOTJR_KAFKA_PROTOCOL')
+
+    # TLS certificates for cluster + client for use with the SSL Kafka protocol
+    c['sqrbot-jr/clusterCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLUSTER_CA')
+    c['sqrbot-jr/clientCaPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CA')
+    c['sqrbot-jr/clientCertPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_CERT')
+    c['sqrbot-jr/clientKeyPath'] = os.getenv('SQRBOTJR_KAFKA_CLIENT_KEY')
+
+    # Suffix to add to Schema Registry suffix names. This is useful when
+    # deploying sqrbot-jr for testing/staging and you do not want to affect
+    # the production subject and its compatibility lineage.
+    c['sqrbot-jr/subjectSuffix'] = os.getenv('SQRBOTJR_SUBJECT_SUFFIX', '')
+
+    # Compatibility level to apply to Schema Registry subjects. Use
+    # NONE for testing and development, but prefer FORWARD_TRANSITIVE for
+    # production.
+    c['sqrbot-jr/subjectCompatibility'] \
+        = os.getenv('SQRBOTJR_SUBJECT_COMPATIBILITY', 'FORWARD_TRANSITIVE')
+
+    # Topic names
+    c['sqrbot-jr/appMentionTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_APP_MENTION', 'sqrbot.app_mention')
+    c['sqrbot-jr/messageChannelsTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_CHANNELS', 'sqrbot.message.channels')
+    c['sqrbot-jr/messageImTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_IM', 'sqrbot.message.im')
+    c['sqrbot-jr/messageGroupsTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_GROUPS', 'sqrbot.message.groups')
+    c['sqrbot-jr/messageMpimTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_MESSAGE_MPIM', 'sqrbot.message.mpim')
+    c['sqrbot-jr/interactionTopic'] = os.getenv(
+        'SQRBOTJR_TOPIC_INTERACTION', 'sqrbot.interaction')
+
+    # Slack signing secret
+    c['sqrbot-jr/slackSigningSecret'] = os.getenv('SQRBOTJR_SLACK_SIGNING')
+
+    # Slack bot token
+    c['sqrbot-jr/slackToken'] = os.getenv('SQRBOTJR_SLACK_TOKEN')
+
+    # Slack App ID
+    c['sqrbot-jr/slackAppId'] = os.getenv('SQRBOTJR_SLACK_APP_ID')
 
     return c

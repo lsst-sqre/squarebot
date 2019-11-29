@@ -2,6 +2,53 @@
 Change log
 ##########
 
+0.5.0 (2019-11-29)
+==================
+
+This release focuses on improving the deployment and configuration of SQuaRE Bot Jr.
+
+- SQuaRE Bot Jr. can now be deployed through Kustomize.
+  The base is located at ``/manifests/base``.
+  This means that you can incorporate this application into a specific Kustomize-based application (such as one deployed by Argo CD) with a URL such as ``github.com/lsst-sqre/sqrbot-jr.git//manifests/base?ref=0.5.0``.
+  There is a *separate* template for the Secret resource expected by the deployment at ``/manifest/base/secret.template.yaml``.
+
+- Topics names can now be configured directly.
+  See the environment variables:
+
+  - ``SQRBOTJR_TOPIC_APP_MENTION``
+  - ``SQRBOTJR_TOPIC_MESSAGE_CHANNELS``
+  - ``SQRBOTJR_TOPIC_MESSAGE_IM``
+  - ``SQRBOTJR_TOPIC_MESSAGE_GROUPS``
+  - ``SQRBOTJR_TOPIC_MESSAGE_MPIM``
+  - ``SQRBOTJR_TOPIC_INTERACTION``
+
+  This granular configuration allows you to mix-and-match production and development topics.
+
+- The old "staging version" configuration is now the ``TEMPLATEBOT_SUBJECT_SUFFIX`` environment variable.
+  This configuration is used solely as a suffix on the fully-qualified name of a schema when determining its subject name at the Schema Registry.
+  Previously it also impacted topic names.
+  Use a subject suffix when trying out new Avro schemas to avoid polluting the production subject in the registry.
+
+- SQuaRE Bot Jr can now connect to Kafka brokers through SSL.
+  Set the ``KAFKA_PROTOCOL`` environment variable to ``SSL``.
+  Then set these environment variables to the paths of specific TLS certificates and keys:
+
+  - ``KAFKA_CLUSTER_CA`` (the Kafka cluster's CA certificate)
+  - ``KAFKA_CLIENT_CA`` (client CA certificate)
+  - ``KAFKA_CLIENT_CERT`` (client certificate)
+  - ``KAFKA_CLIENT_KEY`` (client key)
+
+- Individual features can be enabled or disabled:
+
+  - ``SQRBOTJR_ENABLE_SCHEMAS``: set to ``"0"`` to disable registering new schemas on start up.
+    This needs to be ``1`` if the producers are enabled.
+  - ``SQRBOTJR_ENABLE_PRODUCERS``: set to ``"0"`` to disable the Kafka producers.
+    SQuaRE Bot Jr can still receive events from Slack though its HTTP endpoints, it just won't pass them on to Kafka.
+  - ``SQRBOTJR_ENABLE_TOPIC_CONFIG``: set to ``"0"`` to disable configuring topics if they do not already exist.
+    It makes sense to disable topic configuration if a separate process is used to configure topics, such as Strimzi's TopicOperator.
+
+:jirap:`DM-22099`
+
 0.4.0 (2019-05-03)
 ==================
 
