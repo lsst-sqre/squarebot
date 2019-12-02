@@ -252,8 +252,10 @@ class SlackInteractionSerializer:
 
     Parameters
     ----------
-    registry : `kafkit.registry.aiohttp.RegistryApi`
-        Client for the Confluent Schema Registry.
+    serializer : `kafkit.registry.PolySerializer`
+        Serializer for event payloads (values in Kafka topics).
+    key_serializer : `kafkit.registry.Serializer`
+        Serializer for the topic key.
     logger
         Logger instance.
     subject_suffix : `str`, optional
@@ -273,8 +275,10 @@ class SlackInteractionSerializer:
     `message actions <https://api.slack.com/actions>`__.
     """
 
-    def __init__(self, *, serializer, logger, subject_suffix=''):
+    def __init__(self, *, serializer, key_serializer, logger,
+                 subject_suffix=''):
         self._serializer = serializer
+        self._key_serializer = key_serializer
         self._logger = logger
         self._subject_suffix = subject_suffix
 
@@ -302,11 +306,21 @@ class SlackInteractionSerializer:
                 interaction_type,
                 suffix=app['sqrbot-jr/subjectSuffix'])
             await register_schema(registry, schema, app)
-
         serializer = PolySerializer(registry=registry)
+
+        # Set up a serializer for the key, and register that schema
+        key_schema = load_key_schema(
+            'interaction',
+            suffix=app['sqrbot-jr/subjectSuffix'])
+        await register_schema(registry, key_schema, app)
+        key_serializer = await Serializer.register(
+            registry=registry,
+            schema=key_schema,
+            subject=key_schema['name'])
 
         return cls(
             serializer=serializer,
+            key_serializer=key_serializer,
             logger=logger,
             subject_suffix=app['sqrbot-jr/subjectSuffix'])
 
@@ -331,6 +345,38 @@ class SlackInteractionSerializer:
             interaction_type=message['type'],
             schema=schema)
         return await self._serializer.serialize(message, schema=schema)
+
+    def serialize_key(self, message):
+        """Serialize the key automatically based on the message.
+
+        Parameters
+        ----------
+        message : `dict`
+            The original JSON payload of a Slack Event, including the wrapper.
+            See https://api.slack.com/types/event.
+
+        Returns
+        -------
+        data : `bytes` or `None`
+            Data encoded in the Confluent Wire Format ready to be sent to a
+            Kafka broker. `None` if the key could not be created from the
+            message.
+
+        Notes
+        -----
+        The serializer attempts to pull data automatically from the message
+        to populate the ``user_id`` and ``team_id`` fields of the key's schema.
+        If the message does not have the expected structure, the serialized key
+        is ``None``.
+        """
+        try:
+            return self._key_serializer({
+                'user_id': message['user']['id'],
+                'team_id': message['team']['id']
+            })
+        except KeyError as e:
+            self._logger.debug('Could not serialize key.\n%s' % str(e))
+            return None
 
 
 @functools.lru_cache()
