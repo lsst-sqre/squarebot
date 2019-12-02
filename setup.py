@@ -34,7 +34,7 @@ tests_require = [
     'pytest==4.2.0',
     'pytest-flake8==1.0.4',
     'aiohttp-devtools==0.11',
-    'avro-python3>=1.8.2',
+    'avro-python3>=1.9.1',
 ]
 tests_require += install_requires
 
