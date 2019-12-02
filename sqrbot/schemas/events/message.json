@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "message_v1",
-  "namespace": "com.slack.events",
+  "namespace": "codes.lsst.roundtable.sqrbot",
   "doc": "A message was posted. There are several types of messages depending on where they are posted. https://api.slack.com/events/message",
   "fields": [
     {

@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "block_actions_v1",
-  "namespace": "com.slack",
+  "namespace": "codes.lsst.roundtable.sqrbot",
   "doc": "Slack message interaction payload: https://api.slack.com/messaging/interactivity/enabling#understanding-payloads",
   "fields": [
     {

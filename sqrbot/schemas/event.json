@@ -1,6 +1,5 @@
 {
-  "name": "event",
-  "namespace": "codes.lsst.api.sqrbot",
+  "name": "codes.lsst.api.sqrbot.event",
   "type": "record",
   "doc": "Wrapper for an Event object. https://api.slack.com/types/event",
   "fields": [

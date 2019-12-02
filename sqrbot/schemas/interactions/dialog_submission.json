@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "dialog_submission_v1",
-  "namespace": "com.slack",
+  "namespace": "codes.lsst.roundtable.sqrbot",
   "doc": "Slack dialog submission payload: https://api.slack.com/dialogs",
   "fields": [
     {
