@@ -24,14 +24,15 @@ async def post_interaction(request):
 
     data = await request.post()
     payload = json.loads(data['payload'])
-    logger.info('Parsed interaction request', data=payload)
+    logger.debug('Parsed interaction request', data=payload)
 
     try:
         serializer = configs['sqrbot-jr/interactionSerializer']
         producer = configs['sqrbot-jr/producer']
         data = await serializer.serialize(payload)
+        key = serializer.serialize_key(payload)
         topic_name = get_interaction_topic_name(configs)
-        await producer.send(topic_name, value=data)
+        await producer.send(topic_name, value=data, key=key)
     except Exception:
         logger.exception("Failed to serialize and send Slack interaction")
     finally:

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "interaction_key_v1",
+  "namespace": "codes.lsst.roundtable.sqrbot",
+  "doc": "Key for a interaction topic that partitions based on the ID of the user that triggered the interaction.",
+  "fields": [
+    {
+      "name": "user_id",
+      "doc": "ID of the user who triggered the interaction.",
+      "type": "string"
+    },
+    {
+      "name": "team_id",
+      "type": "string",
+      "doc": "The unique identifier of the workspace where the event occurred."
+    }
+  ]
+}

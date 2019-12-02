@@ -2,6 +2,21 @@
 Change log
 ##########
 
+0.6.0 (2019-12-02)
+==================
+
+- The event topics (for messages) have keys that contain the Slack Team ID and the channel ID. This ensures that messages in a given channel are processed sequentially.
+
+- The interaction topics (i.e., a dialogue submission) have keys that contain the Slack Team ID and the ID of the user that triggered the interaction.
+
+- Schemas now use the ``codes.lsst.roundtable.sqrbot`` namespace.
+
+- The message schema is no longer dynamically generated with a separate wrapper schema. This significantly simplifies the loading of the message schema.
+
+- Updated avro-python3 (a test dependency) to 1.9.1.
+
+:jirap:`DM-22408`
+
 0.5.0 (2019-11-29)
 ==================
 

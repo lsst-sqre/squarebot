@@ -11,27 +11,45 @@ import avro.schema  # official Avro library (for testing only)
 
 from sqrbot.avroformat import (
     load_event_schema, get_desired_compatibility, list_event_schemas,
-    list_interaction_types, load_interaction_schema, encode_slack_message)
+    list_interaction_types, load_interaction_schema, encode_slack_message,
+    load_key_schema)
 
 
 def validate_avro_schema(schema_object):
     """Validate an Avro schema using the avro package, which is stricter
     than fastavro.
     """
+    # avro.schema.
     avro.schema.Parse(json.dumps(schema_object))
 
 
 @pytest.mark.parametrize(
-    'event_type',
+    'event_type,expected_name',
     [
-        'message'
+        ('message', 'codes.lsst.roundtable.sqrbot.message_v1')
     ]
 )
-def test_load_event_schema(event_type):
+def test_load_event_schema(event_type, expected_name):
     """Test the validity of event schemas loaded by
     sqrbot.avroformat.load_event_schema.
     """
     schema = load_event_schema(event_type)
+    assert schema['name'] == expected_name
+    validate_avro_schema(schema)
+
+
+@pytest.mark.parametrize(
+    'name',
+    [
+        'event.message',
+        'interaction',
+    ]
+)
+def test_load_key_schema(name):
+    """Test the validity of key schemas loaded by
+    sqrbot.avroformat.load_key_schema.
+    """
+    schema = load_key_schema(name)
     validate_avro_schema(schema)
 
 
@@ -70,7 +88,7 @@ def test_interaction_schemas():
 
 def test_list_event_schemas():
     event_names = list_event_schemas()
-    assert 'message' in event_names
+    assert ['message'] == event_names
 
 
 @pytest.mark.parametrize(
