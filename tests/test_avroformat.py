@@ -39,7 +39,8 @@ def test_load_event_schema(event_type):
 @pytest.mark.parametrize(
     'name',
     [
-        'event.message'
+        'event.message',
+        'interaction',
     ]
 )
 def test_load_key_schema(name):
