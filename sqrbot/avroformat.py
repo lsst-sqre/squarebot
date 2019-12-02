@@ -183,12 +183,7 @@ def load_event_schema(event_type, suffix=None):
     Notes
     -----
     This function loads schemas from the app's package data, rather from a
-    schema registry service. The wrapper schema is the
-    ``sqrbot/schemas/event.json`` file, while schemas for each type of event
-    are in the ``sqrbot/schemas/events`` directory. This function inserts
-    the event-specific schema into the ``events`` field of the wrapper and
-    also sets the wrapper schemas name to the name of the event, such as
-    ``message``.
+    schema registry service.
     """
     # Normalize similar event types that share a common schema
     if event_type in ('app_mention', 'message', 'message.channels',
@@ -196,24 +191,9 @@ def load_event_schema(event_type, suffix=None):
         event_type = 'message'
 
     schemas_dir = Path(__file__).parent / 'schemas'
-    wrapper_path = schemas_dir / 'event.json'
-    event_path = schemas_dir / 'events' / f'{event_type}.json'
+    schema_path = schemas_dir / 'events' / f'{event_type}.json'
 
-    schema = json.loads(wrapper_path.read_text())
-    event_schema = json.loads(event_path.read_text())
-
-    # Insert the event schema into the wrapper schema
-    inserted = False
-    for field in schema['fields']:
-        if field['name'] == 'event':
-            field['type'] = event_schema
-            inserted = True
-            break
-    if not inserted:
-        raise RuntimeError('Wrapper schema does not have an `event` field.')
-
-    # Make the overall schema take on the name of the event record.
-    schema['name'] = event_schema['name']
+    schema = json.loads(schema_path.read_text())
 
     if suffix:
         schema['name'] = f"{schema['name']}{suffix}"

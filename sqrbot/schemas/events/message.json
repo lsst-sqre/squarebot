@@ -1,88 +1,134 @@
 {
   "type": "record",
-  "name": "message_v1",
-  "namespace": "codes.lsst.roundtable.sqrbot",
+  "name": "codes.lsst.roundtable.sqrbot.message_v1",
   "doc": "A message was posted. There are several types of messages depending on where they are posted. https://api.slack.com/events/message",
   "fields": [
     {
+      "name": "token",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "A verification token to validate that the event originated from Slack (deprecated)."
+    },
+    {
+      "name": "team_id",
+      "type": "string",
+      "doc": "The unique identifier of the workspace where the event occurred."
+    },
+    {
+      "name": "api_app_id",
+      "type": "string",
+      "doc": "The unique identifier of your installed Slack application. Use this to distinguish which app the event belongs to if you use multiple apps with the same Request URL."
+    },
+    {
+      "name": "event",
+      "doc": "Message payload. https://api.slack.com/events/message",
+      "type": {
+        "type": "record",
+        "name": "event",
+        "fields": [
+          {
+            "name": "type",
+            "doc": "The specific name of the event",
+            "type": "string"
+          },
+          {
+            "name": "event_ts",
+            "doc": "When the event was dispatched",
+            "type": "string"
+          },
+          {
+            "name": "user",
+            "doc": "The ID of the user that sent the message (eg U061F7AUR).",
+            "type": "string"
+          },
+          {
+            "name": "text",
+            "doc": "Content of the message.",
+            "type": "string"
+          },
+          {
+            "name": "ts",
+            "doc": "Timestamp of the message.",
+            "type": "string"
+          },
+          {
+            "name": "channel",
+            "doc": "ID of the channel where the message was sent (eg C0LAN2Q65).",
+            "type": "string"
+          },
+          {
+            "name": "channel_type",
+            "doc": "The type of channel.",
+            "default": null,
+            "type": [
+              "null",
+              {
+                "type": "enum",
+                "name": "channel_types",
+                "symbols": ["im", "channel", "group", "mpim"]
+              }
+            ]
+          },
+          {
+            "name": "edited",
+            "doc": "Indicates that the message has been edited, if not null.",
+            "type": [
+              "null",
+              {
+                "name": "edited",
+                "namespace": "com.slack.events.messages",
+                "doc": "Information about how a message was edited.",
+                "type": "record",
+                "fields": [
+                  {
+                    "name": "user",
+                    "type": "string",
+                    "doc": "The ID of the user that edited the message."
+                  },
+                  {
+                    "name": "ts",
+                    "type": "string",
+                    "doc": "The timestamp of when the message was edited."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "subtype",
+            "doc": "Subtype of the message.",
+            "default": null,
+            "type": ["null", "string"]
+          },
+          {
+            "name": "hidden",
+            "doc": "Whether the message is considered hidden, or not.",
+            "default": false,
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
       "name": "type",
-      "doc": "The specific name of the event",
+      "doc": "Indicates which kind of event dispatch this is, usually `event_callback`",
       "type": "string"
     },
     {
-      "name": "event_ts",
-      "doc": "When the event was dispatched",
+      "name": "event_id",
+      "doc": "A unique identifier for this specific event, globally unique across all workspaces.",
       "type": "string"
     },
     {
-      "name": "user",
-      "doc": "The ID of the user that sent the message (eg U061F7AUR).",
-      "type": "string"
+      "name": "event_time",
+      "doc": "The epoch timestamp in seconds indicating when this event was dispatched.",
+      "type": "int"
     },
     {
-      "name": "text",
-      "doc": "Content of the message.",
-      "type": "string"
-    },
-    {
-      "name": "ts",
-      "doc": "Timestamp of the message.",
-      "type": "string"
-    },
-    {
-      "name": "channel",
-      "doc": "ID of the channel where the message was sent (eg C0LAN2Q65).",
-      "type": "string"
-    },
-    {
-      "name": "channel_type",
-      "doc": "The type of channel.",
-      "default": null,
-      "type": [
-        "null",
-        {
-          "type": "enum",
-          "name": "channel_types",
-          "symbols": ["im", "channel", "group", "mpim"]
-        }
-      ]
-    },
-    {
-      "name": "edited",
-      "doc": "Indicates that the message has been edited, if not null.",
-      "type": [
-        "null",
-        {
-          "name": "edited",
-          "namespace": "com.slack.events.messages",
-          "doc": "Information about how a message was edited.",
-          "type": "record",
-          "fields": [
-            {
-              "name": "user",
-              "type": "string",
-              "doc": "The ID of the user that edited the message."
-            },
-            {
-              "name": "ts",
-              "type": "string",
-              "doc": "The timestamp of when the message was edited."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "subtype",
-      "doc": "Subtype of the message.",
-      "default": null,
-      "type": ["null", "string"]
-    },
-    {
-      "name": "hidden",
-      "doc": "Whether the message is considered hidden, or not.",
-      "default": false,
-      "type": "boolean"
+      "name": "authed_users",
+      "doc": "An array of string-based User IDs. Each member of the collection represents a user that has installed your application/bot and indicates the described event would be visible to those users.",
+      "type": ["null", {"type": "array", "items": "string"}],
+      "default": null
     }
   ]
 }
