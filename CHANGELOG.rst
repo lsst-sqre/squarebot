@@ -25,7 +25,7 @@ This release focuses on improving the deployment and configuration of SQuaRE Bot
 - SQuaRE Bot Jr. can now be deployed through Kustomize.
   The base is located at ``/manifests/base``.
   This means that you can incorporate this application into a specific Kustomize-based application (such as one deployed by Argo CD) with a URL such as ``github.com/lsst-sqre/sqrbot-jr.git//manifests/base?ref=0.5.0``.
-  There is a *separate* template for the Secret resource expected by the deployment at ``/manifest/base/secret.template.yaml``.
+  There is a *separate* template for the Secret resource expected by the deployment at ``/manifests/secret.template.yaml``.
 
 - Topics names can now be configured directly.
   See the environment variables:
