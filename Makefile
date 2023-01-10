@@ -1,24 +1,27 @@
-.PHONY: install
-install:
-	pip install -e ".[dev]"
+.PHONY: update-deps
+update-deps:
+	pip install --upgrade pip-tools pip setuptools
+	pip-compile --upgrade --build-isolation --generate-hashes --output-file requirements/main.txt requirements/main.in
+	pip-compile --upgrade --build-isolation --generate-hashes --output-file requirements/dev.txt requirements/dev.in
 
-.PHONY: test
-test:
-	pytest
+# Useful for testing against a Git version of Safir.
+.PHONY: update-deps-no-hashes
+update-deps-no-hashes:
+	pip install --upgrade pip-tools pip setuptools
+	pip-compile --upgrade --build-isolation --allow-unsafe --output-file requirements/main.txt requirements/main.in
+	pip-compile --upgrade --build-isolation --allow-unsafe --output-file requirements/dev.txt requirements/dev.in
 
-.PHONY: dev
-dev:
-	adev runserver --app-factory create_app sqrbot/app.py
+.PHONY: init
+init:
+	pip install --editable .
+	pip install --upgrade -r requirements/main.txt -r requirements/dev.txt
+	rm -rf .tox
+	pip install --upgrade pre-commit tox
+	pre-commit install
 
-.PHONY: image
-image:
-	python setup.py sdist
-	docker build --build-arg VERSION=`sqrbot --version` -t lsstsqre/sqrbot-jr:build .
+.PHONY: update
+update: update-deps init
 
-.PHONY: travis-docker-deploy
-travis-docker-deploy:
-	./bin/travis-docker-deploy.sh lsstsqre/sqrbot-jr build
-
-.PHONY: version
-version:
-	sqrbot --version
+.PHONY: run
+run:
+	tox -e run
