@@ -9,6 +9,7 @@
 fastapi
 starlette
 uvicorn[standard]
+python-multipart
 
 # Other dependencies.
 safir>=3.4.0
