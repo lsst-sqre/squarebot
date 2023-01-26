@@ -136,7 +136,14 @@ class SlackService:
             )
 
     async def publish_event(self, request_json: dict[str, Any]) -> None:
-        """Publish a Slack event to the appropriate Kafka topic."""
+        """Publish a Slack event to the appropriate Kafka topic.
+
+        Parameters
+        ----------
+        request_json
+            The parsed JSON event published by Slack. Events and the Events API
+            are described by Slack at https://api.slack.com/events.
+        """
         # Parse into the Slack message model
         if (
             "event" in request_json
@@ -150,13 +157,24 @@ class SlackService:
                 event_type=message.event.type,
                 slack_text=message.event.text,
                 channel_id=message.event.channel,
+                channel_type=message.event.channel_type,
                 user_id=message.event.user,
             )
+        else:
+            self._logger.debug("Did not parse Slack event")
 
     async def publish_interaction(
         self, interaction_payload: dict[str, Any]
     ) -> None:
-        """Publish a Slack interaction payload to a Kafka topic."""
+        """Publish a Slack interaction payload to a Kafka topic.
+
+        Parameters
+        ----------
+        interaction_payload
+            The parsed JSON interaction payload published by Slack. Interaction
+            payloads are described at
+            https://api.slack.com/reference/interaction-payloads
+        """
         if (
             "type" in interaction_payload
             and interaction_payload["type"] == "block_actions"
