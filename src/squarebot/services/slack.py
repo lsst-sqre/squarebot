@@ -26,6 +26,40 @@ class SlackService:
         self._logger = logger
         self._config = config
 
+    @staticmethod
+    def compute_slack_signature(
+        signing_secret: str, body: str, timestamp: str
+    ) -> str:
+        """Compute the hash of the message, which can be compared to the
+        ``X-Slack-Signature`` header.
+
+        See: https://api.slack.com/docs/verifying-requests-from-slack
+
+        Parameters
+        ----------
+        signing_secret
+            The app's Slack signing secret.
+        body
+            The request body content.
+        timestamp
+            The timestamp (the ``X-Slack-Request-Timestamp``).
+
+        Returns
+        -------
+        signature_digest
+            The SHA 256 hex digest of the signature, matching
+            ``X-Slack-Signature``.
+        """
+        base_signature = f"v0:{timestamp}:{body}"
+        return (
+            "v0="
+            + hmac.new(
+                signing_secret.encode(),
+                msg=base_signature.encode(),
+                digestmod=hashlib.sha256,
+            ).hexdigest()
+        )
+
     async def verify_request(self, request: Request) -> bool:
         """Verify that the request came from Slack using the signing sercret
         method.
@@ -49,7 +83,16 @@ class SlackService:
         fastapi.HTTPException
             Raised for requests that cannot be validated.
         """
-        timestamp = request.headers["X-Slack-Request-Timestamp"]
+        try:
+            timestamp = request.headers["X-Slack-Request-Timestamp"]
+        except KeyError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "msg": ("X-Slack-Request-Timestamp header is missing."),
+                    "type": "bad_request",
+                },
+            )
 
         if math.fabs(time.time() - float(timestamp)) > 300.0:
             # The request timestamp is more than five minutes from local time.
@@ -71,19 +114,13 @@ class SlackService:
         body_bytes = await request.body()
         body = body_bytes.decode(encoding="utf-8")
 
+        # Compute the hash of the message and compare it ot X-Slack-Signature
         signing_secret = self._config.slack_signing_secret.get_secret_value()
-        base_signature = f"v0:{timestamp}:{body}"
-        signature_hash = (
-            "v0="
-            + hmac.new(
-                signing_secret.encode(),
-                msg=base_signature.encode(),
-                digestmod=hashlib.sha256,
-            ).hexdigest()
+        signature_hash = SlackService.compute_slack_signature(
+            signing_secret, body, timestamp
         )
-
         if hmac.compare_digest(
-            signature_hash, request.headers["X-Slack-Signature"]
+            signature_hash, request.headers.get("X-Slack-Signature", "")
         ):
             return True
         else:
@@ -101,9 +138,13 @@ class SlackService:
     async def publish_event(self, request_json: dict[str, Any]) -> None:
         """Publish a Slack event to the appropriate Kafka topic."""
         # Parse into the Slack message model
+        print("request json")
+        print(request_json)
+        print("event" in request_json)
+        print(request_json["event"])
         if (
             "event" in request_json
-            and request_json["event"] in SlackMessageType.__members__
+            and request_json["event"]["type"] in SlackMessageType.__members__
         ):
             message = SlackMessageEvent.parse_obj(request_json)
             # Temporary placeholder; will serialize and publish to Kafka

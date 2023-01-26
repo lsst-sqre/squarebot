@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import AsyncIterator
 
+import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
@@ -28,3 +30,9 @@ async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
     """Return an ``httpx.AsyncClient`` configured to talk to the test app."""
     async with AsyncClient(app=app, base_url="https://example.com/") as client:
         yield client
+
+
+@pytest.fixture
+def sample_slack_message_dir() -> Path:
+    """Return the directory for the sample Slack message datasets."""
+    return Path(__file__).parent.joinpath("slack_messages")
