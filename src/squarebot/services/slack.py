@@ -138,10 +138,6 @@ class SlackService:
     async def publish_event(self, request_json: dict[str, Any]) -> None:
         """Publish a Slack event to the appropriate Kafka topic."""
         # Parse into the Slack message model
-        print("request json")
-        print(request_json)
-        print("event" in request_json)
-        print(request_json["event"])
         if (
             "event" in request_json
             and request_json["event"]["type"] in SlackMessageType.__members__
@@ -151,6 +147,7 @@ class SlackService:
             # in reality.
             self._logger.debug(
                 "Got a Slack message",
+                event_type=message.event.type,
                 slack_text=message.event.text,
                 channel_id=message.event.channel,
                 user_id=message.event.user,

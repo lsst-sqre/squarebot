@@ -44,6 +44,74 @@ async def test_post_event_app_mention(
 
 
 @pytest.mark.asyncio
+async def test_post_event_message_channels(
+    client: AsyncClient, sample_slack_message_dir: Path
+) -> None:
+    """Test ``POST /event`` with a ``message.channels`` payload
+    (happy path).
+    """
+    app_mention_payload = json.loads(
+        sample_slack_message_dir.joinpath("message.channels.json").read_text()
+    )
+    slack_server = SlackServer(client)
+    response = await slack_server.post(
+        f"{config.path_prefix}/event", json_data=app_mention_payload
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_post_event_message_im(
+    client: AsyncClient, sample_slack_message_dir: Path
+) -> None:
+    """Test ``POST /event`` with a ``message.im`` payload
+    (happy path).
+    """
+    app_mention_payload = json.loads(
+        sample_slack_message_dir.joinpath("message.im.json").read_text()
+    )
+    slack_server = SlackServer(client)
+    response = await slack_server.post(
+        f"{config.path_prefix}/event", json_data=app_mention_payload
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_post_event_message_groups(
+    client: AsyncClient, sample_slack_message_dir: Path
+) -> None:
+    """Test ``POST /event`` with a ``message.groups`` payload
+    (happy path).
+    """
+    app_mention_payload = json.loads(
+        sample_slack_message_dir.joinpath("message.groups.json").read_text()
+    )
+    slack_server = SlackServer(client)
+    response = await slack_server.post(
+        f"{config.path_prefix}/event", json_data=app_mention_payload
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_post_event_message_mpim(
+    client: AsyncClient, sample_slack_message_dir: Path
+) -> None:
+    """Test ``POST /event`` with a ``message.mpim`` payload
+    (happy path).
+    """
+    app_mention_payload = json.loads(
+        sample_slack_message_dir.joinpath("message.mpim.json").read_text()
+    )
+    slack_server = SlackServer(client)
+    response = await slack_server.post(
+        f"{config.path_prefix}/event", json_data=app_mention_payload
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_post_event_missing_timestamp(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
