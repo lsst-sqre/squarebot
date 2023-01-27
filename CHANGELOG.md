@@ -1,6 +1,12 @@
 # Change log
 
-# 0.6.0 (2019-12-02)
+## Unreleased (2023-01-27)
+
+SQuaRE Bot (`@squarebot` on Slack) is the next iteration of the SQuaRE Bot Jr. and is intended to finally become the successor to the original Hubot-based `#sqrbot`.
+SQuaRE Bot is a migration of the original SQuaRE Bot Jr. code base from aiohttp into FastAPI.
+With this migration, SQuaRE Bot now takes advangate of Pydantic modelling for end-to-end type checking from the payloads received by the HTTP handlers to the messages published to Kafka.
+
+## 0.6.0 (2019-12-02)
 
 - The event topics (for messages) have keys that contain the Slack Team ID and the channel ID. This ensures that messages in a given channel are processed sequentially.
 
