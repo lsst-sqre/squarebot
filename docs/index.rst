@@ -16,4 +16,5 @@ You can deploy new ChatOps automations without having to update or modify SQuaRE
 .. toctree::
    :hidden:
 
+   user-guide/index
    changelog

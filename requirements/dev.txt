@@ -22,6 +22,10 @@ attrs==22.2.0 \
     --hash=sha256:29e95c7f6778868dbd49170f98f8818f78f3dc5e0e37c0b1f474e3561b240836 \
     --hash=sha256:c9227bfc2f01993c03f68db37d1d15c9690188323c067c641f1a35ca58185f99
     # via pytest
+autodoc-pydantic==1.8.0 \
+    --hash=sha256:77da1cbbe4434fa9963f85a1555c63afff9a4acec06b318dc4f54c4f28a04f2c \
+    --hash=sha256:f1bf9318f37369fec906ab523ebe65c1894395a6fc859dbc6fd02ffd90d3242f
+    # via -r requirements/dev.in
 avro-python3==1.10.2 \
     --hash=sha256:3b63f24e6b04368c3e4a6f923f484be0230d821aad65ac36108edbff29e9aaab
     # via -r requirements/dev.in
@@ -461,6 +465,7 @@ pydantic==1.10.4 \
     --hash=sha256:fdf8d759ef326962b4678d89e275ffc55b7ce59d917d9f72233762061fd04a2d
     # via
     #   -c requirements/main.txt
+    #   autodoc-pydantic
     #   documenteer
 pydata-sphinx-theme==0.12.0 \
     --hash=sha256:7a07c3ac1fb1cfbb5f7d1e147a9500fb120e329d610e0fa2caac4a645141bdd9 \
@@ -583,6 +588,7 @@ sphinx==5.3.0 \
     --hash=sha256:060ca5c9f7ba57a08a1219e547b269fadf125ae25b06b9fa7f66768efb652d6d \
     --hash=sha256:51026de0a9ff9fc13c05d74913ad66047e104f56a129ff73e174eb5c3ee794b5
     # via
+    #   autodoc-pydantic
     #   documenteer
     #   myst-parser
     #   pydata-sphinx-theme

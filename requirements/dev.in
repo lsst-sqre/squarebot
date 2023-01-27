@@ -18,3 +18,4 @@ pytest-cov
 
 avro-python3
 documenteer[guide]
+autodoc_pydantic
