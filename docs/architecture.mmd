@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph Slack
+    message[Slack message]
+    interaction[Slack interaction]
+    end
+    subgraph sqrbot ["Square Bot"]
+    eventapi["/event"]
+    interactionapi["/interaction"]
+    message -->|HTTP POST| eventapi
+    interaction -->|HTTP POST| interactionapi
+    end
+    subgraph kafka ["Kafka Topics"]
+    topicmention["squarebot.app_mention"]
+    topicchannel["squarebot.message.channel"]
+    topicgroup["squarebot.message.group"]
+    topicim["squarebot.message.im"]
+    topicmpim["squarebot.message.mpim"]
+    topicinteraction["squarebot.interaction"]
+    end
+    eventapi --> topicmention
+    eventapi --> topicchannel
+    eventapi --> topicgroup
+    eventapi --> topicim
+    eventapi --> topicmpim
+    interactionapi --> topicinteraction
+    subgraph backends ["Backends"]
+    backend1["Backend 1"]
+    backend2["Backend 2"]
+    end
+    topicchannel --> backend1
+    topicgroup --> backend1
+    topicmention --> backend2
+    topicinteraction --> backend2
