@@ -28,7 +28,7 @@ squarebot = "squarebot.cli:main"
 
 [project.urls]
 Homepage = "https://squarebot.lsst.io"
-Source = "https://github.com/lsst-sqre/sqrbot-jr"
+Source = "https://github.com/lsst-sqre/squarebot"
 
 [build-system]
 requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=6.2"]
