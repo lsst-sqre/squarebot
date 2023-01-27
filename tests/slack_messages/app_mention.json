@@ -8,6 +8,7 @@
     "text": "What is the hour of the pearl, <@U0LAN0Z89>?",
     "ts": "1515449522.000016",
     "channel": "C0LAN2Q65",
+    "channel_type": "channel",
     "event_ts": "1515449522000016"
   },
   "type": "event_callback",
