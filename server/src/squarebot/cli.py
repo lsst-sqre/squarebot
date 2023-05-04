@@ -11,9 +11,9 @@ import uvicorn
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(message="%(version)s")
 def main() -> None:
-    """times-square.
+    """SQuaRE Bot.
 
-    Administrative command-line interface for Times Square.
+    Administrative command-line interface for SQuaRE Bot.
     """
     pass
 

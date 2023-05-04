@@ -20,7 +20,7 @@ class Configuration(BaseSettings):
     )
 
     profile: Profile = Field(
-        Profile.development,
+        Profile.production,
         title="Application logging profile",
         env="SAFIR_PROFILE",
     )
@@ -70,7 +70,7 @@ class Configuration(BaseSettings):
 
     # TLS certificates for cluster + client for use with the SSL Kafka protocol
     kafka_cluster_ca_path: Optional[FilePath] = Field(
-        None, title="Kafka cluster CA path", env="SQRBOTJR_KAFKA_CLUSTER_CA"
+        None, title="Kafka cluster CA path", env="SQUAREBOT_KAFKA_CLUSTER_CA"
     )
 
     kafka_client_ca_path: Optional[FilePath] = Field(

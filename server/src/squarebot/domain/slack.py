@@ -46,13 +46,11 @@ class SlackUrlVerificationEvent(BaseSlackEvent):
 
 
 class SlackMessageType(str, Enum):
-
     app_mention = "app_mention"
     message = "message"
 
 
 class SlackChannelType(str, Enum):
-
     channel = "channel"  # public channel
     group = "group"  # private channel
     im = "im"  # direct message

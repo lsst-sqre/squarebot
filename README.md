@@ -1,6 +1,4 @@
-##########
-SQuaRE Bot
-##########
+# SQuaRE Bot
 
 SQuaRE Bot is a SQuaRE's Slack bot that's built around Kafka-based backends for processing and responding to messages.
 SQuaRE Bot, Jr receives events (Slack messages, reactions, button actions, and more) from the Slack Events API and passes those on as messages in Kafka topics.

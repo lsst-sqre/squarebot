@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, Form, Request, Response
+from pydantic import AnyHttpUrl
 from safir.metadata import get_metadata
 
 from squarebot.config import config
@@ -39,7 +40,10 @@ async def get_index(
     # Construct these URLs; this doesn't use request.url_for because the
     # endpoints are in other FastAPI "apps".
     doc_url = request.url.replace(path=f"/{config.path_prefix}/redoc")
-    return IndexResponse(metadata=metadata, api_docs=str(doc_url))
+    return IndexResponse(
+        metadata=metadata,
+        api_docs=AnyHttpUrl(str(doc_url), scheme=request.url.scheme),
+    )
 
 
 @external_router.post(

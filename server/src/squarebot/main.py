@@ -35,9 +35,9 @@ app = FastAPI(
     title="SQuaRE Bot",
     description=metadata("squarebot")["Summary"],
     version=version("squarebot"),
-    openapi_url=f"/{config.path_prefix}/openapi.json",
-    docs_url=f"/{config.path_prefix}/docs",
-    redoc_url=f"/{config.path_prefix}/redoc",
+    openapi_url=f"{config.path_prefix}/openapi.json",
+    docs_url=f"{config.path_prefix}/docs",
+    redoc_url=f"{config.path_prefix}/redoc",
 )
 """The main FastAPI application for squarebot."""
 
@@ -45,12 +45,14 @@ app = FastAPI(
 app.include_router(internal_router)
 app.include_router(external_router, prefix=config.path_prefix)
 
+# Set up middleware
+app.add_middleware(XForwardedMiddleware)
+
 
 @app.on_event("startup")
 async def startup_event() -> None:
     """Application start-up hook."""
     logger = get_logger()
-    app.add_middleware(XForwardedMiddleware)
     logger.info("Square Bot start up complete.")
 
 
