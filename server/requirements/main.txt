@@ -25,6 +25,12 @@ cryptography==40.0.2
     # via
     #   pyjwt
     #   safir
+dacite==1.8.0
+    # via dataclasses-avroschema
+dataclasses-avroschema[pydantic]==0.43.0
+    # via kafkit
+faker==18.6.2
+    # via dataclasses-avroschema
 fastapi==0.95.1
     # via
     #   -r server/requirements/main.in
@@ -32,6 +38,7 @@ fastapi==0.95.1
 fastavro==1.7.4
     # via
     #   -r server/requirements/main.in
+    #   dataclasses-avroschema
     #   kafkit
 gidgethub==5.2.1
     # via safir
@@ -44,14 +51,18 @@ httpcore==0.17.0
 httptools==0.5.0
     # via uvicorn
 httpx==0.24.0
-    # via safir
+    # via
+    #   kafkit
+    #   safir
 idna==3.4
     # via
     #   anyio
     #   httpx
+inflector==3.1.0
+    # via dataclasses-avroschema
 kafka-python==2.0.2
     # via aiokafka
-kafkit==0.3.0
+kafkit @ git+https://github.com/lsst-sqre/kafkit.git@main
     # via -r server/requirements/main.in
 packaging==23.1
     # via aiokafka
@@ -59,10 +70,13 @@ pycparser==2.21
     # via cffi
 pydantic==1.10.7
     # via
+    #   dataclasses-avroschema
     #   fastapi
     #   safir
 pyjwt[crypto]==2.6.0
     # via gidgethub
+python-dateutil==2.8.2
+    # via faker
 python-dotenv==1.0.0
     # via uvicorn
 python-multipart==0.0.6
@@ -71,6 +85,8 @@ pyyaml==6.0
     # via uvicorn
 safir==4.0.0
     # via -r server/requirements/main.in
+six==1.16.0
+    # via python-dateutil
 sniffio==1.3.0
     # via
     #   anyio
@@ -81,6 +97,8 @@ starlette==0.26.1
     #   -r server/requirements/main.in
     #   fastapi
     #   safir
+stringcase==1.2.0
+    # via dataclasses-avroschema
 structlog==23.1.0
     # via safir
 typing-extensions==4.5.0
