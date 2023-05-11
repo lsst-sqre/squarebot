@@ -41,6 +41,15 @@ class Configuration(BaseSettings):
         ),
     )
 
+    environment_url: AnyHttpUrl = Field(
+        ...,
+        title="Base URL of the environment",
+        env="SAFIR_ENVIRONMENT_URL",
+        description=(
+            "The base URL of the environment where the application is hosted."
+        ),
+    )
+
     enable_schemas: bool = Field(
         True,
         env="SQUAREBOT_ENABLE_SCHEMAS",
