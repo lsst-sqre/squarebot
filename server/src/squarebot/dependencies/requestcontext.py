@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from aiokafka import AIOKafkaProducer
 from fastapi import Depends, Request, Response
 from httpx import AsyncClient
 from safir.dependencies.http_client import http_client_dependency
@@ -11,6 +12,7 @@ from structlog.stdlib import BoundLogger
 
 from ..config import Configuration, config
 from ..services.slack import SlackService
+from .aiokafkaproducer import kafka_producer_dependency
 
 __all__ = ["RequestContext", "context_dependency"]
 
@@ -42,6 +44,9 @@ class RequestContext:
     http_client: AsyncClient
     """An HTTPX client."""
 
+    kafka_producer: AIOKafkaProducer
+    """A Kafka producer."""
+
     def rebind_logger(self, **values: Optional[str]) -> None:
         """Add the given values to the logging context.
         Also updates the logging context stored in the request object in case
@@ -59,6 +64,7 @@ async def context_dependency(
     response: Response,
     logger: BoundLogger = Depends(logger_dependency),
     http_client: AsyncClient = Depends(http_client_dependency),
+    kafka_producer: AIOKafkaProducer = Depends(kafka_producer_dependency),
 ) -> RequestContext:
     """Provides a RequestContext as a dependency."""
     slack_service = SlackService(logger=logger, config=config)
@@ -69,4 +75,5 @@ async def context_dependency(
         slack=slack_service,
         logger=logger,
         http_client=http_client,
+        kafka_producer=kafka_producer,
     )

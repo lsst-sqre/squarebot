@@ -18,6 +18,7 @@ from safir.middleware.x_forwarded import XForwardedMiddleware
 from structlog import get_logger
 
 from .config import config
+from .dependencies.aiokafkaproducer import kafka_producer_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
 
@@ -53,6 +54,11 @@ app.add_middleware(XForwardedMiddleware)
 async def startup_event() -> None:
     """Application start-up hook."""
     logger = get_logger()
+    logger.info("Square Bot is starting up.")
+
+    # Initialize the Kafka producer
+    await kafka_producer_dependency.initialize(config.kafka)
+
     logger.info("Square Bot start up complete.")
 
 
@@ -60,5 +66,6 @@ async def startup_event() -> None:
 async def shutdown_event() -> None:
     """Application shut-down hook."""
     logger = get_logger()
+    await kafka_producer_dependency.stop()
     await http_client_dependency.aclose()
     logger.info("Square Bot shut down up complete.")
