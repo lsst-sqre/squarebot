@@ -249,18 +249,6 @@ class Configuration(BaseSettings):
         ),
     )
 
-    enable_schemas: bool = Field(
-        True,
-        env="SQUAREBOT_ENABLE_SCHEMAS",
-        description="Enable schema management, such as registering schemas.",
-    )
-
-    enable_producers: bool = Field(
-        True,
-        env="SQUAREBOT_ENABLE_PRODUCERS",
-        description="Enable Kafka producers to backends.",
-    )
-
     kafka: KafkaConnectionSettings = Field(
         default_factory=KafkaConnectionSettings,
         description="Kafka connection configuration.",
