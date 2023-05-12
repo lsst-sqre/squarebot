@@ -7,11 +7,15 @@ from aiokafka import AIOKafkaProducer
 from fastapi import Depends, Request, Response
 from httpx import AsyncClient
 from kafkit.registry.httpx import RegistryApi
+from kafkit.registry.manager import PydanticSchemaManager
 from safir.dependencies.http_client import http_client_dependency
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
 from squarebot.dependencies.registryapi import registry_api_dependency
+from squarebot.dependencies.schemamanager import (
+    pydantic_schema_manager_dependency,
+)
 
 from ..config import Configuration, config
 from ..services.slack import SlackService
@@ -53,6 +57,9 @@ class RequestContext:
     registry_api: RegistryApi
     """A Confluent Schema Registry client."""
 
+    schema_manager: PydanticSchemaManager
+    """A Kafkit Pydantic Schema Manager."""
+
     def rebind_logger(self, **values: Optional[str]) -> None:
         """Add the given values to the logging context.
         Also updates the logging context stored in the request object in case
@@ -72,6 +79,9 @@ async def context_dependency(
     http_client: AsyncClient = Depends(http_client_dependency),
     registry_api: RegistryApi = Depends(registry_api_dependency),
     kafka_producer: AIOKafkaProducer = Depends(kafka_producer_dependency),
+    schema_manager: PydanticSchemaManager = Depends(
+        pydantic_schema_manager_dependency
+    ),
 ) -> RequestContext:
     """Provides a RequestContext as a dependency."""
     slack_service = SlackService(logger=logger, config=config)
@@ -84,4 +94,5 @@ async def context_dependency(
         http_client=http_client,
         registry_api=registry_api,
         kafka_producer=kafka_producer,
+        schema_manager=schema_manager,
     )
