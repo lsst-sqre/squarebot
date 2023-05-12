@@ -6,9 +6,12 @@ from typing import Optional
 from aiokafka import AIOKafkaProducer
 from fastapi import Depends, Request, Response
 from httpx import AsyncClient
+from kafkit.registry.httpx import RegistryApi
 from safir.dependencies.http_client import http_client_dependency
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
+
+from squarebot.dependencies.registryapi import registry_api_dependency
 
 from ..config import Configuration, config
 from ..services.slack import SlackService
@@ -47,6 +50,9 @@ class RequestContext:
     kafka_producer: AIOKafkaProducer
     """A Kafka producer."""
 
+    registry_api: RegistryApi
+    """A Confluent Schema Registry client."""
+
     def rebind_logger(self, **values: Optional[str]) -> None:
         """Add the given values to the logging context.
         Also updates the logging context stored in the request object in case
@@ -64,6 +70,7 @@ async def context_dependency(
     response: Response,
     logger: BoundLogger = Depends(logger_dependency),
     http_client: AsyncClient = Depends(http_client_dependency),
+    registry_api: RegistryApi = Depends(registry_api_dependency),
     kafka_producer: AIOKafkaProducer = Depends(kafka_producer_dependency),
 ) -> RequestContext:
     """Provides a RequestContext as a dependency."""
@@ -75,5 +82,6 @@ async def context_dependency(
         slack=slack_service,
         logger=logger,
         http_client=http_client,
+        registry_api=registry_api,
         kafka_producer=kafka_producer,
     )
