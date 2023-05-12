@@ -19,6 +19,7 @@ from structlog import get_logger
 
 from .config import config
 from .dependencies.aiokafkaproducer import kafka_producer_dependency
+from .dependencies.registryapi import registry_api_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
 
@@ -55,6 +56,13 @@ async def startup_event() -> None:
     """Application start-up hook."""
     logger = get_logger()
     logger.info("Square Bot is starting up.")
+
+    http_client = await http_client_dependency()
+
+    # Initialize the Confluent Schema Registry client
+    await registry_api_dependency.initialize(
+        http_client=http_client, registry_url=config.registry_url
+    )
 
     # Initialize the Kafka producer
     await kafka_producer_dependency.initialize(config.kafka)
