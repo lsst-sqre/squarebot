@@ -18,6 +18,7 @@ from squarebot.dependencies.schemamanager import (
 )
 
 from ..config import Configuration, config
+from ..services.kafkaproducer import PydanticKafkaProducer
 from ..services.slack import SlackService
 from .aiokafkaproducer import kafka_producer_dependency
 
@@ -51,8 +52,8 @@ class RequestContext:
     http_client: AsyncClient
     """An HTTPX client."""
 
-    kafka_producer: AIOKafkaProducer
-    """A Kafka producer."""
+    kafka_producer: PydanticKafkaProducer
+    """A Kafka producer that sends managed Pydantic models."""
 
     registry_api: RegistryApi
     """A Confluent Schema Registry client."""
@@ -84,7 +85,12 @@ async def context_dependency(
     ),
 ) -> RequestContext:
     """Provides a RequestContext as a dependency."""
-    slack_service = SlackService(logger=logger, config=config)
+    pydantic_kafka_producer = PydanticKafkaProducer(
+        producer=kafka_producer, schema_manager=schema_manager
+    )
+    slack_service = SlackService(
+        logger=logger, config=config, kafka_producer=pydantic_kafka_producer
+    )
     return RequestContext(
         request=request,
         response=response,
@@ -93,6 +99,6 @@ async def context_dependency(
         logger=logger,
         http_client=http_client,
         registry_api=registry_api,
-        kafka_producer=kafka_producer,
+        kafka_producer=pydantic_kafka_producer,
         schema_manager=schema_manager,
     )

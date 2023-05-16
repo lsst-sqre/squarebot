@@ -17,14 +17,21 @@ from ..domain.slack import (
     SlackMessageEvent,
     SlackMessageType,
 )
+from .kafkaproducer import PydanticKafkaProducer
 
 
 class SlackService:
     """A service for processing with Slack messages and interactions."""
 
-    def __init__(self, logger: BoundLogger, config: Configuration) -> None:
+    def __init__(
+        self,
+        logger: BoundLogger,
+        config: Configuration,
+        kafka_producer: PydanticKafkaProducer,
+    ) -> None:
         self._logger = logger
         self._config = config
+        self._producer = kafka_producer
 
     @staticmethod
     def compute_slack_signature(
@@ -159,6 +166,10 @@ class SlackService:
                 channel_id=message.event.channel,
                 channel_type=message.event.channel_type,
                 user_id=message.event.user,
+            )
+            await self._producer.send(
+                topic=self._config.message_channels_topic,
+                value=message,
             )
         else:
             self._logger.debug("Did not parse Slack event")
