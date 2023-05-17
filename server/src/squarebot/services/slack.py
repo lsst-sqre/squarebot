@@ -12,8 +12,8 @@ from fastapi import HTTPException, Request, status
 from structlog.stdlib import BoundLogger
 
 from rubinobs.square.squarebot.models.kafka import (
-    SquarebotMessageKey,
-    SquarebotMessageValue,
+    SquarebotSlackMessageKey,
+    SquarebotSlackMessageValue,
 )
 from rubinobs.square.squarebot.models.slack import (
     SlackBlockAction,
@@ -163,8 +163,8 @@ class SlackService:
         ):
             message = SlackMessageEvent.parse_obj(request_json)
 
-            key = SquarebotMessageKey.from_event(message)
-            value = SquarebotMessageValue.from_event(
+            key = SquarebotSlackMessageKey.from_event(message)
+            value = SquarebotSlackMessageValue.from_event(
                 event=message, raw=request_json
             )
             # Temporary placeholder; will serialize and publish to Kafka

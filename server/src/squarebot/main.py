@@ -12,14 +12,15 @@ from __future__ import annotations
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
-from rubinobs.square.models.kafka import (
-    SquarebotSlackMessageKey,
-    SquarebotSlackMessageValue,
-)
 from safir.dependencies.http_client import http_client_dependency
 from safir.logging import configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 from structlog import get_logger
+
+from rubinobs.square.squarebot.models.kafka import (
+    SquarebotSlackMessageKey,
+    SquarebotSlackMessageValue,
+)
 
 from .config import config
 from .dependencies.aiokafkaproducer import kafka_producer_dependency

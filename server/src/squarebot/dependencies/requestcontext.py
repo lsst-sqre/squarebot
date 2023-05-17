@@ -6,13 +6,11 @@ from typing import Optional
 from aiokafka import AIOKafkaProducer
 from fastapi import Depends, Request, Response
 from httpx import AsyncClient
-from kafkit.registry.httpx import RegistryApi
 from kafkit.registry.manager import PydanticSchemaManager
 from safir.dependencies.http_client import http_client_dependency
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
-from squarebot.dependencies.registryapi import registry_api_dependency
 from squarebot.dependencies.schemamanager import (
     pydantic_schema_manager_dependency,
 )
@@ -55,9 +53,6 @@ class RequestContext:
     kafka_producer: PydanticKafkaProducer
     """A Kafka producer that sends managed Pydantic models."""
 
-    registry_api: RegistryApi
-    """A Confluent Schema Registry client."""
-
     schema_manager: PydanticSchemaManager
     """A Kafkit Pydantic Schema Manager."""
 
@@ -78,7 +73,6 @@ async def context_dependency(
     response: Response,
     logger: BoundLogger = Depends(logger_dependency),
     http_client: AsyncClient = Depends(http_client_dependency),
-    registry_api: RegistryApi = Depends(registry_api_dependency),
     kafka_producer: AIOKafkaProducer = Depends(kafka_producer_dependency),
     schema_manager: PydanticSchemaManager = Depends(
         pydantic_schema_manager_dependency
@@ -98,7 +92,6 @@ async def context_dependency(
         slack=slack_service,
         logger=logger,
         http_client=http_client,
-        registry_api=registry_api,
         kafka_producer=pydantic_kafka_producer,
         schema_manager=schema_manager,
     )

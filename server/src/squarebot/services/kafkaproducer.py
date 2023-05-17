@@ -5,9 +5,9 @@ from __future__ import annotations
 from asyncio import Future
 from typing import Optional
 
-from aiokafka import AIOKafkaProducer
+import aiokafka
 from dataclasses_avroschema.avrodantic import AvroBaseModel
-from kafkit.registry.manager import PydanticSchemaManager
+from kafkit.registry import manager
 
 
 class PydanticKafkaProducer:
@@ -23,18 +23,20 @@ class PydanticKafkaProducer:
     """
 
     def __init__(
-        self, producer: AIOKafkaProducer, schema_manager: PydanticSchemaManager
+        self,
+        producer: aiokafka.AIOKafkaProducer,
+        schema_manager: manager.PydanticSchemaManager,
     ) -> None:
         self._producer = producer
         self._schema_manager = schema_manager
 
     @property
-    def aiokafka_producer(self) -> AIOKafkaProducer:
+    def aiokafka_producer(self) -> aiokafka.AIOKafkaProducer:
         """The aiokafka producer (access-only)."""
         return self._producer
 
     @property
-    def schema_manager(self) -> PydanticSchemaManager:
+    def schema_manager(self) -> manager.PydanticSchemaManager:
         """The Pydantic schema manager used by the Pydantic Kafka
         producer (access-only).
         """

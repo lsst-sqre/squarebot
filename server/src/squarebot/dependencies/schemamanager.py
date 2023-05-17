@@ -2,15 +2,13 @@
 for serializing Pydantic models into Avro.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Type
 
 from dataclasses_avroschema.avrodantic import AvroBaseModel
 from httpx import AsyncClient
+from kafkit.registry import manager  # this is patched in tests
 from kafkit.registry.httpx import RegistryApi
-from kafkit.registry.manager import PydanticSchemaManager
 
 __all__ = [
     "pydantic_schema_manager_dependency",
@@ -24,7 +22,7 @@ class PydanticSchemaManagerDependency:
     """
 
     def __init__(self) -> None:
-        self._schema_manager: PydanticSchemaManager | None = None
+        self._schema_manager: manager.PydanticSchemaManager | None = None
 
     async def initialize(
         self,
@@ -36,7 +34,7 @@ class PydanticSchemaManagerDependency:
         compatibility: str = "FORWARD",
     ) -> None:
         registry_api = RegistryApi(http_client=http_client, url=registry_url)
-        self._schema_manager = PydanticSchemaManager(
+        self._schema_manager = manager.PydanticSchemaManager(
             registry=registry_api, suffix=suffix
         )
 
@@ -44,7 +42,7 @@ class PydanticSchemaManagerDependency:
             models, compatibility=compatibility
         )
 
-    async def __call__(self) -> PydanticSchemaManager:
+    async def __call__(self) -> manager.PydanticSchemaManager:
         """Get the dependency (call during FastAPI request handling)."""
         if self._schema_manager is None:
             raise RuntimeError("Dependency not initialized")

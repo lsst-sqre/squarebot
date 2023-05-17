@@ -1,7 +1,5 @@
 """Handlers for the app's external root, ``/squarebot/``."""
 
-from __future__ import annotations
-
 import json
 
 from fastapi import APIRouter, Depends, Form, Request, Response

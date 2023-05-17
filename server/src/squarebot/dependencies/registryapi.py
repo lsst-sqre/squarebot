@@ -1,7 +1,5 @@
 """A FastAPI dependency that provides a Kafkit RegistryApi client."""
 
-from __future__ import annotations
-
 from httpx import AsyncClient
 from kafkit.registry.httpx import RegistryApi
 

@@ -1,8 +1,6 @@
 """A FastAPI dependency that provides an aiokafka Producer."""
 
-from __future__ import annotations
-
-from aiokafka import AIOKafkaProducer
+import aiokafka  # patched for testing
 
 from squarebot.config import KafkaConnectionSettings
 
@@ -13,11 +11,11 @@ class AioKafkaProducerDependency:
     """A FastAPI dependency that provides an aiokafka Producer."""
 
     def __init__(self) -> None:
-        self._producer: AIOKafkaProducer | None = None
+        self._producer: aiokafka.AIOKafkaProducer | None = None
 
     async def initialize(self, settings: KafkaConnectionSettings) -> None:
         """Initialize the dependency (call during FastAPI startup)."""
-        self._producer = AIOKafkaProducer(
+        self._producer = aiokafka.AIOKafkaProducer(
             bootstrap_servers=settings.bootstrap_servers,
             # client_id=TODO,
             security_protocol=str(settings.security_protocol),
@@ -30,10 +28,9 @@ class AioKafkaProducerDependency:
             ),
             sasl_plain_username=settings.sasl_username,
         )
-
         await self._producer.start()
 
-    async def __call__(self) -> AIOKafkaProducer:
+    async def __call__(self) -> aiokafka.AIOKafkaProducer:
         """Get the dependency (call during FastAPI request handling)."""
         if self._producer is None:
             raise RuntimeError("Dependency not initialized")
