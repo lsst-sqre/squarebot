@@ -12,11 +12,13 @@ from safir.logging import LogLevel, Profile, configure_logging
 from structlog import get_logger
 
 from squarebot.config import config
+from squarebot.services.kafkaproducer import PydanticKafkaProducer
 from squarebot.services.slack import SlackService
 
 
 @pytest.mark.asyncio
 async def test_publish_event_app_mention(
+    mock_kafka_producer: PydanticKafkaProducer,
     caplog: LogCaptureFixture,
     sample_slack_message_dir: Path,
 ) -> None:
@@ -30,6 +32,12 @@ async def test_publish_event_app_mention(
     )
     logger = get_logger("squarebot")
 
+    # kafka_producer = AIOKafkaProducer(
+    #     bootstrap_servers=config.kafka_bootstrap_servers,
+    # )
+    # registry_api = RegistryApi(
+    #     http_client=http_client, registry_url=config.registry_url
+    # )
     slack = SlackService(logger=logger, config=config)
 
     app_mention_payload = json.loads(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from pydantic import AnyHttpUrl, BaseModel, Field
 from safir.metadata import Metadata as SafirMetadata
 
-from squarebot.domain.slack import SlackUrlVerificationEvent
+from rubinobs.square.squarebot.models.slack import SlackUrlVerificationEvent
 
 __all__ = ["IndexResponse", "UrlVerificationResponse"]
 

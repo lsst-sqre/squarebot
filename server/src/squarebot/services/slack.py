@@ -11,12 +11,17 @@ from typing import Any
 from fastapi import HTTPException, Request, status
 from structlog.stdlib import BoundLogger
 
-from ..config import Configuration
-from ..domain.slack import (
+from rubinobs.square.squarebot.models.kafka import (
+    SquarebotMessageKey,
+    SquarebotMessageValue,
+)
+from rubinobs.square.squarebot.models.slack import (
     SlackBlockAction,
     SlackMessageEvent,
     SlackMessageType,
 )
+
+from ..config import Configuration
 from .kafkaproducer import PydanticKafkaProducer
 
 
@@ -157,6 +162,11 @@ class SlackService:
             and request_json["event"]["type"] in SlackMessageType.__members__
         ):
             message = SlackMessageEvent.parse_obj(request_json)
+
+            key = SquarebotMessageKey.from_event(message)
+            value = SquarebotMessageValue.from_event(
+                event=message, raw=request_json
+            )
             # Temporary placeholder; will serialize and publish to Kafka
             # in reality.
             self._logger.debug(
@@ -169,7 +179,8 @@ class SlackService:
             )
             await self._producer.send(
                 topic=self._config.message_channels_topic,
-                value=message,
+                value=value,
+                key=key,
             )
         else:
             self._logger.debug("Did not parse Slack event")

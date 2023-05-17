@@ -8,12 +8,15 @@ from fastapi import APIRouter, Depends, Form, Request, Response
 from pydantic import AnyHttpUrl
 from safir.metadata import get_metadata
 
+from rubinobs.square.squarebot.models.slack import (
+    BaseSlackEvent,
+    SlackUrlVerificationEvent,
+)
 from squarebot.config import config
 from squarebot.dependencies.requestcontext import (
     RequestContext,
     context_dependency,
 )
-from squarebot.domain.slack import BaseSlackEvent, SlackUrlVerificationEvent
 
 from .models import IndexResponse, UrlVerificationResponse
 

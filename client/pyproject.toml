@@ -44,7 +44,7 @@ root = "../"
 [tool.coverage.run]
 parallel = true
 branch = true
-source = ["rubinobs.square.clients.safirdemo"]
+source = ["rubinobs.square.squarebot"]
 
 [tool.coverage.paths]
 source = ["src", ".tox/*/site-packages"]
@@ -103,7 +103,7 @@ add-ignore = [
 profile = "black"
 line_length = 79
 # This tox config might be used for the server isort with pre-commit; so add safir demo as a firstparty
-known_first_party = ["rubinobs.square.clients.squarebot", "squarebot", "tests"]
+known_first_party = ["rubinobs.square.squarebot", "squarebot", "tests"]
 skip = ["docs/conf.py"]
 
 [tool.pytest.ini_options]

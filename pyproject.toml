@@ -16,5 +16,5 @@ exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 79
-known_first_party = ["squarebot", "rubinobs.square.clients.squarebot", "tests"]
+known_first_party = ["squarebot", "rubinobs.square.squarebot", "tests"]
 skip = ["docs/conf.py"]
