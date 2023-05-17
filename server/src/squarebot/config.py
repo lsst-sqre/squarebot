@@ -210,7 +210,7 @@ class KafkaConnectionSettings(BaseSettings):
 
 
 class Configuration(BaseSettings):
-    """Configuration for example."""
+    """Configuration for Squarebot."""
 
     name: str = Field(
         "squarebot",

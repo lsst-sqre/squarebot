@@ -31,6 +31,7 @@ nitpick_ignore = [
     ["py:class", "pydantic.networks.IPvAnyNetwork"],
     ["py:class", "pydantic.types.SecretStr"],
     ["py:class", "pydantic.types.FilePath"],
+    ["py:class", "pydantic.types.DirectoryPath"],
     ["py:class", "pydantic.utils.Representation"],
     ["py:class", "redis.asyncio.client.Redis"],
     ["py:class", "starlette.middleware.base.BaseHTTPMiddleware"],
