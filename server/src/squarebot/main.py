@@ -19,7 +19,6 @@ from structlog import get_logger
 
 from .config import config
 from .dependencies.aiokafkaproducer import kafka_producer_dependency
-from .dependencies.registryapi import registry_api_dependency
 from .dependencies.schemamanager import pydantic_schema_manager_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
@@ -60,15 +59,10 @@ async def startup_event() -> None:
 
     http_client = await http_client_dependency()
 
-    # Initialize the Confluent Schema Registry client
-    await registry_api_dependency.initialize(
-        http_client=http_client, registry_url=config.registry_url
-    )
-    registry_api = await registry_api_dependency()
-
     # Initialize the Pydantic Schema Manager and register models
     await pydantic_schema_manager_dependency.initialize(
-        registry_api=registry_api,
+        http_client=http_client,
+        registry_url=config.registry_url,
         models=[],
         suffix=config.subject_suffix,
         compatibility=config.subject_compatibility,

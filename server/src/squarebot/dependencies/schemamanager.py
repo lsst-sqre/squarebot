@@ -8,6 +8,7 @@ from collections.abc import Iterable
 from typing import Type
 
 from dataclasses_avroschema.avrodantic import AvroBaseModel
+from httpx import AsyncClient
 from kafkit.registry.httpx import RegistryApi
 from kafkit.registry.manager import PydanticSchemaManager
 
@@ -28,11 +29,13 @@ class PydanticSchemaManagerDependency:
     async def initialize(
         self,
         *,
-        registry_api: RegistryApi,
+        http_client: AsyncClient,
+        registry_url: str,
         models: Iterable[Type[AvroBaseModel]],
         suffix: str = "",
         compatibility: str = "FORWARD",
     ) -> None:
+        registry_api = RegistryApi(http_client=http_client, url=registry_url)
         self._schema_manager = PydanticSchemaManager(
             registry=registry_api, suffix=suffix
         )
