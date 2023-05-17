@@ -12,6 +12,10 @@ from __future__ import annotations
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
+from rubinobs.square.models.kafka import (
+    SquarebotSlackMessageKey,
+    SquarebotSlackMessageValue,
+)
 from safir.dependencies.http_client import http_client_dependency
 from safir.logging import configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
@@ -63,7 +67,7 @@ async def startup_event() -> None:
     await pydantic_schema_manager_dependency.initialize(
         http_client=http_client,
         registry_url=config.registry_url,
-        models=[],
+        models=[SquarebotSlackMessageKey, SquarebotSlackMessageValue],
         suffix=config.subject_suffix,
         compatibility=config.subject_compatibility,
     )
