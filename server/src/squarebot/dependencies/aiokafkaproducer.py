@@ -1,6 +1,7 @@
 """A FastAPI dependency that provides an aiokafka Producer."""
 
 import aiokafka  # patched for testing
+from structlog.stdlib import BoundLogger
 
 from squarebot.config import KafkaConnectionSettings
 
@@ -13,8 +14,17 @@ class AioKafkaProducerDependency:
     def __init__(self) -> None:
         self._producer: aiokafka.AIOKafkaProducer | None = None
 
-    async def initialize(self, settings: KafkaConnectionSettings) -> None:
+    async def initialize(
+        self, settings: KafkaConnectionSettings, logger: BoundLogger
+    ) -> None:
         """Initialize the dependency (call during FastAPI startup)."""
+        logger.info(
+            "Kafka connection settings",
+            bootstrap_servers=settings.bootstrap_servers,
+            security_protocol=str(settings.security_protocol),
+            sasl_mechanism=str(settings.sasl_mechanism),
+            sasl_plain_username=str(settings.sasl_username),
+        )
         self._producer = aiokafka.AIOKafkaProducer(
             bootstrap_servers=settings.bootstrap_servers,
             # client_id=TODO,

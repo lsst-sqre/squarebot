@@ -74,7 +74,7 @@ async def startup_event() -> None:
     )
 
     # Initialize the Kafka producer
-    await kafka_producer_dependency.initialize(config.kafka)
+    await kafka_producer_dependency.initialize(config.kafka, logger)
 
     logger.info("Square Bot start up complete.")
 
