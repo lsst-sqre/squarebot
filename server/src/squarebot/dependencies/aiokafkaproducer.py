@@ -18,19 +18,23 @@ class AioKafkaProducerDependency:
         self, settings: KafkaConnectionSettings, logger: BoundLogger
     ) -> None:
         """Initialize the dependency (call during FastAPI startup)."""
+        security_protocol = settings.security_protocol.value
+        sasl_mechanism = (
+            settings.sasl_mechanism.value if settings.sasl_mechanism else None
+        )
         logger.info(
             "Kafka connection settings",
             bootstrap_servers=settings.bootstrap_servers,
-            security_protocol=str(settings.security_protocol),
-            sasl_mechanism=str(settings.sasl_mechanism),
-            sasl_plain_username=str(settings.sasl_username),
+            security_protocol=security_protocol,
+            sasl_mechanism=sasl_mechanism,
+            sasl_plain_username=settings.sasl_username,
         )
         self._producer = aiokafka.AIOKafkaProducer(
             bootstrap_servers=settings.bootstrap_servers,
             # client_id=TODO,
-            security_protocol=str(settings.security_protocol),
+            security_protocol=security_protocol,
             ssl_context=settings.ssl_context,
-            sasl_mechanism=str(settings.sasl_mechanism),
+            sasl_mechanism=sasl_mechanism,
             sasl_plain_password=(
                 settings.sasl_password.get_secret_value()
                 if settings.sasl_password
