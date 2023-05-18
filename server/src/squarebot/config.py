@@ -197,7 +197,11 @@ class KafkaConnectionSettings(BaseSettings):
                 )
             client_ca = Path(self.client_ca_path).read_text()
             client_cert = Path(self.client_cert_path).read_text()
-            new_client_cert = "\n".join([client_cert, client_ca])
+            if client_ca.endswith("\n"):
+                sep = ""
+            else:
+                sep = "\n"
+            new_client_cert = sep.join([client_cert, client_ca])
             new_client_cert_path = Path(self.cert_temp_dir) / "client.crt"
             new_client_cert_path.write_text(new_client_cert)
             client_cert_path = Path(new_client_cert_path)
