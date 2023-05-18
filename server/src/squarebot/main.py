@@ -64,6 +64,24 @@ async def startup_event() -> None:
 
     http_client = await http_client_dependency()
 
+    logger.info(
+        "Kafka topic configuration",
+        slack={
+            "app_mention": config.app_mention_topic,
+            "message_channels": config.message_channels_topic,
+            "message_im": config.message_im_topic,
+            "message_groups": config.message_groups_topic,
+            "message_mpim": config.message_mpim_topic,
+            "interaction": config.interaction_topic,
+        },
+    )
+    logger.info(
+        "Schema Registry configuration",
+        registry_url=config.registry_url,
+        subject_suffix=config.subject_suffix,
+        subject_compatibility=config.subject_compatibility,
+    )
+
     # Initialize the Pydantic Schema Manager and register models
     await pydantic_schema_manager_dependency.initialize(
         http_client=http_client,
