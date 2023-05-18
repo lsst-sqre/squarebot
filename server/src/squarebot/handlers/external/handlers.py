@@ -48,7 +48,7 @@ async def get_index(
 
 
 @external_router.post(
-    "/event", summary="Handle Slack event", response_model=None
+    "/slack/event", summary="Handle Slack event", response_model=None
 )
 async def post_event(
     slack_event: BaseSlackEvent,
@@ -76,7 +76,7 @@ async def post_event(
         return Response(status_code=200)
 
 
-@external_router.post("/interaction", summary="Handle Slack interaction")
+@external_router.post("/slack/interaction", summary="Handle Slack interaction")
 async def post_interaction(
     payload: str = Form(),
     context: RequestContext = Depends(context_dependency),

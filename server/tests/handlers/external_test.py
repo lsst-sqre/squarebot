@@ -32,13 +32,15 @@ async def test_get_index(client: AsyncClient) -> None:
 async def test_post_event_app_mention(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with an ``app_mention`` payload (happy path)."""
+    """Test ``POST /slack/event`` with an ``app_mention`` payload
+    (happy path).
+    """
     app_mention_payload = json.loads(
         sample_slack_message_dir.joinpath("app_mention.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
     )
     assert response.status_code == 200
 
@@ -47,7 +49,7 @@ async def test_post_event_app_mention(
 async def test_post_event_message_channels(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with a ``message.channels`` payload
+    """Test ``POST /slack/event`` with a ``message.channels`` payload
     (happy path).
     """
     app_mention_payload = json.loads(
@@ -55,7 +57,7 @@ async def test_post_event_message_channels(
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
     )
     assert response.status_code == 200
 
@@ -64,7 +66,7 @@ async def test_post_event_message_channels(
 async def test_post_event_message_im(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with a ``message.im`` payload
+    """Test ``POST /slack/event`` with a ``message.im`` payload
     (happy path).
     """
     app_mention_payload = json.loads(
@@ -72,7 +74,7 @@ async def test_post_event_message_im(
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
     )
     assert response.status_code == 200
 
@@ -81,7 +83,7 @@ async def test_post_event_message_im(
 async def test_post_event_message_groups(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with a ``message.groups`` payload
+    """Test ``POST /slack/event`` with a ``message.groups`` payload
     (happy path).
     """
     app_mention_payload = json.loads(
@@ -89,7 +91,7 @@ async def test_post_event_message_groups(
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
     )
     assert response.status_code == 200
 
@@ -98,7 +100,7 @@ async def test_post_event_message_groups(
 async def test_post_event_message_mpim(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with a ``message.mpim`` payload
+    """Test ``POST /slack/event`` with a ``message.mpim`` payload
     (happy path).
     """
     app_mention_payload = json.loads(
@@ -106,7 +108,7 @@ async def test_post_event_message_mpim(
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
     )
     assert response.status_code == 200
 
@@ -115,15 +117,15 @@ async def test_post_event_message_mpim(
 async def test_post_event_missing_timestamp(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with an ``app_mention`` payload where the timestamp
-    is missing.
+    """Test ``POST /slack/event`` with an ``app_mention`` payload where the
+    timestamp is missing.
     """
     app_mention_payload = json.loads(
         sample_slack_message_dir.joinpath("app_mention.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event",
+        f"{config.path_prefix}/slack/event",
         json_data=app_mention_payload,
         timestamped=False,
     )
@@ -137,15 +139,15 @@ async def test_post_event_missing_timestamp(
 async def test_post_event_bad_timestamp(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with an ``app_mention`` payload where the timestamp
-    is incorrect.
+    """Test ``POST /slack/event`` with an ``app_mention`` payload where the
+    timestamp is incorrect.
     """
     app_mention_payload = json.loads(
         sample_slack_message_dir.joinpath("app_mention.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event",
+        f"{config.path_prefix}/slack/event",
         json_data=app_mention_payload,
         bad_timestamp=True,
     )
@@ -159,15 +161,15 @@ async def test_post_event_bad_timestamp(
 async def test_post_event_missing_signature(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with an ``app_mention`` payload where the signature
-    is missing.
+    """Test ``POST /slack/event`` with an ``app_mention`` payload where the
+    signature is missing.
     """
     app_mention_payload = json.loads(
         sample_slack_message_dir.joinpath("app_mention.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event",
+        f"{config.path_prefix}/slack/event",
         json_data=app_mention_payload,
         signed=False,
     )
@@ -181,15 +183,15 @@ async def test_post_event_missing_signature(
 async def test_post_event_wrong_signature(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
-    """Test ``POST /event`` with an ``app_mention`` payload where the signature
-    is incorrect.
+    """Test ``POST /slack/event`` with an ``app_mention`` payload where the
+    signature is incorrect.
     """
     app_mention_payload = json.loads(
         sample_slack_message_dir.joinpath("app_mention.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/event",
+        f"{config.path_prefix}/slack/event",
         json_data=app_mention_payload,
         bad_signature=True,
     )
