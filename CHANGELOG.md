@@ -2,6 +2,22 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.7.0'></a>
+
+## 0.7.0 (2023-05-19)
+
+### Backwards-incompatible changes
+
+- sqrbot-jr is now Squarebot. It's docker image is now published at `ghcr.io/lsst-sqre/squarebot`. The app is also deployed through a Helm chart in [lsst-sqre/phalanx](https://github.com/lsst-sqre/phalanx), rather than as a Kustomize manifest. See _New features_ for more details.
+- Avro schemas for messages
+- Slack interaction events are currently unsupported; only Slack messages are published to Kafka.
+
+### New features
+
+- Squarebot is rebuilt for the modern SQuaRE app architecture: FastAPI, deployed with Helm through Phalanx.
+- Squarebot uses Pydantic for modelling Avro-encoded Kafka messages. This allows for end-to-end type checking from the HTTP handlers to the messages published to Kafka.
+- The `lsst-sqre/squarebot` repository is now a monorepo that contains the Squarebot service and a client library (`rubin-squarebot` on PyPI). The client library contains Pydantic models for the Avro-encoded messages published to Kafka by Squarebot. See [SQR-075](https://sqr-075.lsst.io) for details on the monorepo architecture and [SQR-076](https://sqr-076.lsst.io) background on how Pydantic is used for Kafka message modelling.
+
 ## 0.6.0 (2019-12-02)
 
 - The event topics (for messages) have keys that contain the Slack Team ID and the channel ID. This ensures that messages in a given channel are processed sequentially.
