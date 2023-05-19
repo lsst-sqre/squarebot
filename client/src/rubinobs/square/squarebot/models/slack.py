@@ -73,8 +73,11 @@ class SlackMessageEventContent(BaseModel):
         )
     )
 
-    channel_type: SlackChannelType = Field(
-        description="The type of channel (public, direct im, etc..)"
+    channel_type: Optional[SlackChannelType] = Field(
+        description=(
+            "The type of channel (public, direct im, etc..). This is null for "
+            "``app_mention`` events."
+        )
     )
 
     user: str = Field(

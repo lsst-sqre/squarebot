@@ -18,6 +18,7 @@ from safir.middleware.x_forwarded import XForwardedMiddleware
 from structlog import get_logger
 
 from rubinobs.square.squarebot.models.kafka import (
+    SquarebotSlackAppMentionValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
 )
@@ -86,7 +87,11 @@ async def startup_event() -> None:
     await pydantic_schema_manager_dependency.initialize(
         http_client=http_client,
         registry_url=config.registry_url,
-        models=[SquarebotSlackMessageKey, SquarebotSlackMessageValue],
+        models=[
+            SquarebotSlackMessageKey,
+            SquarebotSlackMessageValue,
+            SquarebotSlackAppMentionValue,
+        ],
         suffix=config.subject_suffix,
         compatibility=config.subject_compatibility,
     )
