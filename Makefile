@@ -1,22 +1,19 @@
 .PHONY: update-deps
 update-deps:
 	pip install --upgrade pip-tools pip setuptools
-	pip-compile --upgrade --build-isolation --generate-hashes --output-file requirements/main.txt requirements/main.in
-	pip-compile --upgrade --build-isolation --generate-hashes --output-file requirements/dev.txt requirements/dev.in
-
-# Useful for testing against a Git version of Safir.
-.PHONY: update-deps-no-hashes
-update-deps-no-hashes:
-	pip install --upgrade pip-tools pip setuptools
-	pip-compile --upgrade --build-isolation --allow-unsafe --output-file requirements/main.txt requirements/main.in
-	pip-compile --upgrade --build-isolation --allow-unsafe --output-file requirements/dev.txt requirements/dev.in
+	# pip-compile --upgrade --build-isolation --generate-hashes --output-file server/requirements/main.hashed.txt server/requirements/main.in
+	# pip-compile --upgrade --build-isolation --generate-hashes --output-file server/requirements/dev.hashed.txt server/requirements/dev.in
+	pip-compile --upgrade --build-isolation --allow-unsafe --output-file server/requirements/main.txt server/requirements/main.in
+	pip-compile --upgrade --build-isolation --allow-unsafe --output-file server/requirements/dev.txt server/requirements/dev.in
 
 .PHONY: init
 init:
-	pip install --editable .
-	pip install --upgrade -r requirements/main.txt -r requirements/dev.txt
-	rm -rf .tox
-	pip install --upgrade pre-commit tox
+	pip install --editable "./client[dev]"
+	pip install --editable ./server
+	pip install --upgrade -r server/requirements/main.txt -r server/requirements/dev.txt
+	rm -rf ./server/.tox
+	rm -rf ./client/.tox
+	pip install --upgrade pre-commit tox scriv
 	pre-commit install
 
 .PHONY: update
@@ -24,4 +21,4 @@ update: update-deps init
 
 .PHONY: run
 run:
-	tox -e=run
+	cd server && tox run -e=run

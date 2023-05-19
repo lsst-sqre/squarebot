@@ -14,7 +14,7 @@
 #   - Runs a non-root user.
 #   - Sets up the entrypoint and port.
 
-FROM python:3.10.7-slim-bullseye as base-image
+FROM python:3.11.3-slim-bullseye as base-image
 
 # Update system packages
 COPY scripts/install-base-packages.sh .
@@ -35,7 +35,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install --upgrade --no-cache-dir pip setuptools wheel
 
 # Install the app's Python runtime dependencies
-COPY requirements/main.txt ./requirements.txt
+COPY server/requirements/main.txt ./requirements.txt
 RUN pip install --quiet --no-cache-dir -r requirements.txt
 
 FROM dependencies-image AS install-image
@@ -45,7 +45,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY . /workdir
 WORKDIR /workdir
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir ./client
+RUN pip install --no-cache-dir ./server
 
 FROM base-image AS runtime-image
 
