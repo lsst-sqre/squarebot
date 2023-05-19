@@ -13,7 +13,7 @@ init:
 	pip install --upgrade -r server/requirements/main.txt -r server/requirements/dev.txt
 	rm -rf ./server/.tox
 	rm -rf ./client/.tox
-	pip install --upgrade pre-commit tox
+	pip install --upgrade pre-commit tox scriv
 	pre-commit install
 
 .PHONY: update
