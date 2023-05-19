@@ -17,6 +17,7 @@ from rubinobs.square.squarebot.models.kafka import (
 )
 from rubinobs.square.squarebot.models.slack import (
     SlackBlockAction,
+    SlackChannelType,
     SlackMessageEvent,
     SlackMessageType,
 )
@@ -161,27 +162,57 @@ class SlackService:
             "event" in request_json
             and request_json["event"]["type"] in SlackMessageType.__members__
         ):
-            message = SlackMessageEvent.parse_obj(request_json)
-
-            key = SquarebotSlackMessageKey.from_event(message)
-            value = SquarebotSlackMessageValue.from_event(
-                event=message, raw=request_json
-            )
-            # Temporary placeholder; will serialize and publish to Kafka
-            # in reality.
+            try:
+                event = SlackMessageEvent.parse_obj(request_json)
+            except Exception as e:
+                self._logger.exception(
+                    "Could not parse Slack event", exc_info=e, raw=request_json
+                )
+                raise
             self._logger.debug(
-                "Got a Slack message",
-                event_type=message.event.type,
-                slack_text=message.event.text,
-                channel_id=message.event.channel,
-                channel_type=message.event.channel_type,
-                user_id=message.event.user,
+                "Got a Slack message event",
+                event_type=event.event.type,
+                slack_text=event.event.text,
+                channel_id=event.event.channel,
+                channel_type=event.event.channel_type,
+                user_id=event.event.user,
             )
+
+            # Create the Kafka key and value as Pydantic objects
+            key = SquarebotSlackMessageKey.from_event(event)
+            value = SquarebotSlackMessageValue.from_event(
+                event=event, raw=request_json
+            )
+
+            # Determine the Kafka topic based on the event type
+            if event.event.type == SlackMessageType.app_mention:
+                topic = self._config.app_mention_topic
+            elif event.event.channel_type == SlackChannelType.channel:
+                topic = self._config.message_channels_topic
+            elif event.event.channel_type == SlackChannelType.group:
+                topic = self._config.message_groups_topic
+            elif event.event.channel_type == SlackChannelType.im:
+                topic = self._config.message_im_topic
+            elif event.event.channel_type == SlackChannelType.mpim:
+                topic = self._config.message_mpim_topic
+            else:
+                raise RuntimeError(
+                    f"Could not determine topic for Slack message event. "
+                    f"Message type is {event.event.channel_type.value}"
+                )
+
             await self._producer.send(
-                topic=self._config.message_channels_topic,
+                topic=topic,
                 value=value,
                 key=key,
             )
+            self._logger.debug(
+                "Published Slack event to Kafka",
+                topic=topic,
+                value=value.dict(),
+                key=key.dict(),
+            )
+
         else:
             self._logger.debug("Did not parse Slack event")
 
