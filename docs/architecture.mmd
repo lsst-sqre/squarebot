@@ -3,19 +3,19 @@ flowchart LR
     message[Slack message]
     interaction[Slack interaction]
     end
-    subgraph sqrbot ["Square Bot"]
-    eventapi["/event"]
-    interactionapi["/interaction"]
+    subgraph sqrbot ["Squarebot"]
+    eventapi["/slack/event"]
+    interactionapi["/slack/interaction"]
     message -->|HTTP POST| eventapi
     interaction -->|HTTP POST| interactionapi
     end
     subgraph kafka ["Kafka Topics"]
-    topicmention["squarebot.app_mention"]
-    topicchannel["squarebot.message.channel"]
-    topicgroup["squarebot.message.group"]
-    topicim["squarebot.message.im"]
-    topicmpim["squarebot.message.mpim"]
-    topicinteraction["squarebot.interaction"]
+    topicmention["lsst.square-events.squarebot.slack.app.mention"]
+    topicchannel["lsst.square-events.squarebot.slack.message.channel"]
+    topicgroup["lsst.square-events.squarebot.slack.message.group"]
+    topicim["lsst.square-events.squarebot.slack.message.im"]
+    topicmpim["lsst.square-events.squarebot.slack.message.mpim"]
+    topicinteraction["lsst.square-events.squarebot.slack.interaction"]
     end
     eventapi --> topicmention
     eventapi --> topicchannel
