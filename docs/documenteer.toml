@@ -6,7 +6,11 @@ copyright = "2018-2023 Association of Universities for Research in Astronomy, In
 package = "squarebot"
 
 [sphinx]
-extensions = ["sphinxcontrib.autodoc_pydantic", "documenteer.ext.openapi"]
+extensions = [
+    "sphinxcontrib.autodoc_pydantic",
+    "sphinxcontrib.redoc",
+    "documenteer.ext.openapi",
+]
 nitpick_ignore = [
     # Ignore missing cross-references for modules that don't provide
     # intersphinx.  The documentation itself should use double-quotes instead
