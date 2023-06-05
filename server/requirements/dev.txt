@@ -6,7 +6,7 @@
 #
 alabaster==0.7.13
     # via sphinx
-anyio==3.6.2
+anyio==3.7.0
     # via
     #   -c server/requirements/main.txt
     #   httpcore
@@ -20,7 +20,7 @@ babel==2.12.1
     # via sphinx
 beautifulsoup4==4.12.2
     # via pydata-sphinx-theme
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   -c server/requirements/main.txt
     #   httpcore
@@ -36,7 +36,7 @@ click==8.1.3
     #   documenteer
 contourpy==1.0.7
     # via matplotlib
-coverage[toml]==7.2.5
+coverage[toml]==7.2.7
     # via
     #   -r server/requirements/dev.in
     #   pytest-cov
@@ -44,7 +44,7 @@ cycler==0.11.0
     # via matplotlib
 distlib==0.3.6
     # via virtualenv
-documenteer[guide]==0.7.3
+documenteer @ git+https://github.com/lsst-sqre/documenteer.git@tickets/DM-37525
     # via -r server/requirements/dev.in
 docutils==0.19
     # via
@@ -55,7 +55,7 @@ docutils==0.19
     #   sphinxcontrib-bibtex
 filelock==3.12.0
     # via virtualenv
-fonttools==4.39.3
+fonttools==4.39.4
     # via matplotlib
 gitdb==4.0.10
     # via gitpython
@@ -65,11 +65,11 @@ h11==0.14.0
     # via
     #   -c server/requirements/main.txt
     #   httpcore
-httpcore==0.17.0
+httpcore==0.17.2
     # via
     #   -c server/requirements/main.txt
     #   httpx
-httpx==0.24.0
+httpx==0.24.1
     # via
     #   -c server/requirements/main.txt
     #   -r server/requirements/dev.in
@@ -100,7 +100,7 @@ markdown-it-py[linkify]==2.2.0
     #   documenteer
     #   mdit-py-plugins
     #   myst-parser
-markupsafe==2.1.2
+markupsafe==2.1.3
     # via jinja2
 matplotlib==3.7.1
     # via sphinxext-opengraph
@@ -108,13 +108,13 @@ mdit-py-plugins==0.3.5
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-mypy==1.2.0
+mypy==1.3.0
     # via -r server/requirements/dev.in
 mypy-extensions==1.0.0
     # via mypy
 myst-parser==1.0.0
     # via documenteer
-nodeenv==1.7.0
+nodeenv==1.8.0
     # via pre-commit
 numpy==1.24.3
     # via
@@ -129,11 +129,11 @@ packaging==23.1
     #   sphinx
 pillow==9.5.0
     # via matplotlib
-platformdirs==3.5.0
+platformdirs==3.5.1
     # via virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==3.3.1
+pre-commit==3.3.2
     # via -r server/requirements/dev.in
 pybtex==0.24.0
     # via
@@ -141,7 +141,7 @@ pybtex==0.24.0
     #   sphinxcontrib-bibtex
 pybtex-docutils==1.0.2
     # via sphinxcontrib-bibtex
-pydantic==1.10.7
+pydantic==1.10.8
     # via
     #   -c server/requirements/main.txt
     #   autodoc-pydantic
@@ -162,7 +162,7 @@ pytest==7.3.1
     #   pytest-cov
 pytest-asyncio==0.21.0
     # via -r server/requirements/dev.in
-pytest-cov==4.0.0
+pytest-cov==4.1.0
     # via -r server/requirements/dev.in
 python-dateutil==2.8.2
     # via
@@ -175,7 +175,7 @@ pyyaml==6.0
     #   myst-parser
     #   pre-commit
     #   pybtex
-requests==2.30.0
+requests==2.31.0
     # via
     #   documenteer
     #   sphinx
@@ -231,7 +231,7 @@ sphinxcontrib-htmlhelp==2.0.1
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-mermaid==0.8.1
+sphinxcontrib-mermaid==0.9.2
     # via documenteer
 sphinxcontrib-qthelp==1.0.3
     # via sphinx
@@ -239,7 +239,7 @@ sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 sphinxext-opengraph==0.8.2
     # via documenteer
-typing-extensions==4.5.0
+typing-extensions==4.6.3
     # via
     #   -c server/requirements/main.txt
     #   mypy
@@ -252,5 +252,5 @@ virtualenv==20.23.0
     # via pre-commit
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==67.7.2
+setuptools==67.8.0
     # via nodeenv
