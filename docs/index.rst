@@ -17,4 +17,5 @@ You can deploy new ChatOps automations without having to update or modify SQuaRE
    :hidden:
 
    user-guide/index
+   api
    changelog

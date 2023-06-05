@@ -8,7 +8,7 @@ documenteer_openapi_generator = {
 redoc = [
     {
         "name": "REST API",
-        "page": "rest",
+        "page": "api",
         "spec": "_static/openapi.json",
         "embed": True,
         "opts": {"hide-hostname": True},
