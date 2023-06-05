@@ -9,9 +9,11 @@ called.
 
 from __future__ import annotations
 
+import json
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from safir.dependencies.http_client import http_client_dependency
 from safir.logging import configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
@@ -29,7 +31,7 @@ from .dependencies.schemamanager import pydantic_schema_manager_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
 
-__all__ = ["app"]
+__all__ = ["app", "create_openapi"]
 
 
 configure_logging(
@@ -109,3 +111,14 @@ async def shutdown_event() -> None:
     await kafka_producer_dependency.stop()
     await http_client_dependency.aclose()
     logger.info("Square Bot shut down up complete.")
+
+
+def create_openapi() -> str:
+    """Create the OpenAPI spec for static documentation."""
+    spec = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    return json.dumps(spec)
