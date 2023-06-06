@@ -19,4 +19,3 @@ pytest-cov
 avro-python3
 git+https://github.com/lsst-sqre/documenteer.git@tickets/DM-37525#egg=documenteer[guide]
 autodoc_pydantic
-sphinxcontrib-redoc
