@@ -5,8 +5,17 @@ copyright = "2018-2023 Association of Universities for Research in Astronomy, In
 [project.python]
 package = "squarebot"
 
+[project.openapi]
+openapi_path = "_static/openapi.json"
+doc_path = "api"
+
+[project.openapi.generator]
+function = "squarebot.main:create_openapi"
+
 [sphinx]
-extensions = ["sphinxcontrib.autodoc_pydantic"]
+extensions = [
+    "sphinxcontrib.autodoc_pydantic",
+]
 nitpick_ignore = [
     # Ignore missing cross-references for modules that don't provide
     # intersphinx.  The documentation itself should use double-quotes instead

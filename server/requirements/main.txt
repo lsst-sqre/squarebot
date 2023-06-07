@@ -4,16 +4,16 @@
 #
 #    pip-compile --allow-unsafe --output-file=server/requirements/main.txt server/requirements/main.in
 #
-aiokafka==0.8.0
+aiokafka==0.8.1
     # via -r server/requirements/main.in
-anyio==3.6.2
+anyio==3.7.0
     # via
     #   httpcore
     #   starlette
     #   watchfiles
 async-timeout==4.0.2
     # via aiokafka
-certifi==2022.12.7
+certifi==2023.5.7
     # via
     #   httpcore
     #   httpx
@@ -21,17 +21,17 @@ cffi==1.15.1
     # via cryptography
 click==8.1.3
     # via uvicorn
-cryptography==40.0.2
+cryptography==41.0.1
     # via
     #   pyjwt
     #   safir
-dacite==1.8.0
+dacite==1.8.1
     # via dataclasses-avroschema
-dataclasses-avroschema[pydantic]==0.43.0
+dataclasses-avroschema[pydantic]==0.43.6
     # via kafkit
-faker==18.6.2
+faker==18.10.1
     # via dataclasses-avroschema
-fastapi==0.95.1
+fastapi==0.96.0
     # via
     #   -r server/requirements/main.in
     #   safir
@@ -40,17 +40,17 @@ fastavro==1.7.4
     #   -r server/requirements/main.in
     #   dataclasses-avroschema
     #   kafkit
-gidgethub==5.2.1
+gidgethub==5.3.0
     # via safir
 h11==0.14.0
     # via
     #   httpcore
     #   uvicorn
-httpcore==0.17.0
+httpcore==0.17.2
     # via httpx
 httptools==0.5.0
     # via uvicorn
-httpx==0.24.0
+httpx==0.24.1
     # via
     #   kafkit
     #   safir
@@ -68,12 +68,12 @@ packaging==23.1
     # via aiokafka
 pycparser==2.21
     # via cffi
-pydantic==1.10.7
+pydantic==1.10.9
     # via
     #   dataclasses-avroschema
     #   fastapi
     #   safir
-pyjwt[crypto]==2.6.0
+pyjwt[crypto]==2.7.0
     # via gidgethub
 python-dateutil==2.8.2
     # via faker
@@ -83,7 +83,7 @@ python-multipart==0.0.6
     # via -r server/requirements/main.in
 pyyaml==6.0
     # via uvicorn
-safir==4.0.0
+safir==4.3.0
     # via -r server/requirements/main.in
 six==1.16.0
     # via python-dateutil
@@ -92,7 +92,7 @@ sniffio==1.3.0
     #   anyio
     #   httpcore
     #   httpx
-starlette==0.26.1
+starlette==0.27.0
     # via
     #   -r server/requirements/main.in
     #   fastapi
@@ -101,7 +101,7 @@ stringcase==1.2.0
     # via dataclasses-avroschema
 structlog==23.1.0
     # via safir
-typing-extensions==4.5.0
+typing-extensions==4.6.3
     # via pydantic
 uritemplate==4.1.1
     # via
@@ -113,5 +113,5 @@ uvloop==0.17.0
     # via uvicorn
 watchfiles==0.19.0
     # via uvicorn
-websockets==11.0.2
+websockets==11.0.3
     # via uvicorn
