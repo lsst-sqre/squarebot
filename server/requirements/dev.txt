@@ -46,7 +46,7 @@ cycler==0.11.0
     # via matplotlib
 distlib==0.3.6
     # via virtualenv
-documenteer @ git+https://github.com/lsst-sqre/documenteer@tickets/DM-37525
+documenteer[guide]==1.0.0a1
     # via -r server/requirements/dev.in
 docutils==0.19
     # via
@@ -146,7 +146,7 @@ pybtex==0.24.0
     #   sphinxcontrib-bibtex
 pybtex-docutils==1.0.2
     # via sphinxcontrib-bibtex
-pydantic==1.10.8
+pydantic==1.10.9
     # via
     #   -c server/requirements/main.txt
     #   autodoc-pydantic
@@ -219,6 +219,7 @@ sphinx==6.2.1
     #   sphinx-design
     #   sphinx-prompt
     #   sphinxcontrib-bibtex
+    #   sphinxcontrib-jquery
     #   sphinxcontrib-redoc
     #   sphinxext-opengraph
 sphinx-autodoc-typehints==1.23.0
@@ -239,6 +240,8 @@ sphinxcontrib-devhelp==1.0.2
     # via sphinx
 sphinxcontrib-htmlhelp==2.0.1
     # via sphinx
+sphinxcontrib-jquery==4.1
+    # via documenteer
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-mermaid==0.9.2
