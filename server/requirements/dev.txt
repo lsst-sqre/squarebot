@@ -46,7 +46,7 @@ cycler==0.11.0
     # via matplotlib
 distlib==0.3.6
     # via virtualenv
-documenteer @ git+https://github.com/lsst-sqre/documenteer.git@tickets/DM-37525
+documenteer @ git+https://github.com/lsst-sqre/documenteer@tickets/DM-37525
     # via -r server/requirements/dev.in
 docutils==0.19
     # via
@@ -258,7 +258,7 @@ typing-extensions==4.6.3
     #   pydantic
 uc-micro-py==1.0.2
     # via linkify-it-py
-urllib3==2.0.2
+urllib3==2.0.3
     # via requests
 virtualenv==20.23.0
     # via pre-commit
