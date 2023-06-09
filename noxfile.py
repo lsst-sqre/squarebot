@@ -84,3 +84,17 @@ def docs(session):
             "./_build/html",
             env=_make_env_vars(),
         )
+
+
+@nox.session(name="scriv-create")
+def scriv_create(session):
+    """Create a scriv entry."""
+    session.install("scriv")
+    session.run("scriv", "create")
+
+
+@nox.session(name="scriv-collect")
+def scriv_collect(session):
+    """Collect scriv entries."""
+    session.install("scriv")
+    session.run("scriv", "collect", "--add", "--version", *session.posargs)
