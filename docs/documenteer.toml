@@ -13,6 +13,7 @@ doc_path = "api"
 function = "squarebot.main:create_openapi"
 
 [sphinx]
+rst_epilog_file = "_rst_epilog.rst"
 extensions = [
     "sphinxcontrib.autodoc_pydantic",
 ]
