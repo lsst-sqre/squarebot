@@ -84,7 +84,29 @@ def docs(session):
             "--keep-going",
             "-n",
             "-T",
-            "-b" "html",
+            "-b",
+            "html",
+            "-d",
+            str(doctree_dir),
+            ".",
+            "./_build/html",
+            env=_make_env_vars(),
+        )
+
+
+@nox.session(name="docs-linkcheck")
+def docs_linkcheck(session):
+    """Linkcheck the docs."""
+    _install(session)
+    doctree_dir = (session.cache_dir / "doctrees").absolute()
+    with session.chdir("docs"):
+        session.run(
+            "sphinx-build",
+            "-W",
+            "--keep-going",
+            "-n",
+            "-T",
+            "-b" "linkcheck",
             "-d",
             str(doctree_dir),
             ".",

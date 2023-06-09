@@ -56,3 +56,8 @@ nitpick_ignore = [
 python = "https://docs.python.org/3/"
 safir = "https://safir.lsst.io/"
 structlog = "https://www.structlog.org/en/stable/"
+
+[sphinx.linkcheck]
+ignore = [
+    "https://api.slack.com/events-api#subscriptions",
+]
