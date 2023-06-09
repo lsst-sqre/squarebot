@@ -33,7 +33,7 @@ jobs:
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.0
 
-  test-client:
+  test:
     runs-on: ubuntu-latest
 
     strategy:
@@ -44,33 +44,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Run tox
-        uses: lsst-sqre/run-tox@v1
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python }}
-          tox-envs: "typing"
-          cache-key-prefix: "client"
-          working-directory: "./client"
+          python-version: "3.11"
 
-  test-server:
+      - name: Install nox
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade nox
 
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python:
-          - "3.11"
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run tox
-        uses: lsst-sqre/run-tox@v1
-        with:
-          python-version: ${{ matrix.python }}
-          tox-envs: "py,coverage-report,typing"
-          cache-key-prefix: "server"
-          working-directory: "./server"
+      - name: Run nox
+        run: "nox -s typing test"
 
   docs:
     runs-on: ubuntu-latest
@@ -88,13 +73,18 @@ jobs:
       - name: Install extra packages
         run: sudo apt install -y graphviz
 
-      - name: Run tox
-        uses: lsst-sqre/run-tox@v1
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
-          tox-envs: "docs"
-          cache-key-prefix: "docs"
-          working-directory: "./server"
+
+      - name: Install nox
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade nox
+
+      - name: Run nox
+        run: "nox -s docs"
 
       # Only attempt documentation uploads for long-lived branches, tagged
       # releases, and pull requests from ticket branches.  This avoids version
@@ -115,7 +105,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    needs: [lint, test-server]
+    needs: [lint, test]
 
     # Only do Docker builds of tagged releases and pull requests from ticket
     # branches.  This will still trigger on pull requests from untrusted
@@ -162,7 +152,7 @@ jobs:
   pypi:
 
     runs-on: ubuntu-latest
-    needs: [lint, test-client, docs]
+    needs: [lint, test, docs]
 
     steps:
       - uses: actions/checkout@v3
