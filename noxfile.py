@@ -98,3 +98,34 @@ def scriv_collect(session):
     """Collect scriv entries."""
     session.install("scriv")
     session.run("scriv", "collect", "--add", "--version", *session.posargs)
+
+
+@nox.session(name="update-deps")
+def update_deps(session):
+    """Update pinned server dependencies and pre-commit hooks."""
+    session.install(
+        "--upgrade", "pip-tools", "pip", "setuptools", "wheel", "pre-commit"
+    )
+    session.run("pre-commit", "autoupdate")
+
+    # Dependencies are unpinned for compatibility with the unpinned client
+    # dependency.
+    session.run(
+        "pip-compile",
+        "--upgrade",
+        "--build-isolation",
+        "--allow-unsafe",
+        "--output-file",
+        "server/requirements/main.txt",
+        "server/requirements/main.in",
+    )
+
+    session.run(
+        "pip-compile",
+        "--upgrade",
+        "--build-isolation",
+        "--allow-unsafe",
+        "--output-file",
+        "server/requirements/dev.txt",
+        "server/requirements/dev.in",
+    )
