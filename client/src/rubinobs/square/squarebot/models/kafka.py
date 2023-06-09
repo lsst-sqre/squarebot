@@ -101,6 +101,11 @@ class SquarebotSlackMessageValue(AvroBaseModel):
         value
             The Squarebot message value.
         """
+        if event.event.channel_type is None:
+            raise ValueError(
+                "Cannot create a SquarebotSlackMessageValue from a Slack "
+                "event that lacks a channel_type. Is this an app_mention?"
+            )
         return cls(
             type=event.event.type,
             channel=event.event.channel,
@@ -171,7 +176,6 @@ class SquarebotSlackAppMentionValue(AvroBaseModel):
         return cls(
             type=event.event.type,
             channel=event.event.channel,
-            channel_type=event.event.channel_type,
             user=event.event.user,
             ts=event.event.ts,
             text=event.event.text,
