@@ -156,3 +156,17 @@ def init_dev(session):
     print(
         "\nTo activate this virtual env, run:\n\n\tsource .venv/bin/activate\n"
     )
+
+
+@nox.session(name="run")
+def run(session):
+    """Run the application in development mode."""
+    # Note this doesn't work right now because Kafka is needed for the app.
+    _install(session)
+    with session.chdir("server"):
+        session.run(
+            "uvicorn",
+            "squarebot.main:app",
+            "--reload",
+            env=_make_env_vars(),
+        )
