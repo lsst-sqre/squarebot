@@ -35,12 +35,14 @@ def _make_env_vars():
 
 @nox.session
 def lint(session):
+    """Run pre-commit hooks."""
     session.install("pre-commit")
     session.run("pre-commit", "run", "--all-files", *session.posargs)
 
 
 @nox.session
 def typing(session):
+    """Run mypy."""
     _install(session)
     session.install("mypy")
     with session.chdir("server"):
@@ -51,6 +53,7 @@ def typing(session):
 
 @nox.session
 def test(session):
+    """Run pytest."""
     _install(session)
     with session.chdir("server"):
         session.run(
@@ -64,6 +67,7 @@ def test(session):
 
 @nox.session
 def docs(session):
+    """Build the docs."""
     _install(session)
     doctree_dir = (session.cache_dir / "doctrees").absolute()
     with session.chdir("docs"):
