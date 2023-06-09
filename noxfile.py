@@ -8,13 +8,20 @@ nox.options.default_venv_backend = "venv"
 nox.options.reuse_existing_virtualenvs = True
 
 
-def _install(session, *args, **kwargs):
-    """Install the application and all dependencies."""
-    session.install("--upgrade", "pip", "setuptools", "wheel")
-    session.install("-r", "server/requirements/main.txt")
-    session.install("-r", "server/requirements/dev.txt")
-    session.install("-e", "client")
-    session.install("-e", "server")
+# Pip install dependencies for the client and server packages
+dependencies = [
+    ("--upgrade", "pip", "setuptools", "wheel"),
+    ("-r", "server/requirements/main.txt"),
+    ("-r", "server/requirements/dev.txt"),
+    ("-e", "client"),
+    ("-e", "server"),
+]
+
+
+def _install(session):
+    """Install the application and all dependencies into the session."""
+    for deps in dependencies:
+        session.install(*deps)
 
 
 def _make_env_vars():
@@ -128,4 +135,24 @@ def update_deps(session):
         "--output-file",
         "server/requirements/dev.txt",
         "server/requirements/dev.in",
+    )
+
+    print("\nTo refresh the development venv, run:\n\n\tnox -s dev-init\n")
+
+
+@nox.session(name="dev-init")
+def init_dev(session):
+    """Set up a development venv."""
+    # Create a venv in the current directory, replacing any existing one
+    session.run("python", "-m", "venv", ".venv", "--clear")
+    # Install the dependencies into this venv by running pip from the venv.
+    python = ".venv/bin/python"
+    for deps in dependencies:
+        session.run(python, "-m", "pip", "install", *deps, external=True)
+    session.run(
+        python, "-m", "pip", "install", "nox", "pre-commit", external=True
+    )
+
+    print(
+        "\nTo activate this virtual env, run:\n\n\tsource .venv/bin/activate\n"
     )
