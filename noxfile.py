@@ -18,13 +18,13 @@ dependencies = [
 ]
 
 
-def _install(session):
+def _install(session: nox.Session) -> None:
     """Install the application and all dependencies into the session."""
     for deps in dependencies:
         session.install(*deps)
 
 
-def _make_env_vars():
+def _make_env_vars() -> dict[str, str]:
     """Create a environment variable dictionary for test sessions that enables
     the app to start up.
     """
@@ -41,17 +41,18 @@ def _make_env_vars():
 
 
 @nox.session
-def lint(session):
+def lint(session: nox.Session) -> None:
     """Run pre-commit hooks."""
     session.install("pre-commit")
     session.run("pre-commit", "run", "--all-files", *session.posargs)
 
 
 @nox.session
-def typing(session):
+def typing(session: nox.Session) -> None:
     """Run mypy."""
     _install(session)
     session.install("mypy")
+    session.run("mypy", "noxfile.py")
     with session.chdir("server"):
         session.run("mypy", "src", "tests", *session.posargs)
     with session.chdir("client"):
@@ -59,7 +60,7 @@ def typing(session):
 
 
 @nox.session
-def test(session):
+def test(session: nox.Session) -> None:
     """Run pytest."""
     _install(session)
     with session.chdir("server"):
@@ -73,7 +74,7 @@ def test(session):
 
 
 @nox.session
-def docs(session):
+def docs(session: nox.Session) -> None:
     """Build the docs."""
     _install(session)
     doctree_dir = (session.cache_dir / "doctrees").absolute()
@@ -95,7 +96,7 @@ def docs(session):
 
 
 @nox.session(name="docs-linkcheck")
-def docs_linkcheck(session):
+def docs_linkcheck(session: nox.Session) -> None:
     """Linkcheck the docs."""
     _install(session)
     doctree_dir = (session.cache_dir / "doctrees").absolute()
@@ -116,21 +117,21 @@ def docs_linkcheck(session):
 
 
 @nox.session(name="scriv-create")
-def scriv_create(session):
+def scriv_create(session: nox.Session) -> None:
     """Create a scriv entry."""
     session.install("scriv")
     session.run("scriv", "create")
 
 
 @nox.session(name="scriv-collect")
-def scriv_collect(session):
+def scriv_collect(session: nox.Session) -> None:
     """Collect scriv entries."""
     session.install("scriv")
     session.run("scriv", "collect", "--add", "--version", *session.posargs)
 
 
 @nox.session(name="update-deps")
-def update_deps(session):
+def update_deps(session: nox.Session) -> None:
     """Update pinned server dependencies and pre-commit hooks."""
     session.install(
         "--upgrade", "pip-tools", "pip", "setuptools", "wheel", "pre-commit"
@@ -163,7 +164,7 @@ def update_deps(session):
 
 
 @nox.session(name="dev-init")
-def init_dev(session):
+def init_dev(session: nox.Session) -> None:
     """Set up a development venv."""
     # Create a venv in the current directory, replacing any existing one
     session.run("python", "-m", "venv", ".venv", "--clear")
@@ -181,7 +182,7 @@ def init_dev(session):
 
 
 @nox.session(name="run")
-def run(session):
+def run(session: nox.Session) -> None:
     """Run the application in development mode."""
     # Note this doesn't work right now because Kafka is needed for the app.
     _install(session)
