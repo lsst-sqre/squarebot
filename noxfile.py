@@ -8,8 +8,8 @@ nox.options.default_venv_backend = "venv"
 nox.options.reuse_existing_virtualenvs = True
 
 
-# Pip install dependencies for the client and server packages
-dependencies = [
+# Pip installable dependencies for the client and server packages
+PIP_DEPENDENCIES = [
     ("--upgrade", "pip", "setuptools", "wheel"),
     ("-r", "server/requirements/main.txt"),
     ("-r", "server/requirements/dev.txt"),
@@ -20,7 +20,7 @@ dependencies = [
 
 def _install(session: nox.Session) -> None:
     """Install the application and all dependencies into the session."""
-    for deps in dependencies:
+    for deps in PIP_DEPENDENCIES:
         session.install(*deps)
 
 
@@ -38,6 +38,41 @@ def _make_env_vars() -> dict[str, str]:
         "SQUAREBOT_SLACK_TOKEN": "1234",
         "SQUAREBOT_SLACK_APP_ID": "1234",
     }
+
+
+def _install_dev(session: nox.Session, bin_prefix: str = "") -> None:
+    """Install the application and all development dependencies into the
+    session.
+    """
+    python = f"{bin_prefix}python"
+    precommit = f"{bin_prefix}pre-commit"
+
+    # Install dev dependencies
+    for deps in PIP_DEPENDENCIES:
+        session.run(python, "-m", "pip", "install", *deps, external=True)
+    session.run(
+        python, "-m", "pip", "install", "nox", "pre-commit", external=True
+    )
+    # Install pre-commit hooks
+    session.run(precommit, "install", external=True)
+
+
+@nox.session(name="venv-init")
+def init_dev(session: nox.Session) -> None:
+    """Set up a development venv."""
+    # Create a venv in the current directory, replacing any existing one
+    session.run("python", "-m", "venv", ".venv", "--clear")
+    _install_dev(session, bin_prefix=".venv/bin/")
+
+    print(
+        "\nTo activate this virtual env, run:\n\n\tsource .venv/bin/activate\n"
+    )
+
+
+@nox.session(name="init")
+def init(session: nox.Session) -> None:
+    """Set up the development environment in the current virtual env."""
+    _install_dev(session, bin_prefix="")
 
 
 @nox.session
@@ -161,41 +196,6 @@ def update_deps(session: nox.Session) -> None:
     )
 
     print("\nTo refresh the development venv, run:\n\n\tnox -s dev-init\n")
-
-
-def _install_dev(session: nox.Session, bin_prefix="") -> None:
-    """Install the application and all development dependencies into the
-    session.
-    """
-    python = f"{bin_prefix}python"
-    precommit = f"{bin_prefix}pre-commit"
-
-    # Install dev dependencies
-    for deps in dependencies:
-        session.run(python, "-m", "pip", "install", *deps, external=True)
-    session.run(
-        python, "-m", "pip", "install", "nox", "pre-commit", external=True
-    )
-    # Install pre-commit hooks
-    session.run(precommit, "install", external=True)
-
-
-@nox.session(name="venv-init")
-def init_dev(session: nox.Session) -> None:
-    """Set up a development venv."""
-    # Create a venv in the current directory, replacing any existing one
-    session.run("python", "-m", "venv", ".venv", "--clear")
-    _install_dev(session, bin_prefix=".venv/bin/")
-
-    print(
-        "\nTo activate this virtual env, run:\n\n\tsource .venv/bin/activate\n"
-    )
-
-
-@nox.session(name="init")
-def init(session: nox.Session) -> None:
-    """Set up the development environment in the current virtual env."""
-    _install_dev(session, bin_prefix="")
 
 
 @nox.session(name="run")
