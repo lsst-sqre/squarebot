@@ -195,7 +195,7 @@ def update_deps(session: nox.Session) -> None:
         "server/requirements/dev.in",
     )
 
-    print("\nTo refresh the development venv, run:\n\n\tnox -s dev-init\n")
+    print("\nTo refresh the development venv, run:\n\n\tnox -s init\n")
 
 
 @nox.session(name="run")
