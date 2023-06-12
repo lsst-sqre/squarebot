@@ -22,27 +22,49 @@ Setting up a local development environment
 ==========================================
 
 Squarebot is a Python project that should be developed within a virtual environment.
-The easiest way to set up a development environment is to run Nox_ from a local clone of squarebot:
+You can either manage this virtual environment yourself, or use :command:`nox -s venv-init` to create one for you.
 
-.. code-block:: sh
+.. tab-set::
 
-   git clone https://github.com/lsst-sqre/squarebot.git
-   cd squarebot
-   pip install nox
-   nox -s init-dev
-   source .venv/bin/activate
+   .. tab-item:: Self-managed
 
-This init step does three things:
+      If you already have a Python virtual environment set up in your shell, you can use the :command:`nox -s init` command to install Squarebot and its development dependencies into it:
 
-1. Creates a `venv`_ virtual environment in the ``.venv`` subdirectory.
-2. Installs Squarebot along with its runtime and development dependencies.
-3. Installs the pre-commit hooks.
+      .. code-block:: sh
 
-Whenever you return to the project in a new shell you will need to activate the virtual environment:
+         git clone https://github.com/lsst-sqre/squarebot.git
+         cd squarebot
+         pip install nox
+         nox -s init
 
-.. code-block:: sh
+      This init step does two things:
 
-   source .venv/bin/activate
+      1. Installs Squarebot along with its runtime and development dependencies.
+      2. Installs the pre-commit hooks.
+
+   .. tab-item:: Managed venv
+
+      Nox can create the virtual environment for you and install Squarebot and its development dependencies init it:
+
+      .. code-block:: sh
+
+         git clone https://github.com/lsst-sqre/squarebot.git
+         cd squarebot
+         pip install nox
+         nox -s venv-init
+         source .venv/bin/activate
+
+      This init step does three things:
+
+      1. Creates a `venv`_ virtual environment in the ``.venv`` subdirectory.
+      2. Installs Squarebot along with its runtime and development dependencies.
+      3. Installs the pre-commit hooks.
+
+      Whenever you return to the project in a new shell you will need to activate the virtual environment:
+
+      .. code-block:: sh
+
+         source .venv/bin/activate
 
 .. _pre-commit-hooks:
 
