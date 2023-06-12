@@ -175,6 +175,8 @@ def init_dev(session: nox.Session) -> None:
     session.run(
         python, "-m", "pip", "install", "nox", "pre-commit", external=True
     )
+    # Run the pre-commit in the virtual environment
+    session.run(".venv/bin/pre-commit", "install", external=True)
 
     print(
         "\nTo activate this virtual env, run:\n\n\tsource .venv/bin/activate\n"
