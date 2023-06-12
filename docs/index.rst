@@ -19,3 +19,4 @@ You can deploy new ChatOps automations without having to update or modify SQuaRE
    user-guide/index
    api
    changelog
+   dev/index
