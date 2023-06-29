@@ -69,7 +69,7 @@ def init_dev(session: nox.Session) -> None:
     )
 
 
-@nox.session(name="init")
+@nox.session(name="init", python=False)
 def init(session: nox.Session) -> None:
     """Set up the development environment in the current virtual env."""
     _install_dev(session, bin_prefix="")
