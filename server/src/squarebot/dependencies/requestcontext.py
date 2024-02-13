@@ -3,22 +3,14 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from aiokafka import AIOKafkaProducer
 from fastapi import Depends, Request, Response
 from httpx import AsyncClient
-from kafkit.registry.manager import PydanticSchemaManager
 from safir.dependencies.http_client import http_client_dependency
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
-from squarebot.dependencies.schemamanager import (
-    pydantic_schema_manager_dependency,
-)
-
 from ..config import Configuration, config
-from ..services.kafkaproducer import PydanticKafkaProducer
 from ..services.slack import SlackService
-from .aiokafkaproducer import kafka_producer_dependency
 
 __all__ = ["RequestContext", "context_dependency"]
 
@@ -50,12 +42,6 @@ class RequestContext:
     http_client: AsyncClient
     """An HTTPX client."""
 
-    kafka_producer: PydanticKafkaProducer
-    """A Kafka producer that sends managed Pydantic models."""
-
-    schema_manager: PydanticSchemaManager
-    """A Kafkit Pydantic Schema Manager."""
-
     def rebind_logger(self, **values: Optional[str]) -> None:
         """Add the given values to the logging context.
         Also updates the logging context stored in the request object in case
@@ -73,18 +59,9 @@ async def context_dependency(
     response: Response,
     logger: BoundLogger = Depends(logger_dependency),
     http_client: AsyncClient = Depends(http_client_dependency),
-    kafka_producer: AIOKafkaProducer = Depends(kafka_producer_dependency),
-    schema_manager: PydanticSchemaManager = Depends(
-        pydantic_schema_manager_dependency
-    ),
 ) -> RequestContext:
     """Provides a RequestContext as a dependency."""
-    pydantic_kafka_producer = PydanticKafkaProducer(
-        producer=kafka_producer, schema_manager=schema_manager
-    )
-    slack_service = SlackService(
-        logger=logger, config=config, kafka_producer=pydantic_kafka_producer
-    )
+    slack_service = SlackService(logger=logger, config=config)
     return RequestContext(
         request=request,
         response=response,
@@ -92,6 +69,4 @@ async def context_dependency(
         slack=slack_service,
         logger=logger,
         http_client=http_client,
-        kafka_producer=pydantic_kafka_producer,
-        schema_manager=schema_manager,
     )

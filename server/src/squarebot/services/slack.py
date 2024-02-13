@@ -24,7 +24,6 @@ from rubin.squarebot.models.slack import (
 )
 
 from ..config import Configuration
-from .kafkaproducer import PydanticKafkaProducer
 
 
 class SlackService:
@@ -34,11 +33,9 @@ class SlackService:
         self,
         logger: BoundLogger,
         config: Configuration,
-        kafka_producer: PydanticKafkaProducer,
     ) -> None:
         self._logger = logger
         self._config = config
-        self._producer = kafka_producer
 
     @staticmethod
     def compute_slack_signature(
@@ -202,11 +199,8 @@ class SlackService:
 
         topic = self._config.app_mention_topic
 
-        await self._producer.send(
-            topic=topic,
-            value=value,
-            key=key,
-        )
+        # FIXME produce message to Kafka: topic, value, key
+
         self._logger.debug(
             "Published Slack app_mention event to Kafka",
             topic=topic,
@@ -259,11 +253,8 @@ class SlackService:
                 f"Channel type is {event.event.channel_type.value}"
             )
 
-        await self._producer.send(
-            topic=topic,
-            value=value,
-            key=key,
-        )
+        # FIXME produce message to Kafka
+
         self._logger.debug(
             "Published Slack message event to Kafka",
             topic=topic,
