@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -46,15 +45,29 @@ class SlackUrlVerificationEvent(BaseSlackEvent):
 
 
 class SlackMessageType(str, Enum):
+    """An enumeration of the different types of Slack messages."""
+
     app_mention = "app_mention"
+    """A message that mentions the app."""
+
     message = "message"
+    """A regular message."""
 
 
 class SlackChannelType(str, Enum):
-    channel = "channel"  # public channel
-    group = "group"  # private channel
-    im = "im"  # direct message
-    mpim = "mpim"  # multi-persion direct message
+    """Represents the type of a Slack channel."""
+
+    channel = "channel"
+    """A public channel."""
+
+    group = "group"
+    """A private channel."""
+
+    im = "im"
+    """A direct message."""
+
+    mpim = "mpim"
+    """A multi-person direct message."""
 
 
 class SlackMessageEventContent(BaseModel):
@@ -73,7 +86,7 @@ class SlackMessageEventContent(BaseModel):
         )
     )
 
-    channel_type: Optional[SlackChannelType] = Field(
+    channel_type: SlackChannelType | None = Field(
         description=(
             "The type of channel (public, direct im, etc..). This is null for "
             "``app_mention`` events."
@@ -126,7 +139,7 @@ class SlackMessageEvent(BaseSlackEvent):
         )
     )
 
-    authed_users: Optional[list[str]] = Field(
+    authed_users: list[str] | None = Field(
         None,
         description=(
             "An array of string-based User IDs. Each member of the collection "

@@ -15,7 +15,7 @@ from ..support.slackrequester import SlackServer
 
 @pytest.mark.asyncio
 async def test_get_index(client: AsyncClient) -> None:
-    """Test ``GET /squarebot/``"""
+    """Test ``GET /squarebot/``."""
     response = await client.get(f"{config.path_prefix}/")
     assert response.status_code == 200
     data = response.json()

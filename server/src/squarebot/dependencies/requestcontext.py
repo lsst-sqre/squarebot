@@ -1,7 +1,7 @@
 """A FastAPI dependency that wraps multiple common dependencies."""
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Annotated
 
 from fastapi import Depends, Request, Response
 from httpx import AsyncClient
@@ -42,10 +42,11 @@ class RequestContext:
     http_client: AsyncClient
     """An HTTPX client."""
 
-    def rebind_logger(self, **values: Optional[str]) -> None:
+    def rebind_logger(self, **values: str | None) -> None:
         """Add the given values to the logging context.
         Also updates the logging context stored in the request object in case
         the request context later needs to be recreated from the request.
+
         Parameters
         ----------
         **values : `str` or `None`
@@ -57,10 +58,10 @@ class RequestContext:
 async def context_dependency(
     request: Request,
     response: Response,
-    logger: BoundLogger = Depends(logger_dependency),
-    http_client: AsyncClient = Depends(http_client_dependency),
+    logger: Annotated[BoundLogger, Depends(logger_dependency)],
+    http_client: Annotated[AsyncClient, Depends(http_client_dependency)],
 ) -> RequestContext:
-    """Provides a RequestContext as a dependency."""
+    """Provide a RequestContext as a dependency."""
     slack_service = SlackService(logger=logger, config=config)
     return RequestContext(
         request=request,

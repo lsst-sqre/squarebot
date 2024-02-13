@@ -103,7 +103,7 @@ class SlackService:
                     "msg": ("X-Slack-Request-Timestamp header is missing."),
                     "type": "bad_request",
                 },
-            )
+            ) from None
 
         if math.fabs(time.time() - float(timestamp)) > 300.0:
             # The request timestamp is more than five minutes from local time.
@@ -239,7 +239,7 @@ class SlackService:
             raise RuntimeError(
                 "Null channel type should be handled by app_mention schema"
             )
-        elif event.event.channel_type == SlackChannelType.channel:
+        if event.event.channel_type == SlackChannelType.channel:
             topic = self._config.message_channels_topic
         elif event.event.channel_type == SlackChannelType.group:
             topic = self._config.message_groups_topic
