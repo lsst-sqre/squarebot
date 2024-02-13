@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Form, Request, Response
 from pydantic import AnyHttpUrl
 from safir.metadata import get_metadata
 
-from rubinobs.square.squarebot.models.slack import (
+from rubin.squarebot.models.slack import (
     BaseSlackEvent,
     SlackUrlVerificationEvent,
 )

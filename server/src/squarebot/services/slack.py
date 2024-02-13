@@ -11,12 +11,12 @@ from typing import Any
 from fastapi import HTTPException, Request, status
 from structlog.stdlib import BoundLogger
 
-from rubinobs.square.squarebot.models.kafka import (
+from rubin.squarebot.models.kafka import (
     SquarebotSlackAppMentionValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
 )
-from rubinobs.square.squarebot.models.slack import (
+from rubin.squarebot.models.slack import (
     SlackBlockAction,
     SlackChannelType,
     SlackMessageEvent,

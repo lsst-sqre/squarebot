@@ -19,7 +19,7 @@ from safir.logging import configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 from structlog import get_logger
 
-from rubinobs.square.squarebot.models.kafka import (
+from rubin.squarebot.models.kafka import (
     SquarebotSlackAppMentionValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
