@@ -125,6 +125,7 @@ nodeenv==1.8.0
     # via pre-commit
 packaging==23.2
     # via
+    #   -c server/requirements/main.txt
     #   pydata-sphinx-theme
     #   pytest
     #   sphinx

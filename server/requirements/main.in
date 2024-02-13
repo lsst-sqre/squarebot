@@ -14,3 +14,4 @@ python-multipart
 # Other dependencies.
 safir>=5.0.0
 pydantic-settings
+faststream[kafka]
