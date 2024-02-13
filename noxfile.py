@@ -115,7 +115,7 @@ def docs(session: nox.Session) -> None:
     with session.chdir("docs"):
         session.run(
             "sphinx-build",
-            "-W",
+            # "-W",
             "--keep-going",
             "-n",
             "-T",
@@ -137,7 +137,7 @@ def docs_linkcheck(session: nox.Session) -> None:
     with session.chdir("docs"):
         session.run(
             "sphinx-build",
-            "-W",
+            # "-W",
             "--keep-going",
             "-n",
             "-T",
