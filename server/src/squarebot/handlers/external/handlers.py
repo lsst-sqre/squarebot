@@ -1,6 +1,7 @@
 """Handlers for the app's external root, ``/squarebot/``."""
 
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, Request, Response
 from pydantic import AnyHttpUrl
@@ -54,7 +55,7 @@ async def get_index(
 )
 async def post_event(
     slack_event: BaseSlackEvent,
-    context: RequestContext = Depends(context_dependency),
+    context: Annotated[RequestContext, Depends(context_dependency)],
 ) -> Response | UrlVerificationResponse:
     """Handle an event post by the Slack Events API."""
     # Verify the Slack signing secret on the request
@@ -80,8 +81,8 @@ async def post_event(
 
 @external_router.post("/slack/interaction", summary="Handle Slack interaction")
 async def post_interaction(
-    payload: str = Form(),
-    context: RequestContext = Depends(context_dependency),
+    payload: Annotated[str, Form()],
+    context: Annotated[RequestContext, Depends(context_dependency)],
 ) -> Response:
     """Handle an interaction payload from Slack."""
     # Verify the Slack signing secret on the request
