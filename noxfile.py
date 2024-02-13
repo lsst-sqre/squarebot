@@ -29,9 +29,8 @@ def _make_env_vars() -> dict[str, str]:
     the app to start up.
     """
     return {
-        "SAFIR_LOG_LEVEL": "DEBUG",
-        "SAFIR_ENVIRONMENT_URL": "http://example.org",
-        "SQUAREBOT_REGISTRY_URL": "http://registry.example.org",
+        "SQUAREBOT_LOG_LEVEL": "DEBUG",
+        "SQUAREBOT_ENVIRONMENT_URL": "http://example.org",
         "KAFKA_BOOTSTRAP_SERVERS": "http://broker.example.org",
         "KAFKA_SECURITY_PROTOCOL": "PLAINTEXT",
         "SQUAREBOT_SLACK_SIGNING": "1234",

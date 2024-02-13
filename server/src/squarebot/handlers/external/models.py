@@ -15,7 +15,7 @@ class IndexResponse(BaseModel):
 
     metadata: SafirMetadata = Field(..., title="Package metadata")
 
-    api_docs: AnyHttpUrl = Field(..., tile="API documentation URL")
+    api_docs: AnyHttpUrl = Field(..., title="API documentation URL")
 
 
 class EventResponse(BaseModel):

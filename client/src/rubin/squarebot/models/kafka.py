@@ -5,8 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any, Self
 
-from dataclasses_avroschema.avrodantic import AvroBaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from .slack import SlackChannelType, SlackMessageEvent, SlackMessageType
 
@@ -17,16 +16,10 @@ __all__ = [
 ]
 
 
-class SquarebotSlackMessageKey(AvroBaseModel):
+class SquarebotSlackMessageKey(BaseModel):
     """Kafka message key model for Slack messages sent by Squarebot."""
 
     channel: str = Field(..., description="The Slack channel ID.")
-
-    class Meta:
-        """Metadata for the model."""
-
-        namespace = "lsst.square-events.squarebot.messages"
-        schema_name = "key"
 
     @classmethod
     def from_event(cls, event: SlackMessageEvent) -> Self:
@@ -45,7 +38,7 @@ class SquarebotSlackMessageKey(AvroBaseModel):
         return cls(channel=event.event.channel)
 
 
-class SquarebotSlackMessageValue(AvroBaseModel):
+class SquarebotSlackMessageValue(BaseModel):
     """Kafka message value model for Slack messages sent by Squarebot.
 
     This value schema should be paired with `SquarebotSlackMessageKey` for
@@ -79,12 +72,6 @@ class SquarebotSlackMessageValue(AvroBaseModel):
         ..., description="The original Slack event JSON string."
     )
 
-    class Meta:
-        """Metadata for the model."""
-
-        namespace = "lsst.square-events.squarebot.messages"
-        schema_name = "value"
-
     @classmethod
     def from_event(cls, event: SlackMessageEvent, raw: dict[str, Any]) -> Self:
         """Create a Kafka value for a Slack message from a Slack event.
@@ -117,7 +104,7 @@ class SquarebotSlackMessageValue(AvroBaseModel):
         )
 
 
-class SquarebotSlackAppMentionValue(AvroBaseModel):
+class SquarebotSlackAppMentionValue(BaseModel):
     """Kafka message value model for Slack app_mention message sent by
     Squarebot.
 
@@ -150,12 +137,6 @@ class SquarebotSlackAppMentionValue(AvroBaseModel):
     slack_event: str = Field(
         ..., description="The original Slack event JSON string."
     )
-
-    class Meta:
-        """Metadata for the model."""
-
-        namespace = "lsst.square-events.squarebot.appmention"
-        schema_name = "value"
 
     @classmethod
     def from_event(cls, event: SlackMessageEvent, raw: dict[str, Any]) -> Self:

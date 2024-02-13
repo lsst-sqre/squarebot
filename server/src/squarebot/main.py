@@ -10,6 +10,8 @@ called.
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
@@ -26,34 +28,10 @@ from .handlers.internal.handlers import internal_router
 __all__ = ["app", "create_openapi"]
 
 
-configure_logging(
-    profile=config.profile,
-    log_level=config.log_level,
-    name="squarebot",
-)
-configure_uvicorn_logging(config.log_level)
-
-app = FastAPI(
-    title="SQuaRE Bot",
-    description=metadata("squarebot")["Summary"],
-    version=version("squarebot"),
-    openapi_url=f"{config.path_prefix}/openapi.json",
-    docs_url=f"{config.path_prefix}/docs",
-    redoc_url=f"{config.path_prefix}/redoc",
-)
-"""The main FastAPI application for squarebot."""
-
-# Attach the routers.
-app.include_router(internal_router)
-app.include_router(external_router, prefix=config.path_prefix)
-
-# Set up middleware
-app.add_middleware(XForwardedMiddleware)
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Application start-up hook."""
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Set up and tear down the application."""
+    # Any code here will be run when the application starts up.
     logger = get_logger()
     logger.info("Square Bot is starting up.")
 
@@ -71,13 +49,37 @@ async def startup_event() -> None:
 
     logger.info("Square Bot start up complete.")
 
+    yield
 
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Application shut-down hook."""
-    logger = get_logger()
+    # Any code here will be run when the application shuts down.
     await http_client_dependency.aclose()
     logger.info("Square Bot shut down up complete.")
+
+
+configure_logging(
+    profile=config.profile,
+    log_level=config.log_level,
+    name="squarebot",
+)
+configure_uvicorn_logging(config.log_level)
+
+app = FastAPI(
+    title="SQuaRE Bot",
+    description=metadata("squarebot")["Summary"],
+    version=version("squarebot"),
+    openapi_url=f"{config.path_prefix}/openapi.json",
+    docs_url=f"{config.path_prefix}/docs",
+    redoc_url=f"{config.path_prefix}/redoc",
+    lifespan=lifespan,
+)
+"""The main FastAPI application for squarebot."""
+
+# Attach the routers.
+app.include_router(internal_router)
+app.include_router(external_router, prefix=config.path_prefix)
+
+# Set up middleware
+app.add_middleware(XForwardedMiddleware)
 
 
 def create_openapi() -> str:

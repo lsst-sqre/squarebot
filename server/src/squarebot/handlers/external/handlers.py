@@ -40,10 +40,12 @@ async def get_index(
     )
     # Construct these URLs; this doesn't use request.url_for because the
     # endpoints are in other FastAPI "apps".
-    doc_url = request.url.replace(path=f"/{config.path_prefix}/redoc")
+    doc_url = request.url.replace(
+        path=f"/{config.path_prefix}/redoc", scheme=request.url.scheme
+    )
     return IndexResponse(
         metadata=metadata,
-        api_docs=AnyHttpUrl(str(doc_url), scheme=request.url.scheme),
+        api_docs=AnyHttpUrl(str(doc_url)),
     )
 
 

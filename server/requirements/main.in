@@ -12,7 +12,5 @@ uvicorn[standard]
 python-multipart
 
 # Other dependencies.
-safir>=4.0.0
-fastavro
-kafkit[httpx,pydantic] @ git+https://github.com/lsst-sqre/kafkit.git@main
-aiokafka
+safir>=5.0.0
+pydantic-settings

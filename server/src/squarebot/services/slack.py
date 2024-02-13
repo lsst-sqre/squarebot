@@ -177,7 +177,7 @@ class SlackService:
     ) -> None:
         """Publish a Slack ``app_mention`` event to Kafka."""
         try:
-            event = SlackMessageEvent.parse_obj(request_json)
+            event = SlackMessageEvent.model_validate(request_json)
         except Exception as e:
             self._logger.exception(
                 "Could not parse Slack event", exc_info=e, raw=request_json
@@ -204,8 +204,8 @@ class SlackService:
         self._logger.debug(
             "Published Slack app_mention event to Kafka",
             topic=topic,
-            value=value.dict(),
-            key=key.dict(),
+            value=value.model_dump(),
+            key=key.model_dump(),
         )
 
     async def _publish_message_event(
@@ -213,7 +213,7 @@ class SlackService:
     ) -> None:
         """Publish a Slack ``message`` event to Kafka."""
         try:
-            event = SlackMessageEvent.parse_obj(request_json)
+            event = SlackMessageEvent.model_validate(request_json)
         except Exception as e:
             self._logger.exception(
                 "Could not parse Slack event", exc_info=e, raw=request_json
@@ -258,8 +258,8 @@ class SlackService:
         self._logger.debug(
             "Published Slack message event to Kafka",
             topic=topic,
-            value=value.dict(),
-            key=key.dict(),
+            value=value.model_dump(),
+            key=key.model_dump(),
         )
 
     async def publish_interaction(
@@ -278,7 +278,7 @@ class SlackService:
             "type" in interaction_payload
             and interaction_payload["type"] == "block_actions"
         ):
-            action = SlackBlockAction.parse_obj(interaction_payload)
+            action = SlackBlockAction.model_validate(interaction_payload)
             # Temporary placeholder; will serialize and publish to Kafka
             # in reality.
             self._logger.debug(
