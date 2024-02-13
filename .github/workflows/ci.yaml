@@ -23,12 +23,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.0
@@ -42,12 +42,12 @@ jobs:
           - "3.11"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install nox
         run: |
@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Ensure the documentation gets the right version.
           fetch-depth: 0
@@ -74,9 +74,9 @@ jobs:
         run: sudo apt install -y graphviz
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install nox
         run: |
@@ -117,7 +117,7 @@ jobs:
       || startsWith(github.head_ref, 'tickets/')
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # full history for setuptools_scm
 
@@ -135,7 +135,7 @@ jobs:
     needs: [lint, test, docs]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # full history for setuptools_scm
 
@@ -143,6 +143,6 @@ jobs:
         uses: lsst-sqre/build-and-publish-to-pypi@v1
         with:
           pypi-token: ${{ secrets.PYPI_SQRE_ADMIN }}
-          python-version: "3.11"
+          python-version: "3.12"
           upload: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
           working-directory: "./client"
