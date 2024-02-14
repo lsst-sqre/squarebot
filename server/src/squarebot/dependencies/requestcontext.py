@@ -3,14 +3,11 @@
 from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Request, Response
-from httpx import AsyncClient
-from safir.dependencies.http_client import http_client_dependency
+from fastapi import Depends, Request
 from safir.dependencies.logger import logger_dependency
 from structlog.stdlib import BoundLogger
 
-from ..config import Configuration, config
-from ..services.slack import SlackService
+from ..factory import Factory, ProcessContext
 
 __all__ = ["RequestContext", "context_dependency"]
 
@@ -27,20 +24,11 @@ class RequestContext:
     request: Request
     """The incoming request."""
 
-    response: Response
-    """The response (useful for setting response headers)."""
-
-    config: Configuration
-    """SQuaRE Bot's configuration."""
-
-    slack: SlackService
-    """The Slack service layer."""
-
     logger: BoundLogger
     """The request logger, rebound with discovered context."""
 
-    http_client: AsyncClient
-    """An HTTPX client."""
+    factory: Factory
+    """A factory for creating services and other components."""
 
     def rebind_logger(self, **values: str | None) -> None:
         """Add the given values to the logging context.
@@ -55,19 +43,63 @@ class RequestContext:
         self.logger = self.logger.bind(**values)
 
 
-async def context_dependency(
-    request: Request,
-    response: Response,
-    logger: Annotated[BoundLogger, Depends(logger_dependency)],
-    http_client: Annotated[AsyncClient, Depends(http_client_dependency)],
-) -> RequestContext:
-    """Provide a RequestContext as a dependency."""
-    slack_service = SlackService(logger=logger, config=config)
-    return RequestContext(
-        request=request,
-        response=response,
-        config=config,
-        slack=slack_service,
-        logger=logger,
-        http_client=http_client,
-    )
+class ContextDependency:
+    """Provide a per-request context as a FastAPI dependency.
+
+    Each request gets a `RequestContext`.  To save overhead, the portions of
+    the context that are shared by all requests are collected into the single
+    process-global `~gafaelfawr.factory.ProcessContext` and reused with each
+    request.
+    """
+
+    def __init__(self) -> None:
+        self._process_context: ProcessContext | None = None
+
+    async def __call__(
+        self,
+        request: Request,
+        logger: Annotated[BoundLogger, Depends(logger_dependency)],
+    ) -> RequestContext:
+        """Create a per-request context and return it."""
+        factory = self.create_factory(logger)
+        return RequestContext(
+            request=request,
+            logger=logger,
+            factory=factory,
+        )
+
+    @property
+    def process_context(self) -> ProcessContext:
+        """Context that is shared by all requests for the life of the app."""
+        if not self._process_context:
+            raise RuntimeError("ContextDependency not initialized")
+        return self._process_context
+
+    async def initialize(self) -> None:
+        """Initialize the process-wide shared context.
+
+        Parameters
+        ----------
+        config
+            Application configuration.
+        """
+        if self._process_context:
+            await self._process_context.aclose()
+        self._process_context = await ProcessContext.create()
+
+    def create_factory(self, logger: BoundLogger) -> Factory:
+        """Create a factory for use outside a request context."""
+        return Factory(
+            logger=logger,
+            process_context=self.process_context,
+        )
+
+    async def aclose(self) -> None:
+        """Clean up the per-process configuration."""
+        if self._process_context:
+            await self._process_context.aclose()
+        self._process_context = None
+
+
+context_dependency = ContextDependency()
+"""The dependency that will return the per-request context."""

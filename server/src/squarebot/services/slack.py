@@ -9,6 +9,7 @@ import time
 from typing import Any
 
 from fastapi import HTTPException, Request, status
+from faststream.kafka.asyncapi import Publisher
 from structlog.stdlib import BoundLogger
 
 from rubin.squarebot.models.kafka import (
@@ -33,9 +34,19 @@ class SlackService:
         self,
         logger: BoundLogger,
         config: Configuration,
+        app_mentions_publisher: Publisher,
+        channel_publisher: Publisher,
+        groups_publisher: Publisher,
+        im_publisher: Publisher,
+        mpim_publisher: Publisher,
     ) -> None:
         self._logger = logger
         self._config = config
+        self._app_mentions_publisher = app_mentions_publisher
+        self._channel_publisher = channel_publisher
+        self._groups_publisher = groups_publisher
+        self._im_publisher = im_publisher
+        self._mpim_publisher = mpim_publisher
 
     @staticmethod
     def compute_slack_signature(
@@ -197,13 +208,16 @@ class SlackService:
             event=event, raw=request_json
         )
 
-        topic = self._config.app_mention_topic
-
-        # FIXME produce message to Kafka: topic, value, key
+        # Produce message to Kafka
+        await self._app_mentions_publisher.publish(
+            message=value.model_dump_json(),
+            key=key.to_key_bytes(),
+            headers={"Content-Type": "application/json"},
+        )
 
         self._logger.debug(
             "Published Slack app_mention event to Kafka",
-            topic=topic,
+            topic=self._config.app_mention_topic,
             value=value.model_dump(),
             key=key.model_dump(),
         )
@@ -239,21 +253,31 @@ class SlackService:
             raise RuntimeError(
                 "Null channel type should be handled by app_mention schema"
             )
+
         if event.event.channel_type == SlackChannelType.channel:
             topic = self._config.message_channels_topic
+            publisher = self._channel_publisher
         elif event.event.channel_type == SlackChannelType.group:
             topic = self._config.message_groups_topic
+            publisher = self._groups_publisher
         elif event.event.channel_type == SlackChannelType.im:
             topic = self._config.message_im_topic
+            publisher = self._im_publisher
         elif event.event.channel_type == SlackChannelType.mpim:
             topic = self._config.message_mpim_topic
+            publisher = self._mpim_publisher
         else:
             raise RuntimeError(
                 f"Could not determine topic for Slack message event. "
                 f"Channel type is {event.event.channel_type.value}"
             )
 
-        # FIXME produce message to Kafka
+        # Produce message to Kafka
+        await publisher.publish(
+            message=value.model_dump_json(),
+            key=key.to_key_bytes(),
+            headers={"Content-Type": "application/json"},
+        )
 
         self._logger.debug(
             "Published Slack message event to Kafka",

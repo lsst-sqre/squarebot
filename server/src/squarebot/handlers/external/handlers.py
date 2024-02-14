@@ -59,16 +59,17 @@ async def post_event(
 ) -> Response | UrlVerificationResponse:
     """Handle an event post by the Slack Events API."""
     # Verify the Slack signing secret on the request
-    await context.slack.verify_request(context.request)
+    slack_service = context.factory.create_slack_service()
+    await slack_service.verify_request(context.request)
 
     request_json = await context.request.json()
     if slack_event.type == "url_verification":
         return UrlVerificationResponse.from_event(
-            SlackUrlVerificationEvent.parse_obj(request_json)
+            SlackUrlVerificationEvent.model_validate(request_json)
         )
     elif slack_event.type == "event_callback":
         try:
-            await context.slack.publish_event(request_json=request_json)
+            await slack_service.publish_event(request_json=request_json)
         except Exception:
             context.logger.exception("Unexpectedly failed to process event")
         finally:
@@ -86,12 +87,13 @@ async def post_interaction(
 ) -> Response:
     """Handle an interaction payload from Slack."""
     # Verify the Slack signing secret on the request
-    await context.slack.verify_request(context.request)
+    slack_service = context.factory.create_slack_service()
+    await slack_service.verify_request(context.request)
 
     interaction_payload = json.loads(payload)
 
     try:
-        await context.slack.publish_interaction(
+        await slack_service.publish_interaction(
             interaction_payload=interaction_payload
         )
     except Exception:

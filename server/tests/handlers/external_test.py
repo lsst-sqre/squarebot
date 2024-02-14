@@ -6,11 +6,27 @@ import json
 from pathlib import Path
 
 import pytest
+from aiokafka import AIOKafkaConsumer
 from httpx import AsyncClient
 
+from rubin.squarebot.models.kafka import (
+    SquarebotSlackAppMentionValue,
+    SquarebotSlackMessageValue,
+)
 from squarebot.config import config
 
 from ..support.slackrequester import SlackServer
+
+
+async def _create_consumer(topic: str) -> AIOKafkaConsumer:
+    consumer = AIOKafkaConsumer(
+        topic,
+        bootstrap_servers=config.kafka.bootstrap_servers,
+        group_id="squarebot-test",
+    )
+    await consumer.start()
+    await consumer.seek_to_end()
+    return consumer
 
 
 @pytest.mark.asyncio
@@ -35,14 +51,25 @@ async def test_post_event_app_mention(
     """Test ``POST /slack/event`` with an ``app_mention`` payload
     (happy path).
     """
-    app_mention_payload = json.loads(
+    consumer = await _create_consumer(config.app_mention_topic)
+
+    slack_payload = json.loads(
         sample_slack_message_dir.joinpath("app_mention.json").read_text()
     )
     slack_server = SlackServer(client)
+
     response = await slack_server.post(
-        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=slack_payload
     )
     assert response.status_code == 200
+
+    # Verify that the message was sent to the Kafka topic
+    message = await consumer.getone()
+    value = SquarebotSlackAppMentionValue.model_validate_json(
+        message.value.decode("utf-8")
+    )
+    assert value.text == slack_payload["event"]["text"]
+    await consumer.stop()
 
 
 @pytest.mark.asyncio
@@ -52,14 +79,24 @@ async def test_post_event_message_channels(
     """Test ``POST /slack/event`` with a ``message.channels`` payload
     (happy path).
     """
-    app_mention_payload = json.loads(
+    consumer = await _create_consumer(config.message_channels_topic)
+
+    slack_payload = json.loads(
         sample_slack_message_dir.joinpath("message.channels.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=slack_payload
     )
     assert response.status_code == 200
+
+    # Verify that the message was sent to the Kafka topic
+    message = await consumer.getone()
+    value = SquarebotSlackMessageValue.model_validate_json(
+        message.value.decode("utf-8")
+    )
+    assert value.text == slack_payload["event"]["text"]
+    await consumer.stop()
 
 
 @pytest.mark.asyncio
@@ -69,14 +106,24 @@ async def test_post_event_message_im(
     """Test ``POST /slack/event`` with a ``message.im`` payload
     (happy path).
     """
-    app_mention_payload = json.loads(
+    consumer = await _create_consumer(config.message_im_topic)
+
+    slack_payload = json.loads(
         sample_slack_message_dir.joinpath("message.im.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=slack_payload
     )
     assert response.status_code == 200
+
+    # Verify that the message was sent to the Kafka topic
+    message = await consumer.getone()
+    value = SquarebotSlackMessageValue.model_validate_json(
+        message.value.decode("utf-8")
+    )
+    assert value.text == slack_payload["event"]["text"]
+    await consumer.stop()
 
 
 @pytest.mark.asyncio
@@ -86,14 +133,24 @@ async def test_post_event_message_groups(
     """Test ``POST /slack/event`` with a ``message.groups`` payload
     (happy path).
     """
-    app_mention_payload = json.loads(
+    consumer = await _create_consumer(config.message_groups_topic)
+
+    slack_payload = json.loads(
         sample_slack_message_dir.joinpath("message.groups.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=slack_payload
     )
     assert response.status_code == 200
+
+    # Verify that the message was sent to the Kafka topic
+    message = await consumer.getone()
+    value = SquarebotSlackMessageValue.model_validate_json(
+        message.value.decode("utf-8")
+    )
+    assert value.text == slack_payload["event"]["text"]
+    await consumer.stop()
 
 
 @pytest.mark.asyncio
@@ -103,14 +160,24 @@ async def test_post_event_message_mpim(
     """Test ``POST /slack/event`` with a ``message.mpim`` payload
     (happy path).
     """
-    app_mention_payload = json.loads(
+    consumer = await _create_consumer(config.message_mpim_topic)
+
+    slack_payload = json.loads(
         sample_slack_message_dir.joinpath("message.mpim.json").read_text()
     )
     slack_server = SlackServer(client)
     response = await slack_server.post(
-        f"{config.path_prefix}/slack/event", json_data=app_mention_payload
+        f"{config.path_prefix}/slack/event", json_data=slack_payload
     )
     assert response.status_code == 200
+
+    # Verify that the message was sent to the Kafka topic
+    message = await consumer.getone()
+    value = SquarebotSlackMessageValue.model_validate_json(
+        message.value.decode("utf-8")
+    )
+    assert value.text == slack_payload["event"]["text"]
+    await consumer.stop()
 
 
 @pytest.mark.asyncio

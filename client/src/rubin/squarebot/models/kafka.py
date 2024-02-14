@@ -37,6 +37,16 @@ class SquarebotSlackMessageKey(BaseModel):
         """
         return cls(channel=event.event.channel)
 
+    def to_key_bytes(self) -> bytes:
+        """Serialize the key to bytes for use as a Kafka key.
+
+        Returns
+        -------
+        bytes
+            The serialized key.
+        """
+        return self.channel.encode("utf-8")
+
 
 class SquarebotSlackMessageValue(BaseModel):
     """Kafka message value model for Slack messages sent by Squarebot.

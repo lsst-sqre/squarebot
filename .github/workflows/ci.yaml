@@ -35,6 +35,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     strategy:
       matrix:
@@ -54,8 +55,14 @@ jobs:
           pip install --upgrade pip
           pip install --upgrade nox
 
+      - name: Start Kafka
+        run: docker compose -f kafka-compose.yaml up -d
+
       - name: Run nox
         run: "nox -s typing test"
+
+      - name: Stop Kafka
+        run: docker compose -f kafka-compose.yaml down
 
   docs:
     runs-on: ubuntu-latest

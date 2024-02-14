@@ -22,8 +22,10 @@ from safir.middleware.x_forwarded import XForwardedMiddleware
 from structlog import get_logger
 
 from .config import config
+from .dependencies.requestcontext import context_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
+from .kafkarouter import kafka_router
 
 __all__ = ["app", "create_openapi"]
 
@@ -47,12 +49,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         },
     )
 
-    logger.info("Square Bot start up complete.")
+    await context_dependency.initialize()
 
-    yield
+    async with kafka_router.lifespan_context(app):
+        logger.info("Square Bot start up complete.")
+        yield
 
     # Any code here will be run when the application shuts down.
     await http_client_dependency.aclose()
+    await context_dependency.aclose()
     logger.info("Square Bot shut down up complete.")
 
 
@@ -77,6 +82,7 @@ app = FastAPI(
 # Attach the routers.
 app.include_router(internal_router)
 app.include_router(external_router, prefix=config.path_prefix)
+app.include_router(kafka_router)
 
 # Set up middleware
 app.add_middleware(XForwardedMiddleware)

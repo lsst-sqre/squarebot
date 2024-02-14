@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import ssl
 from enum import Enum
+from pathlib import Path
 
 from pydantic import AnyHttpUrl, DirectoryPath, Field, FilePath, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -151,6 +153,49 @@ class KafkaConnectionSettings(BaseSettings):
         env_prefix="KAFKA_", case_sensitive=False
     )
 
+    @property
+    def ssl_context(self) -> ssl.SSLContext | None:
+        """An SSL context for connecting to Kafka with aiokafka, if the
+        Kafka connection is configured to use SSL.
+        """
+        if (
+            self.security_protocol != KafkaSecurityProtocol.SSL
+            or self.cluster_ca_path is None
+            or self.client_cert_path is None
+            or self.client_key_path is None
+        ):
+            return None
+
+        client_cert_path = Path(self.client_cert_path)
+
+        if self.client_ca_path is not None:
+            # Need to contatenate the client cert and CA certificates. This is
+            # typical for Strimzi-based Kafka clusters.
+            if self.cert_temp_dir is None:
+                raise RuntimeError(
+                    "KAFKIT_KAFKA_CERT_TEMP_DIR must be set when "
+                    "a client CA certificate is provided."
+                )
+            client_ca = Path(self.client_ca_path).read_text()
+            client_cert = Path(self.client_cert_path).read_text()
+            sep = "" if client_ca.endswith("\n") else "\n"
+            new_client_cert = sep.join([client_cert, client_ca])
+            new_client_cert_path = Path(self.cert_temp_dir) / "client.crt"
+            new_client_cert_path.write_text(new_client_cert)
+            client_cert_path = Path(new_client_cert_path)
+
+        # Create an SSL context on the basis that we're the client
+        # authenticating the server (the Kafka broker).
+        ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.SERVER_AUTH, cafile=str(self.cluster_ca_path)
+        )
+        # Add the certificates that the Kafka broker uses to authenticate us.
+        ssl_context.load_cert_chain(
+            certfile=str(client_cert_path), keyfile=str(self.client_key_path)
+        )
+
+        return ssl_context
+
 
 class Configuration(BaseSettings):
     """Configuration for Squarebot."""
@@ -235,7 +280,7 @@ class Configuration(BaseSettings):
         alias="SQUAREBOT_TOPIC_MESSAGE_MPIM",
         description=(
             "Kafka topic name for `message.mpim` Slack events (messages in "
-            "multi-personal direct messages)."
+            "multi-person direct messages)."
         ),
     )
 
