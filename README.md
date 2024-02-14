@@ -43,4 +43,47 @@ flowchart LR
 Slack integration is implemented at the time.
 We plan to add support for other event sources, such as GitHub, in the future.
 
-Squarebot is built on top of [FastAPI](https://fastapi.tiangolo.com/), a modern Python web framework, with Rubin/SQuaRE libraries [Safir](https://safir.lsst.io) (FastAPI application libraries) and [Kafkit](https://kafkit.lsst.io) (Kafka integration).
+Squarebot is built on top of [FastAPI](https://fastapi.tiangolo.com/), a modern Python web framework, with the Rubin/SQuaRE [Safir](https://safir.lsst.io) library.
+Squarebot uses [FastStream](https://faststream.airt.ai/latest/) to publish messages to Kafka with the [aiokafka](https://aiokafka.readthedocs.io/en/stable/) library.
+
+## Development set up
+
+Squarebot uses Python 3.12 or later.
+
+You'll need [nox](https://nox.thea.codes/en/stable/) to run the development environment:
+
+```bash
+pip install nox
+```
+
+Then you can set up a virtual environment with the development dependencies:
+
+```bash
+nox -s venv-init`
+```
+
+(If you already have a virtual environment, you can activate it and run `nox -s init` instead).
+
+The tests require a local Kafka broker.
+If you have Docker, you can deploy a Kafka broker with Docker Compose:
+
+```bash
+docker-compose -f kafka-compose.yaml up
+```
+
+To run all linters, type checking, and tests, run:
+
+```bash
+nox
+```
+
+While developing and running tests, you can inspect messages produced to Kafka with Kafdrop at [http://localhost:9000](http://localhost:9000).
+
+You can run individual sessions with `nox -s <session-name>`.
+See `nox -l` for a list of available sessions.
+
+To tear down the Kafka broker, run:
+
+```bash
+docker-compose -f kafka-compose.yaml down
+```
