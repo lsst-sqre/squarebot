@@ -210,9 +210,9 @@ class SlackService:
 
         # Produce message to Kafka
         await self._app_mentions_publisher.publish(
-            message=value.model_dump_json(),
+            message=value,
             key=key.to_key_bytes(),
-            headers={"Content-Type": "application/json"},
+            headers={"content-type": "application/json"},
         )
 
         self._logger.debug(
@@ -274,9 +274,9 @@ class SlackService:
 
         # Produce message to Kafka
         await publisher.publish(
-            message=value.model_dump_json(),
+            message=value,
             key=key.to_key_bytes(),
-            headers={"Content-Type": "application/json"},
+            headers={"content-type": "application/json"},
         )
 
         self._logger.debug(
