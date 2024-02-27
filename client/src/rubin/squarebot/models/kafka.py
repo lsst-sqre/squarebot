@@ -76,6 +76,14 @@ class SquarebotSlackMessageValue(BaseModel):
         ),
     )
 
+    thread_ts: str | None = Field(
+        None,
+        description=(
+            "The timestamp of the parent message. This is only present in "
+            "threaded messages."
+        ),
+    )
+
     text: str = Field(..., description="The Slack message text content.")
 
     slack_event: str = Field(
@@ -109,6 +117,7 @@ class SquarebotSlackMessageValue(BaseModel):
             channel_type=event.event.channel_type,
             user=event.event.user,
             ts=event.event.ts,
+            thread_ts=event.event.thread_ts,
             text=event.event.text,
             slack_event=json.dumps(raw),
         )

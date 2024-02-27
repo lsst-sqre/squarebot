@@ -103,6 +103,14 @@ class SlackMessageEventContent(BaseModel):
 
     event_ts: str = Field(description="When the event was dispatched.")
 
+    thread_ts: str | None = Field(
+        None,
+        description=(
+            "The timestamp of the parent message. This is only present in "
+            "threaded messages."
+        ),
+    )
+
 
 class SlackMessageEvent(BaseSlackEvent):
     """A Slack event for message events in general.
