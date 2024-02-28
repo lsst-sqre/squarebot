@@ -90,6 +90,14 @@ class SquarebotSlackMessageValue(BaseModel):
         ..., description="The original Slack event JSON string."
     )
 
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The unique identifier of the bot user that sent the message. "
+            "This field is only present if the message was sent by a bot."
+        ),
+    )
+
     @classmethod
     def from_event(cls, event: SlackMessageEvent, raw: dict[str, Any]) -> Self:
         """Create a Kafka value for a Slack message from a Slack event.
@@ -120,6 +128,7 @@ class SquarebotSlackMessageValue(BaseModel):
             thread_ts=event.event.thread_ts,
             text=event.event.text,
             slack_event=json.dumps(raw),
+            bot_id=event.event.bot_id,
         )
 
 

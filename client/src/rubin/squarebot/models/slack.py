@@ -111,6 +111,14 @@ class SlackMessageEventContent(BaseModel):
         ),
     )
 
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The unique identifier of the bot user that sent the message. "
+            "This field is only present if the message was sent by a bot."
+        ),
+    )
+
 
 class SlackMessageEvent(BaseSlackEvent):
     """A Slack event for message events in general.
