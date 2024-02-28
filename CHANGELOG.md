@@ -2,6 +2,47 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.8.0'></a>
+## 0.8.0 (2024-02-28)
+
+### Backwards-incompatible changes
+
+- Squarebot now publishes messages in JSON, rather than Avro. Consumers should use the Pydantic models published in the `rubin-squarebot` PyPI package to deserialize messages.
+
+- The `rubin-squarebot` PyPI package now uses the `rubin.squarebot` Python namespace (previously `rubinobs.square.squarebot`). Consumers should use the `rubin.squarebot.models.kafka.SquarebotSlackMessageValue` Pydantic model to deserialize Squarebot messages for Slack channel message traffic (or `rubin.squarebot.models.kafka.SquarebotSlackMessageValue` for the app mention topic).
+
+- The codebase now uses Pydantic 2.
+
+### New features
+
+- Squarebot now uses [FastStream](https://faststream.airt.ai/) to publish messages. This approach drops the Confluent Schema Registry integration because messages are now published in JSON from Pydantic models, and those Pydantic models are versioned and published through the `rubin-squarebot` PyPI package.
+
+- New fields in the `SquarebotSlackMessageValue` Pydantic model:
+
+  - `thread_ts`, useful for identify a threaded message and replying to its thread.
+  - `bot_id`, the ID of the bot that sent the message (if applicable). This is useful for identifying bot messages and ignoring them in some cases.
+
+### Bug fixes
+
+- Fix type annotations related in `channel_type` in `rubin.squarebot.models.kafka.SquarebotSlackMessageValue`. We now assure that the channel type is not Null here. However the `channel_type` field is now set to null/None in the `SquarebotSlackAppMentionValue` model.
+
+- Fixed the `nox -s init` command so that it will install into the current Python environment (previously it still installing into the environment managed by `nox`).
+
+### Other changes
+
+- A Redoc-based OpenAPI documentation page for the REST API is now included in the Sphinx documentation.
+
+- Switched to [nox](https://nox.thea.codes/en/stable/) for running tests and repository tasks. Nox now replaces the two tox configurations for the client and server. Nox also replaces the `Makefile` for repository tasks:
+  - `nox -s venv-init` initializes a Python venv virtual environment and installs the application into it. Alternatively, `nox -s init` can be used to initialize the application in the current Python environment (like `make init`).
+  - `nox -s update-deps` updates the pinned dependencies as well as the pre-commit hooks (replacing `make update-deps`).
+- New nox integration with scriv for change log management: `nox -s scriv-create` creates a change log fragment and `nox -s scriv-collect X.Y.Z` collects change log fragments into CHANGELOG.md for a release.
+
+- Adopt the lsst-sqre/build-and-push-to-ghcr@v1 action.
+
+- Tests require a local Kafka broker. The easiest way to run a Kafka broker is with Docker Compose and the `kafka-compose.yaml` configuration file in this repository. The Docker compose set up also deploys Kafdrop so you can view the messages produced during testing.
+
+- The codebase is now linted and formatted with Ruff.
+
 <a id='changelog-0.7.0'></a>
 
 ## 0.7.0 (2023-05-19)
