@@ -10,6 +10,8 @@ called.
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
@@ -19,19 +21,44 @@ from safir.logging import configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
 from structlog import get_logger
 
-from rubinobs.square.squarebot.models.kafka import (
-    SquarebotSlackAppMentionValue,
-    SquarebotSlackMessageKey,
-    SquarebotSlackMessageValue,
-)
-
 from .config import config
-from .dependencies.aiokafkaproducer import kafka_producer_dependency
-from .dependencies.schemamanager import pydantic_schema_manager_dependency
+from .dependencies.requestcontext import context_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
+from .kafkarouter import kafka_router
 
 __all__ = ["app", "create_openapi"]
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """Set up and tear down the application."""
+    # Any code here will be run when the application starts up.
+    logger = get_logger()
+    logger.info("Square Bot is starting up.")
+
+    logger.info(
+        "Kafka topic configuration",
+        slack={
+            "app_mention": config.app_mention_topic,
+            "message_channels": config.message_channels_topic,
+            "message_im": config.message_im_topic,
+            "message_groups": config.message_groups_topic,
+            "message_mpim": config.message_mpim_topic,
+            "interaction": config.interaction_topic,
+        },
+    )
+
+    await context_dependency.initialize()
+
+    async with kafka_router.lifespan_context(app):
+        logger.info("Square Bot start up complete.")
+        yield
+
+    # Any code here will be run when the application shuts down.
+    await http_client_dependency.aclose()
+    await context_dependency.aclose()
+    logger.info("Square Bot shut down up complete.")
 
 
 configure_logging(
@@ -48,69 +75,17 @@ app = FastAPI(
     openapi_url=f"{config.path_prefix}/openapi.json",
     docs_url=f"{config.path_prefix}/docs",
     redoc_url=f"{config.path_prefix}/redoc",
+    lifespan=lifespan,
 )
 """The main FastAPI application for squarebot."""
 
 # Attach the routers.
 app.include_router(internal_router)
 app.include_router(external_router, prefix=config.path_prefix)
+app.include_router(kafka_router)
 
 # Set up middleware
 app.add_middleware(XForwardedMiddleware)
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Application start-up hook."""
-    logger = get_logger()
-    logger.info("Square Bot is starting up.")
-
-    http_client = await http_client_dependency()
-
-    logger.info(
-        "Kafka topic configuration",
-        slack={
-            "app_mention": config.app_mention_topic,
-            "message_channels": config.message_channels_topic,
-            "message_im": config.message_im_topic,
-            "message_groups": config.message_groups_topic,
-            "message_mpim": config.message_mpim_topic,
-            "interaction": config.interaction_topic,
-        },
-    )
-    logger.info(
-        "Schema Registry configuration",
-        registry_url=config.registry_url,
-        subject_suffix=config.subject_suffix,
-        subject_compatibility=config.subject_compatibility,
-    )
-
-    # Initialize the Pydantic Schema Manager and register models
-    await pydantic_schema_manager_dependency.initialize(
-        http_client=http_client,
-        registry_url=config.registry_url,
-        models=[
-            SquarebotSlackMessageKey,
-            SquarebotSlackMessageValue,
-            SquarebotSlackAppMentionValue,
-        ],
-        suffix=config.subject_suffix,
-        compatibility=config.subject_compatibility,
-    )
-
-    # Initialize the Kafka producer
-    await kafka_producer_dependency.initialize(config.kafka, logger)
-
-    logger.info("Square Bot start up complete.")
-
-
-@app.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Application shut-down hook."""
-    logger = get_logger()
-    await kafka_producer_dependency.stop()
-    await http_client_dependency.aclose()
-    logger.info("Square Bot shut down up complete.")
 
 
 def create_openapi() -> str:

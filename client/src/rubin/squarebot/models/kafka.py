@@ -5,8 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any, Self
 
-from dataclasses_avroschema.avrodantic import AvroBaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from .slack import SlackChannelType, SlackMessageEvent, SlackMessageType
 
@@ -17,16 +16,10 @@ __all__ = [
 ]
 
 
-class SquarebotSlackMessageKey(AvroBaseModel):
+class SquarebotSlackMessageKey(BaseModel):
     """Kafka message key model for Slack messages sent by Squarebot."""
 
     channel: str = Field(..., description="The Slack channel ID.")
-
-    class Meta:
-        """Metadata for the model."""
-
-        namespace = "lsst.square-events.squarebot.messages"
-        schema_name = "key"
 
     @classmethod
     def from_event(cls, event: SlackMessageEvent) -> Self:
@@ -44,8 +37,18 @@ class SquarebotSlackMessageKey(AvroBaseModel):
         """
         return cls(channel=event.event.channel)
 
+    def to_key_bytes(self) -> bytes:
+        """Serialize the key to bytes for use as a Kafka key.
 
-class SquarebotSlackMessageValue(AvroBaseModel):
+        Returns
+        -------
+        bytes
+            The serialized key.
+        """
+        return self.channel.encode("utf-8")
+
+
+class SquarebotSlackMessageValue(BaseModel):
     """Kafka message value model for Slack messages sent by Squarebot.
 
     This value schema should be paired with `SquarebotSlackMessageKey` for
@@ -73,17 +76,27 @@ class SquarebotSlackMessageValue(AvroBaseModel):
         ),
     )
 
+    thread_ts: str | None = Field(
+        None,
+        description=(
+            "The timestamp of the parent message. This is only present in "
+            "threaded messages."
+        ),
+    )
+
     text: str = Field(..., description="The Slack message text content.")
 
     slack_event: str = Field(
         ..., description="The original Slack event JSON string."
     )
 
-    class Meta:
-        """Metadata for the model."""
-
-        namespace = "lsst.square-events.squarebot.messages"
-        schema_name = "value"
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The unique identifier of the bot user that sent the message. "
+            "This field is only present if the message was sent by a bot."
+        ),
+    )
 
     @classmethod
     def from_event(cls, event: SlackMessageEvent, raw: dict[str, Any]) -> Self:
@@ -112,12 +125,14 @@ class SquarebotSlackMessageValue(AvroBaseModel):
             channel_type=event.event.channel_type,
             user=event.event.user,
             ts=event.event.ts,
+            thread_ts=event.event.thread_ts,
             text=event.event.text,
             slack_event=json.dumps(raw),
+            bot_id=event.event.bot_id,
         )
 
 
-class SquarebotSlackAppMentionValue(AvroBaseModel):
+class SquarebotSlackAppMentionValue(BaseModel):
     """Kafka message value model for Slack app_mention message sent by
     Squarebot.
 
@@ -150,12 +165,6 @@ class SquarebotSlackAppMentionValue(AvroBaseModel):
     slack_event: str = Field(
         ..., description="The original Slack event JSON string."
     )
-
-    class Meta:
-        """Metadata for the model."""
-
-        namespace = "lsst.square-events.squarebot.appmention"
-        schema_name = "value"
 
     @classmethod
     def from_event(cls, event: SlackMessageEvent, raw: dict[str, Any]) -> Self:

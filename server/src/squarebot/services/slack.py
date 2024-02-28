@@ -9,14 +9,15 @@ import time
 from typing import Any
 
 from fastapi import HTTPException, Request, status
+from faststream.kafka.asyncapi import Publisher
 from structlog.stdlib import BoundLogger
 
-from rubinobs.square.squarebot.models.kafka import (
+from rubin.squarebot.models.kafka import (
     SquarebotSlackAppMentionValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
 )
-from rubinobs.square.squarebot.models.slack import (
+from rubin.squarebot.models.slack import (
     SlackBlockAction,
     SlackChannelType,
     SlackMessageEvent,
@@ -24,7 +25,6 @@ from rubinobs.square.squarebot.models.slack import (
 )
 
 from ..config import Configuration
-from .kafkaproducer import PydanticKafkaProducer
 
 
 class SlackService:
@@ -34,11 +34,19 @@ class SlackService:
         self,
         logger: BoundLogger,
         config: Configuration,
-        kafka_producer: PydanticKafkaProducer,
+        app_mentions_publisher: Publisher,
+        channel_publisher: Publisher,
+        groups_publisher: Publisher,
+        im_publisher: Publisher,
+        mpim_publisher: Publisher,
     ) -> None:
         self._logger = logger
         self._config = config
-        self._producer = kafka_producer
+        self._app_mentions_publisher = app_mentions_publisher
+        self._channel_publisher = channel_publisher
+        self._groups_publisher = groups_publisher
+        self._im_publisher = im_publisher
+        self._mpim_publisher = mpim_publisher
 
     @staticmethod
     def compute_slack_signature(
@@ -106,7 +114,7 @@ class SlackService:
                     "msg": ("X-Slack-Request-Timestamp header is missing."),
                     "type": "bad_request",
                 },
-            )
+            ) from None
 
         if math.fabs(time.time() - float(timestamp)) > 300.0:
             # The request timestamp is more than five minutes from local time.
@@ -180,7 +188,7 @@ class SlackService:
     ) -> None:
         """Publish a Slack ``app_mention`` event to Kafka."""
         try:
-            event = SlackMessageEvent.parse_obj(request_json)
+            event = SlackMessageEvent.model_validate(request_json)
         except Exception as e:
             self._logger.exception(
                 "Could not parse Slack event", exc_info=e, raw=request_json
@@ -200,18 +208,18 @@ class SlackService:
             event=event, raw=request_json
         )
 
-        topic = self._config.app_mention_topic
-
-        await self._producer.send(
-            topic=topic,
-            value=value,
-            key=key,
+        # Produce message to Kafka
+        await self._app_mentions_publisher.publish(
+            message=value,
+            key=key.to_key_bytes(),
+            headers={"content-type": "application/json"},
         )
+
         self._logger.debug(
             "Published Slack app_mention event to Kafka",
-            topic=topic,
-            value=value.dict(),
-            key=key.dict(),
+            topic=self._config.app_mention_topic,
+            value=value.model_dump(),
+            key=key.model_dump(),
         )
 
     async def _publish_message_event(
@@ -219,7 +227,7 @@ class SlackService:
     ) -> None:
         """Publish a Slack ``message`` event to Kafka."""
         try:
-            event = SlackMessageEvent.parse_obj(request_json)
+            event = SlackMessageEvent.model_validate(request_json)
         except Exception as e:
             self._logger.exception(
                 "Could not parse Slack event", exc_info=e, raw=request_json
@@ -245,30 +253,37 @@ class SlackService:
             raise RuntimeError(
                 "Null channel type should be handled by app_mention schema"
             )
-        elif event.event.channel_type == SlackChannelType.channel:
+
+        if event.event.channel_type == SlackChannelType.channel:
             topic = self._config.message_channels_topic
+            publisher = self._channel_publisher
         elif event.event.channel_type == SlackChannelType.group:
             topic = self._config.message_groups_topic
+            publisher = self._groups_publisher
         elif event.event.channel_type == SlackChannelType.im:
             topic = self._config.message_im_topic
+            publisher = self._im_publisher
         elif event.event.channel_type == SlackChannelType.mpim:
             topic = self._config.message_mpim_topic
+            publisher = self._mpim_publisher
         else:
             raise RuntimeError(
                 f"Could not determine topic for Slack message event. "
                 f"Channel type is {event.event.channel_type.value}"
             )
 
-        await self._producer.send(
-            topic=topic,
-            value=value,
-            key=key,
+        # Produce message to Kafka
+        await publisher.publish(
+            message=value,
+            key=key.to_key_bytes(),
+            headers={"content-type": "application/json"},
         )
+
         self._logger.debug(
             "Published Slack message event to Kafka",
             topic=topic,
-            value=value.dict(),
-            key=key.dict(),
+            value=value.model_dump(),
+            key=key.model_dump(),
         )
 
     async def publish_interaction(
@@ -287,7 +302,7 @@ class SlackService:
             "type" in interaction_payload
             and interaction_payload["type"] == "block_actions"
         ):
-            action = SlackBlockAction.parse_obj(interaction_payload)
+            action = SlackBlockAction.model_validate(interaction_payload)
             # Temporary placeholder; will serialize and publish to Kafka
             # in reality.
             self._logger.debug(

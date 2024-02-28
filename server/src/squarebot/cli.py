@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import click
 import uvicorn
+from safir.click import display_help
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -15,24 +14,15 @@ def main() -> None:
 
     Administrative command-line interface for SQuaRE Bot.
     """
-    pass
 
 
 @main.command()
 @click.argument("topic", default=None, required=False, nargs=1)
+@click.argument("subtopic", default=None, required=False, nargs=1)
 @click.pass_context
-def help(ctx: click.Context, topic: Optional[str]) -> None:
+def help(ctx: click.Context, topic: str | None, subtopic: str | None) -> None:
     """Show help for any command."""
-    # The help command implementation is taken from
-    # https://www.burgundywall.com/post/having-click-help-subcommand
-    if topic:
-        if topic in main.commands:
-            click.echo(main.commands[topic].get_help(ctx))
-        else:
-            raise click.UsageError(f"Unknown help topic {topic}", ctx)
-    else:
-        assert ctx.parent
-        click.echo(ctx.parent.get_help())
+    display_help(main, ctx, topic, subtopic)
 
 
 @main.command()

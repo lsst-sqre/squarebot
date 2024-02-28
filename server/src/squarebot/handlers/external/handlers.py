@@ -1,12 +1,13 @@
 """Handlers for the app's external root, ``/squarebot/``."""
 
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, Request, Response
 from pydantic import AnyHttpUrl
 from safir.metadata import get_metadata
 
-from rubinobs.square.squarebot.models.slack import (
+from rubin.squarebot.models.slack import (
     BaseSlackEvent,
     SlackUrlVerificationEvent,
 )
@@ -40,10 +41,12 @@ async def get_index(
     )
     # Construct these URLs; this doesn't use request.url_for because the
     # endpoints are in other FastAPI "apps".
-    doc_url = request.url.replace(path=f"/{config.path_prefix}/redoc")
+    doc_url = request.url.replace(
+        path=f"/{config.path_prefix}/redoc", scheme=request.url.scheme
+    )
     return IndexResponse(
         metadata=metadata,
-        api_docs=AnyHttpUrl(str(doc_url), scheme=request.url.scheme),
+        api_docs=AnyHttpUrl(str(doc_url)),
     )
 
 
@@ -52,20 +55,21 @@ async def get_index(
 )
 async def post_event(
     slack_event: BaseSlackEvent,
-    context: RequestContext = Depends(context_dependency),
+    context: Annotated[RequestContext, Depends(context_dependency)],
 ) -> Response | UrlVerificationResponse:
     """Handle an event post by the Slack Events API."""
     # Verify the Slack signing secret on the request
-    await context.slack.verify_request(context.request)
+    slack_service = context.factory.create_slack_service()
+    await slack_service.verify_request(context.request)
 
     request_json = await context.request.json()
     if slack_event.type == "url_verification":
         return UrlVerificationResponse.from_event(
-            SlackUrlVerificationEvent.parse_obj(request_json)
+            SlackUrlVerificationEvent.model_validate(request_json)
         )
     elif slack_event.type == "event_callback":
         try:
-            await context.slack.publish_event(request_json=request_json)
+            await slack_service.publish_event(request_json=request_json)
         except Exception:
             context.logger.exception("Unexpectedly failed to process event")
         finally:
@@ -78,17 +82,18 @@ async def post_event(
 
 @external_router.post("/slack/interaction", summary="Handle Slack interaction")
 async def post_interaction(
-    payload: str = Form(),
-    context: RequestContext = Depends(context_dependency),
+    payload: Annotated[str, Form()],
+    context: Annotated[RequestContext, Depends(context_dependency)],
 ) -> Response:
     """Handle an interaction payload from Slack."""
     # Verify the Slack signing secret on the request
-    await context.slack.verify_request(context.request)
+    slack_service = context.factory.create_slack_service()
+    await slack_service.verify_request(context.request)
 
     interaction_payload = json.loads(payload)
 
     try:
-        await context.slack.publish_interaction(
+        await slack_service.publish_interaction(
             interaction_payload=interaction_payload
         )
     except Exception:

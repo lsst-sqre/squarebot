@@ -16,6 +16,5 @@ pytest
 pytest-asyncio
 pytest-cov
 
-avro-python3
-documenteer[guide]==1.0.0a1
+documenteer[guide]>=1,<2
 autodoc_pydantic

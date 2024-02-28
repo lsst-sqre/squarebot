@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -46,15 +45,29 @@ class SlackUrlVerificationEvent(BaseSlackEvent):
 
 
 class SlackMessageType(str, Enum):
+    """An enumeration of the different types of Slack messages."""
+
     app_mention = "app_mention"
+    """A message that mentions the app."""
+
     message = "message"
+    """A regular message."""
 
 
 class SlackChannelType(str, Enum):
-    channel = "channel"  # public channel
-    group = "group"  # private channel
-    im = "im"  # direct message
-    mpim = "mpim"  # multi-persion direct message
+    """Represents the type of a Slack channel."""
+
+    channel = "channel"
+    """A public channel."""
+
+    group = "group"
+    """A private channel."""
+
+    im = "im"
+    """A direct message."""
+
+    mpim = "mpim"
+    """A multi-person direct message."""
 
 
 class SlackMessageEventContent(BaseModel):
@@ -73,7 +86,7 @@ class SlackMessageEventContent(BaseModel):
         )
     )
 
-    channel_type: Optional[SlackChannelType] = Field(
+    channel_type: SlackChannelType | None = Field(
         description=(
             "The type of channel (public, direct im, etc..). This is null for "
             "``app_mention`` events."
@@ -89,6 +102,22 @@ class SlackMessageEventContent(BaseModel):
     ts: str = Field(description="Timestamp of the message.")
 
     event_ts: str = Field(description="When the event was dispatched.")
+
+    thread_ts: str | None = Field(
+        None,
+        description=(
+            "The timestamp of the parent message. This is only present in "
+            "threaded messages."
+        ),
+    )
+
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The unique identifier of the bot user that sent the message. "
+            "This field is only present if the message was sent by a bot."
+        ),
+    )
 
 
 class SlackMessageEvent(BaseSlackEvent):
@@ -126,7 +155,7 @@ class SlackMessageEvent(BaseSlackEvent):
         )
     )
 
-    authed_users: Optional[list[str]] = Field(
+    authed_users: list[str] | None = Field(
         None,
         description=(
             "An array of string-based User IDs. Each member of the collection "
