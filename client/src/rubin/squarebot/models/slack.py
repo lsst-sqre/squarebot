@@ -12,6 +12,7 @@ __all__ = [
     "SlackMessageEvent",
     "SlackMessageType",
     "SlackChannelType",
+    "SlackMessageSubtype",
     "SlackMessageEventContent",
     "SlackBlockAction",
     "SlackUser",
@@ -70,14 +71,29 @@ class SlackChannelType(str, Enum):
     """A multi-person direct message."""
 
 
+class SlackMessageSubtype(str, Enum):
+    """Represents the subtype of a Slack message.
+
+    See https://api.slack.com/events/message#subtypes
+    """
+
+    bot_message = "bot_message"
+    """A message sent by an integration."""
+
+
 class SlackMessageEventContent(BaseModel):
     """A model for the ``event`` field inside a message event.
 
-    See https://api.slack.com/events/app_mention and
-    https://api.slack.com/events/message.
+    See https://api.slack.com/events/app_mention,
+    https://api.slack.com/events/message, and
+    https://api.slack.com/events/message/bot_message
     """
 
     type: SlackMessageType = Field(description="The Slack message type.")
+
+    subtype: SlackMessageSubtype | None = Field(
+        None, description="The message subtype."
+    )
 
     channel: str = Field(
         description=(
@@ -93,8 +109,12 @@ class SlackMessageEventContent(BaseModel):
         )
     )
 
-    user: str = Field(
-        description="The ID of the user that sent the message (eg U061F7AUR)."
+    user: str | None = Field(
+        None,
+        description=(
+            "The ID of the user that sent the message (eg U061F7AUR). "
+            "This is null for bot messages."
+        ),
     )
 
     text: str = Field(description="Content of the message.")

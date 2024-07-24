@@ -7,7 +7,12 @@ from typing import Any, Self
 
 from pydantic import BaseModel, Field
 
-from .slack import SlackChannelType, SlackMessageEvent, SlackMessageType
+from .slack import (
+    SlackChannelType,
+    SlackMessageEvent,
+    SlackMessageSubtype,
+    SlackMessageType,
+)
 
 __all__ = [
     "SquarebotSlackMessageKey",
@@ -64,7 +69,11 @@ class SquarebotSlackMessageValue(BaseModel):
     )
 
     user: str = Field(
-        ..., description="The ID of the user that sent the message."
+        ...,
+        description=(
+            "The ID of the user or bot that sent the message. See the "
+            "is_bot field to determine if the user is a bot."
+        ),
     )
 
     ts: str = Field(
@@ -90,12 +99,9 @@ class SquarebotSlackMessageValue(BaseModel):
         ..., description="The original Slack event JSON string."
     )
 
-    bot_id: str | None = Field(
-        None,
-        description=(
-            "The unique identifier of the bot user that sent the message. "
-            "This field is only present if the message was sent by a bot."
-        ),
+    is_bot: bool = Field(
+        False,
+        description="Flag that is true if `user` is a bot user ID.",
     )
 
     @classmethod
@@ -119,16 +125,37 @@ class SquarebotSlackMessageValue(BaseModel):
                 "Cannot create a SquarebotSlackMessageValue from a Slack "
                 "event that lacks a channel_type. Is this an app_mention?"
             )
+
+        if (
+            event.event.subtype is not None
+            and event.event.subtype == SlackMessageSubtype.bot_message
+        ):
+            is_bot = True
+            if event.event.bot_id is None:
+                raise ValueError(
+                    "Cannot create a SquarebotSlackMessageValue from a Slack "
+                    "bot_message event that lacks a bot_id."
+                )
+            user_id = event.event.bot_id
+        else:
+            is_bot = False
+            if event.event.user is None:
+                raise ValueError(
+                    "Cannot create a SquarebotSlackMessageValue from a Slack "
+                    "message event that lacks a user."
+                )
+            user_id = event.event.user
+
         return cls(
             type=event.event.type,
             channel=event.event.channel,
             channel_type=event.event.channel_type,
-            user=event.event.user,
+            user=user_id,
             ts=event.event.ts,
             thread_ts=event.event.thread_ts,
             text=event.event.text,
             slack_event=json.dumps(raw),
-            bot_id=event.event.bot_id,
+            is_bot=is_bot,
         )
 
 
@@ -182,6 +209,11 @@ class SquarebotSlackAppMentionValue(BaseModel):
         value
             The Squarebot message value.
         """
+        if event.event.user is None:
+            raise ValueError(
+                "Cannot create a SquarebotSlackAppMentionValue from a Slack "
+                "app_mention event that lacks a user. Is this a bot message?"
+            )
         return cls(
             type=event.event.type,
             channel=event.event.channel,

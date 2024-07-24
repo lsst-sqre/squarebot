@@ -1,0 +1,51 @@
+{
+  "token": "3fEkJdH0rQhvcHkRxP6rb5vq",
+  "team_id": "T06D204F2",
+  "context_team_id": "T06D204F2",
+  "context_enterprise_id": null,
+  "api_app_id": "A0575THDXFV",
+  "event": {
+    "subtype": "bot_message",
+    "text": "",
+    "username": "jonathansick",
+    "icons": {
+      "image_48": "https://s3-us-west-2.amazonaws.com/slack-files2/bot_icons/2022-01-18/2964027752950_48.png"
+    },
+    "attachments": [
+      {
+        "id": 1,
+        "color": "0081CF",
+        "fallback": "*jonathansick* posted an update for *SQuaRE* report.",
+        "text": "*What are you up to? (WIP, upcoming, whatever we should know)*\nLorem ipsump",
+        "pretext": "*jonathansick* posted an update for *SQuaRE* report."
+      },
+      {
+        "id": 2,
+        "color": "00A4DE",
+        "fallback": "*Topic for live discussion - priority*\nLorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "text": "*Topic for live discussion - priority*\nLorem ipsum dolor sit amet, consectetur adipiscing elit."
+      }
+    ],
+    "type": "message",
+    "ts": "1721762012.847069",
+    "bot_id": "B02U5C98FU2",
+    "app_id": "A01SS9WN8V7",
+    "channel": "GTADWR431",
+    "event_ts": "1721762012.847069",
+    "channel_type": "group"
+  },
+  "type": "event_callback",
+  "event_id": "Ev07DTBDBYAY",
+  "event_time": 1721762012,
+  "authorizations": [
+    {
+      "enterprise_id": null,
+      "team_id": "T06D204F2",
+      "user_id": "U058HDHHQQK",
+      "is_bot": true,
+      "is_enterprise_install": false
+    }
+  ],
+  "is_ext_shared_channel": false,
+  "event_context": "4-eyJldCI6Im1lc3NhZ2UiLCJ0aWQiOiJUMDZEMjA0RjIiLCJhaWQiOiJBMDU3NVRIRFhGViIsImNpZCI6IkdUQURXUjQzMSJ9"
+}
