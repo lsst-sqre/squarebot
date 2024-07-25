@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  PYTHON_VERSION: "3.12"
+
 "on":
   merge_group: {}
   pull_request: {}
@@ -30,19 +33,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run pre-commit
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    strategy:
-      matrix:
-        python:
-          - "3.12"
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v4
@@ -50,18 +48,17 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
-
-      - name: Install nox
-        run: |
-          pip install --upgrade pip
-          pip install --upgrade nox
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Start Kafka
         run: docker compose -f kafka-compose.yaml up -d
 
       - name: Run nox
-        run: "nox -s typing test"
+        uses: lsst-sqre/run-nox@v1
+        with:
+          cache-dependency: "*/pyproject.toml"
+          nox-sessions: "typing test"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Stop Kafka
         run: docker compose -f kafka-compose.yaml down
@@ -85,15 +82,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-
-      - name: Install nox
-        run: |
-          pip install --upgrade pip
-          pip install --upgrade nox
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run nox
-        run: "nox -s docs"
+        uses: lsst-sqre/run-nox@v1
+        with:
+          cache-dependency: "*/pyproject.toml"
+          nox-sessions: "docs"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       # Only attempt documentation uploads for long-lived branches, tagged
       # releases, and pull requests from ticket branches.  This avoids version
@@ -150,7 +146,7 @@ jobs:
       - name: Build and publish
         uses: lsst-sqre/build-and-publish-to-pypi@v2
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
           upload: "false"
           working-directory: "client"
 
@@ -172,5 +168,5 @@ jobs:
       - name: Build and publish
         uses: lsst-sqre/build-and-publish-to-pypi@v2
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
           working-directory: "client"
