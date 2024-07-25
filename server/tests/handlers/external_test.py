@@ -203,7 +203,8 @@ async def test_post_bot_message(
     value = SquarebotSlackMessageValue.model_validate_json(
         message.value.decode("utf-8")
     )
-    assert value.text == slack_payload["event"]["text"]
+    # Check that we're getting the combined text that includes attachments
+    assert "Lorem ipsum" in value.text
     await consumer.stop()
 
 

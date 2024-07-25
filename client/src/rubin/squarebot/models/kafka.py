@@ -153,7 +153,7 @@ class SquarebotSlackMessageValue(BaseModel):
             user=user_id,
             ts=event.event.ts,
             thread_ts=event.event.thread_ts,
-            text=event.event.text,
+            text=event.event.combined_text_content,
             slack_event=json.dumps(raw),
             is_bot=is_bot,
         )
