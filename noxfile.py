@@ -4,13 +4,12 @@ import nox
 nox.options.sessions = ["lint", "typing", "test", "docs"]
 
 # Other nox defaults
-nox.options.default_venv_backend = "venv"
+nox.options.default_venv_backend = "uv"
 nox.options.reuse_existing_virtualenvs = True
 
 
 # Pip installable dependencies for the client and server packages
 PIP_DEPENDENCIES = [
-    ("--upgrade", "pip", "setuptools", "wheel"),
     ("-r", "server/requirements/main.txt"),
     ("-r", "server/requirements/dev.txt"),
     ("-e", "client"),
@@ -20,8 +19,34 @@ PIP_DEPENDENCIES = [
 
 def _install(session: nox.Session) -> None:
     """Install the application and all dependencies into the session."""
+    session.install("--upgrade", "uv")
     for deps in PIP_DEPENDENCIES:
         session.install(*deps)
+
+
+def _install_dev(session: nox.Session, bin_prefix: str = "") -> None:
+    """Install the application and all development dependencies into the
+    specified virtual environment.
+    """
+    python = f"{bin_prefix}python"
+    precommit = f"{bin_prefix}pre-commit"
+
+    # Install dev dependencies
+    session.run(python, "-m", "pip", "install", "uv", external=True)
+    for deps in PIP_DEPENDENCIES:
+        session.run(python, "-m", "uv", "pip", "install", *deps, external=True)
+    session.run(
+        python,
+        "-m",
+        "uv",
+        "pip",
+        "install",
+        "nox",
+        "pre-commit",
+        external=True,
+    )
+    # Install pre-commit hooks
+    session.run(precommit, "install", external=True)
 
 
 def _make_env_vars() -> dict[str, str]:
@@ -37,23 +62,6 @@ def _make_env_vars() -> dict[str, str]:
         "SQUAREBOT_SLACK_TOKEN": "1234",
         "SQUAREBOT_SLACK_APP_ID": "1234",
     }
-
-
-def _install_dev(session: nox.Session, bin_prefix: str = "") -> None:
-    """Install the application and all development dependencies into the
-    session.
-    """
-    python = f"{bin_prefix}python"
-    precommit = f"{bin_prefix}pre-commit"
-
-    # Install dev dependencies
-    for deps in PIP_DEPENDENCIES:
-        session.run(python, "-m", "pip", "install", *deps, external=True)
-    session.run(
-        python, "-m", "pip", "install", "nox", "pre-commit", external=True
-    )
-    # Install pre-commit hooks
-    session.run(precommit, "install", external=True)
 
 
 @nox.session(name="venv-init")
@@ -175,20 +183,20 @@ def update_deps(session: nox.Session) -> None:
     # Dependencies are unpinned for compatibility with the unpinned client
     # dependency.
     session.run(
-        "pip-compile",
+        "uv",
+        "pip",
+        "compile",
         "--upgrade",
-        "--build-isolation",
-        "--allow-unsafe",
         "--output-file",
         "server/requirements/main.txt",
         "server/requirements/main.in",
     )
 
     session.run(
-        "pip-compile",
+        "uv",
+        "pip",
+        "compile",
         "--upgrade",
-        "--build-isolation",
-        "--allow-unsafe",
         "--output-file",
         "server/requirements/dev.txt",
         "server/requirements/dev.in",

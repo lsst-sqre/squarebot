@@ -12,6 +12,7 @@ __all__ = [
     "SlackMessageEvent",
     "SlackMessageType",
     "SlackChannelType",
+    "SlackMessageSubtype",
     "SlackMessageEventContent",
     "SlackBlockAction",
     "SlackUser",
@@ -70,14 +71,102 @@ class SlackChannelType(str, Enum):
     """A multi-person direct message."""
 
 
+class SlackMessageSubtype(str, Enum):
+    """Represents the subtype of a Slack message.
+
+    See https://api.slack.com/events/message#subtypes
+    """
+
+    bot_message = "bot_message"
+    """A message sent by an integration."""
+
+
+class SlackMessageAttachmentField(BaseModel):
+    """A model for a field in a Slack message attachment.
+
+    See https://api.slack.com/reference/messaging/attachments#field_objects
+    """
+
+    title: str | None = Field(
+        None,
+        description=(
+            "The title of the field. This is not markdown-formatted, but it "
+            "can contain some limited formatting."
+        ),
+    )
+
+    value: str | None = Field(
+        None,
+        description=(
+            "The value of the field. This is not markdown-formatted, but it "
+            "can contain some limited formatting."
+        ),
+    )
+
+    short: bool | None = Field(
+        None,
+        description=(
+            "Whether the field is short enough to be displayed next to other "
+            "fields. This is a hint to the Slack client."
+        ),
+    )
+
+    @property
+    def combined_text_content(self) -> str:
+        """The combined text content of the field."""
+        if self.title and self.value:
+            return f"{self.title}: {self.value}"
+        elif self.title:
+            return self.title
+        elif self.value:
+            return self.value
+        else:
+            return ""
+
+
+class SlackMessageAttachment(BaseModel):
+    """A model for individual Slack message attachments.
+
+    Attachments are an old-style way to add structured content to messages,
+    but is still popular with my app integrations.
+    """
+
+    text: str | None = Field(
+        None,
+        description=(
+            "The text content of the field as mrkdwn. `text` in attachments "
+            "deprecated, with a preference for fields instead."
+        ),
+    )
+
+    fields: list[SlackMessageAttachmentField] | None = Field(
+        None, description=("An array of fields to display in the attachment.")
+    )
+
+    @property
+    def combined_text_content(self) -> str:
+        """The combined text content of the attachment."""
+        combined_text = self.text or ""
+        if self.fields:
+            combined_text += "\n\n".join(
+                field.combined_text_content for field in self.fields
+            )
+        return combined_text
+
+
 class SlackMessageEventContent(BaseModel):
     """A model for the ``event`` field inside a message event.
 
-    See https://api.slack.com/events/app_mention and
-    https://api.slack.com/events/message.
+    See https://api.slack.com/events/app_mention,
+    https://api.slack.com/events/message, and
+    https://api.slack.com/events/message/bot_message
     """
 
     type: SlackMessageType = Field(description="The Slack message type.")
+
+    subtype: SlackMessageSubtype | None = Field(
+        None, description="The message subtype."
+    )
 
     channel: str = Field(
         description=(
@@ -93,8 +182,12 @@ class SlackMessageEventContent(BaseModel):
         )
     )
 
-    user: str = Field(
-        description="The ID of the user that sent the message (eg U061F7AUR)."
+    user: str | None = Field(
+        None,
+        description=(
+            "The ID of the user that sent the message (eg U061F7AUR). "
+            "This is null for bot messages."
+        ),
     )
 
     text: str = Field(description="Content of the message.")
@@ -118,6 +211,21 @@ class SlackMessageEventContent(BaseModel):
             "This field is only present if the message was sent by a bot."
         ),
     )
+
+    attachments: list[SlackMessageAttachment] | None = Field(
+        None,
+        description=(
+            "An array of attachments that were included in the message."
+        ),
+    )
+
+    @property
+    def combined_text_content(self) -> str:
+        """The combined text content of the message and its attachments."""
+        combined_text = self.text
+        for attachment in self.attachments or []:
+            combined_text += f"\n\n{attachment.text}"
+        return combined_text
 
 
 class SlackMessageEvent(BaseSlackEvent):

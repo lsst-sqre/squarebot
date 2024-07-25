@@ -181,6 +181,34 @@ async def test_post_event_message_mpim(
 
 
 @pytest.mark.asyncio
+async def test_post_bot_message(
+    client: AsyncClient, sample_slack_message_dir: Path
+) -> None:
+    """Test ``POST /slack/event`` with a bot_message payload subtype
+    (happy path).
+    """
+    consumer = await _create_consumer(config.message_groups_topic)
+
+    slack_payload = json.loads(
+        sample_slack_message_dir.joinpath("bot_message.json").read_text()
+    )
+    slack_server = SlackServer(client)
+    response = await slack_server.post(
+        f"{config.path_prefix}/slack/event", json_data=slack_payload
+    )
+    assert response.status_code == 200
+
+    # Verify that the message was sent to the Kafka topic
+    message = await consumer.getone()
+    value = SquarebotSlackMessageValue.model_validate_json(
+        message.value.decode("utf-8")
+    )
+    # Check that we're getting the combined text that includes attachments
+    assert "Lorem ipsum" in value.text
+    await consumer.stop()
+
+
+@pytest.mark.asyncio
 async def test_post_event_missing_timestamp(
     client: AsyncClient, sample_slack_message_dir: Path
 ) -> None:
