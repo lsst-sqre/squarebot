@@ -35,7 +35,8 @@ jobs:
           pip install --upgrade uv
           uv venv
           source .venv/bin/activate
-          make update-deps
+          uv pip install nox
+          nox -s update-deps
         shell: bash
 
       - name: Start Kafka
