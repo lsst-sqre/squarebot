@@ -45,21 +45,21 @@ class ProcessContext:
             kafka_broker=broker,
             channel_publisher=broker.publisher(
                 config.message_channels_topic,
-                title="Slack public channel messages.",
+                description="Slack public channel messages.",
             ),
             im_publisher=broker.publisher(
-                config.message_im_topic, title="Slack IM messages."
+                config.message_im_topic, description="Slack IM messages."
             ),
             mpim_publisher=broker.publisher(
-                config.message_mpim_topic, title="Slack MPIM messages."
+                config.message_mpim_topic, description="Slack MPIM messages."
             ),
             groups_publisher=broker.publisher(
                 config.message_groups_topic,
-                title="Slack private-channel messages.",
+                description="Slack private-channel messages.",
             ),
             app_mentions_publisher=broker.publisher(
                 config.app_mention_topic,
-                title="Slack bot mention messages.",
+                description="Slack bot mention messages.",
             ),
         )
 
