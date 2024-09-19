@@ -77,6 +77,14 @@ class SquarebotSlackMessageValue(BaseModel):
         ),
     )
 
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The ID of the Slack App integration that sent the message. This "
+            "is null for non-bot messages."
+        ),
+    )
+
     ts: str = Field(
         ...,
         description=(
@@ -152,6 +160,7 @@ class SquarebotSlackMessageValue(BaseModel):
             channel=event.event.channel,
             channel_type=event.event.channel_type,
             user=event.event.user,
+            bot_id=event.event.bot_id,
             ts=event.event.ts,
             thread_ts=event.event.thread_ts,
             text=event.event.combined_text_content,
