@@ -18,7 +18,7 @@ from rubin.squarebot.models.kafka import (
     SquarebotSlackMessageValue,
 )
 from rubin.squarebot.models.slack import (
-    SlackBlockAction,
+    SlackBlockActionsPayload,
     SlackChannelType,
     SlackMessageEvent,
     SlackMessageType,
@@ -302,7 +302,9 @@ class SlackService:
             "type" in interaction_payload
             and interaction_payload["type"] == "block_actions"
         ):
-            action = SlackBlockAction.model_validate(interaction_payload)
+            action = SlackBlockActionsPayload.model_validate(
+                interaction_payload
+            )
             # Temporary placeholder; will serialize and publish to Kafka
             # in reality.
             self._logger.debug(
@@ -310,5 +312,5 @@ class SlackService:
                 type=action.type,
                 trigger_id=action.trigger_id,
                 username=action.user.username,
-                channel=action.channel.name,
+                channel=action.channel.name if action.channel else None,
             )
