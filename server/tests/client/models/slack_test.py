@@ -28,3 +28,4 @@ def test_parse_block_actions_static_select(samples_dir: Path) -> None:
     assert data.actions[0].type == "static_select"
     assert data.actions[0].action_id == "templatebot_select_project_template"
     assert data.actions[0].selected_option.value == "fastapi"
+    assert data.actions[0].selected_option.text.text == "FastAPI"

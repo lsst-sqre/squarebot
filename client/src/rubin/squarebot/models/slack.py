@@ -8,6 +8,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 __all__ = [
+    "SlackPlainTextObject",
+    "SlackMrkdwnTextObject",
     "BaseSlackEvent",
     "SlackBlockActionBase",
     "SlackBlockActionsMessage",
@@ -29,6 +31,54 @@ __all__ = [
     "SlackUrlVerificationEvent",
     "SlackUser",
 ]
+
+
+# SlackPlainTextObject and SlackMrkdwnTextObject are composition objects
+# that should belong to a Safir Block Kit models library. They are included
+# here for the interim.
+
+
+class SlackPlainTextObject(BaseModel):
+    """A plain_text composition object.
+
+    https://api.slack.com/reference/block-kit/composition-objects#text
+    """
+
+    type: Literal["plain_text"] = Field(
+        "plain_text", description="The type of object."
+    )
+
+    text: str = Field(..., description="The text to display.")
+
+    emoji: bool = Field(
+        True,
+        description=(
+            "Indicates whether emojis in text should be escaped into colon "
+            "emoji format."
+        ),
+    )
+
+
+class SlackMrkdwnTextObject(BaseModel):
+    """A mrkdwn text composition object.
+
+    https://api.slack.com/reference/block-kit/composition-objects#text
+    """
+
+    type: Literal["mrkdwn"] = Field(
+        "mrkdwn", description="The type of object."
+    )
+
+    text: str = Field(..., description="The text to display.")
+
+    verbatim: bool = Field(
+        False,
+        description=(
+            "Indicates whether the text should be treated as verbatim. When "
+            "`True`, URLs will not be auto-converted into links and "
+            "channel names will not be auto-converted into links."
+        ),
+    )
 
 
 class BaseSlackEvent(BaseModel):
@@ -402,6 +452,14 @@ class SlackBlockActionBase(BaseModel):
 
 class SlackStaticSelectActionSelectedOption(BaseModel):
     """A model for the selected option in a static select action."""
+
+    text: SlackPlainTextObject = Field(
+        ...,
+        description=(
+            "The text of the selected option. This is only present for static "
+            "select actions."
+        ),
+    )
 
     value: str = Field(description="The value of the selected option.")
 
