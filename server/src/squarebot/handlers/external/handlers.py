@@ -92,6 +92,8 @@ async def post_interaction(
 
     interaction_payload = json.loads(payload)
 
+    print(json.dumps(interaction_payload, indent=2))  # noqa: T201
+
     try:
         await slack_service.publish_interaction(
             interaction_payload=interaction_payload
