@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import math
 import time
+import urllib.parse
 from typing import Any
 
 from fastapi import HTTPException, Request, status
@@ -132,14 +133,22 @@ class SlackService:
                 },
             )
 
-        # Ensure that no special decoding is done on the body
-        body_bytes = await request.body()
-        body = body_bytes.decode(encoding="utf-8")
+        content_type = request.headers.get("Content-Type", "")
+
+        # Get the payload from the request. This can either be from a form
+        # (like in interaction endpoint) or from the body (like in events
+        # endpoints.) See
+        # https://github.com/encode/starlette/discussions/1933#discussioncomment-8387206
+        payload = (
+            urllib.parse.urlencode(await request.form())
+            if content_type == "application/x-www-form-urlencoded"
+            else (await request.body()).decode("utf-8")
+        )
 
         # Compute the hash of the message and compare it ot X-Slack-Signature
         signing_secret = self._config.slack_signing_secret.get_secret_value()
         signature_hash = SlackService.compute_slack_signature(
-            signing_secret, body, timestamp
+            signing_secret, payload, timestamp
         )
         if hmac.compare_digest(
             signature_hash, request.headers.get("X-Slack-Signature", "")
