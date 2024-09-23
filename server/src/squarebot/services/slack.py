@@ -314,3 +314,6 @@ class SlackService:
                 username=action.user.username,
                 channel=action.channel.name if action.channel else None,
             )
+        else:
+            self._logger.debug("Did not parse Slack interaction")
+            print(interaction_payload)  # noqa: T201
