@@ -9,24 +9,25 @@ from pydantic import BaseModel, Field
 
 __all__ = [
     "BaseSlackEvent",
-    "SlackUrlVerificationEvent",
-    "SlackMessageEvent",
-    "SlackMessageType",
-    "SlackChannelType",
-    "SlackMessageSubtype",
-    "SlackMessageEventContent",
-    "SlackBlockActionsPayload",
-    "SlackUser",
-    "SlackTeam",
-    "SlackChannel",
-    "SlackBlockMessageAttachmentContainer",
-    "SlackBlockActionViewContainer",
-    "SlackBlockActionMessage",
     "SlackBlockActionBase",
-    "SlackStaticSelectActionSelectedOption",
-    "SlackStaticSelectAction",
-    "SlackMessageAttachmentField",
+    "SlackBlockActionsMessage",
+    "SlackBlockActionsMessageAttachmentContainer",
+    "SlackBlockActionsMessageContainer",
+    "SlackBlockActionsPayload",
+    "SlackBlockActionsViewContainer",
+    "SlackChannel",
+    "SlackChannelType",
     "SlackMessageAttachment",
+    "SlackMessageAttachmentField",
+    "SlackMessageEvent",
+    "SlackMessageEventContent",
+    "SlackMessageSubtype",
+    "SlackMessageType",
+    "SlackStaticSelectAction",
+    "SlackStaticSelectActionSelectedOption",
+    "SlackTeam",
+    "SlackUrlVerificationEvent",
+    "SlackUser",
 ]
 
 
@@ -310,7 +311,23 @@ class SlackChannel(BaseModel):
     name: str = Field(description="Name of the channel.")
 
 
-class SlackBlockMessageAttachmentContainer(BaseModel):
+class SlackBlockActionsMessageContainer(BaseModel):
+    """A model for the container field in Slack interaction payloads triggered
+    by block actions in a message.
+    """
+
+    type: Literal["message"] = Field(
+        description="The type of container.",
+    )
+
+    message_ts: str = Field(description="The timestamp of the message.")
+
+    channel_id: str = Field(description="The ID of the channel.")
+
+    is_ephemeral: bool = Field(description="Whether the message is ephemeral.")
+
+
+class SlackBlockActionsMessageAttachmentContainer(BaseModel):
     """A model for the container field in Slack interaction payloads triggered
     by a block message attachment.
     """
@@ -330,7 +347,7 @@ class SlackBlockMessageAttachmentContainer(BaseModel):
     )
 
 
-class SlackBlockActionViewContainer(BaseModel):
+class SlackBlockActionsViewContainer(BaseModel):
     """A model for the container field in Slack interaction payloads triggered
     by a block action view.
     """
@@ -342,7 +359,7 @@ class SlackBlockActionViewContainer(BaseModel):
     view_id: str = Field(description="The ID of the view.")
 
 
-class SlackBlockActionMessage(BaseModel):
+class SlackBlockActionsMessage(BaseModel):
     """A model for the message field in Slack interaction payloads."""
 
     type: Literal["message"] = Field(description="The type of container.")
@@ -449,10 +466,12 @@ class SlackBlockActionsPayload(BaseModel):
     )
 
     container: (
-        SlackBlockMessageAttachmentContainer | SlackBlockActionViewContainer
+        SlackBlockActionsMessageContainer
+        | SlackBlockActionsMessageAttachmentContainer
+        | SlackBlockActionsViewContainer
     ) = Field(description="Container where this interaction occurred.")
 
-    message: SlackBlockActionMessage | None = Field(
+    message: SlackBlockActionsMessage | None = Field(
         None, description="The message where the interaction occurred."
     )
 
