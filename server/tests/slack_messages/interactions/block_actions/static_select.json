@@ -1,0 +1,149 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "U2A73RVCL",
+    "username": "jonathansick",
+    "name": "jonathansick",
+    "team_id": "T06D204F2"
+  },
+  "api_app_id": "A0575THDXFV",
+  "token": "3fEkJdH0rQhvcHkRxP6rb5vq",
+  "container": {
+    "type": "message",
+    "message_ts": "1727114630.743389",
+    "channel_id": "D058L2LN1BN",
+    "is_ephemeral": false
+  },
+  "trigger_id": "7755839979959.6444004512.aa774cb19f437e2e9a31f6e48e875f18",
+  "team": {
+    "id": "T06D204F2",
+    "domain": "lsstc"
+  },
+  "enterprise": null,
+  "is_enterprise_install": false,
+  "channel": {
+    "id": "D058L2LN1BN",
+    "name": "directmessage"
+  },
+  "message": {
+    "user": "U058HDHHQQK",
+    "type": "message",
+    "ts": "1727114630.743389",
+    "bot_id": "B058W6LBPKK",
+    "app_id": "A0575THDXFV",
+    "text": "Select a project template",
+    "team": "T06D204F2",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "kqamX",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Let's create a project",
+          "verbatim": false
+        },
+        "accessory": {
+          "type": "static_select",
+          "action_id": "templatebot_select_project_template",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Choose a template\u2026",
+            "emoji": true
+          },
+          "option_groups": [
+            {
+              "label": {
+                "type": "plain_text",
+                "text": "SQuaRE",
+                "emoji": true
+              },
+              "options": [
+                {
+                  "text": {
+                    "type": "plain_text",
+                    "text": "FastAPI",
+                    "emoji": true
+                  },
+                  "value": "fastapi"
+                },
+                {
+                  "text": {
+                    "type": "plain_text",
+                    "text": "PyPI",
+                    "emoji": true
+                  },
+                  "value": "pypi"
+                }
+              ]
+            },
+            {
+              "label": {
+                "type": "plain_text",
+                "text": "Technotes",
+                "emoji": true
+              },
+              "options": [
+                {
+                  "text": {
+                    "type": "plain_text",
+                    "text": "ReStructuredText",
+                    "emoji": true
+                  },
+                  "value": "rst"
+                },
+                {
+                  "text": {
+                    "type": "plain_text",
+                    "text": "Markdown",
+                    "emoji": true
+                  },
+                  "value": "md"
+                }
+              ]
+            }
+          ],
+          "focus_on_load": false
+        }
+      }
+    ]
+  },
+  "state": {
+    "values": {
+      "kqamX": {
+        "templatebot_select_project_template": {
+          "type": "static_select",
+          "selected_option": {
+            "text": {
+              "type": "plain_text",
+              "text": "FastAPI",
+              "emoji": true
+            },
+            "value": "fastapi"
+          }
+        }
+      }
+    }
+  },
+  "response_url": "https://hooks.slack.com/actions/T06D204F2/7772886742436/i29HurSZvetWQkglyHkH41es",
+  "actions": [
+    {
+      "type": "static_select",
+      "action_id": "templatebot_select_project_template",
+      "block_id": "kqamX",
+      "selected_option": {
+        "text": {
+          "type": "plain_text",
+          "text": "FastAPI",
+          "emoji": true
+        },
+        "value": "fastapi"
+      },
+      "placeholder": {
+        "type": "plain_text",
+        "text": "Choose a template\u2026",
+        "emoji": true
+      },
+      "action_ts": "1727114633.415354"
+    }
+  ]
+}

@@ -8,26 +8,77 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 __all__ = [
+    "SlackPlainTextObject",
+    "SlackMrkdwnTextObject",
     "BaseSlackEvent",
-    "SlackUrlVerificationEvent",
-    "SlackMessageEvent",
-    "SlackMessageType",
-    "SlackChannelType",
-    "SlackMessageSubtype",
-    "SlackMessageEventContent",
-    "SlackBlockActionsPayload",
-    "SlackUser",
-    "SlackTeam",
-    "SlackChannel",
-    "SlackBlockMessageAttachmentContainer",
-    "SlackBlockActionViewContainer",
-    "SlackBlockActionMessage",
     "SlackBlockActionBase",
-    "SlackStaticSelectActionSelectedOption",
-    "SlackStaticSelectAction",
-    "SlackMessageAttachmentField",
+    "SlackBlockActionsMessage",
+    "SlackBlockActionsMessageAttachmentContainer",
+    "SlackBlockActionsMessageContainer",
+    "SlackBlockActionsPayload",
+    "SlackBlockActionsViewContainer",
+    "SlackChannel",
+    "SlackChannelType",
     "SlackMessageAttachment",
+    "SlackMessageAttachmentField",
+    "SlackMessageEvent",
+    "SlackMessageEventContent",
+    "SlackMessageSubtype",
+    "SlackMessageType",
+    "SlackStaticSelectAction",
+    "SlackStaticSelectActionSelectedOption",
+    "SlackTeam",
+    "SlackUrlVerificationEvent",
+    "SlackUser",
 ]
+
+
+# SlackPlainTextObject and SlackMrkdwnTextObject are composition objects
+# that should belong to a Safir Block Kit models library. They are included
+# here for the interim.
+
+
+class SlackPlainTextObject(BaseModel):
+    """A plain_text composition object.
+
+    https://api.slack.com/reference/block-kit/composition-objects#text
+    """
+
+    type: Literal["plain_text"] = Field(
+        "plain_text", description="The type of object."
+    )
+
+    text: str = Field(..., description="The text to display.")
+
+    emoji: bool = Field(
+        True,
+        description=(
+            "Indicates whether emojis in text should be escaped into colon "
+            "emoji format."
+        ),
+    )
+
+
+class SlackMrkdwnTextObject(BaseModel):
+    """A mrkdwn text composition object.
+
+    https://api.slack.com/reference/block-kit/composition-objects#text
+    """
+
+    type: Literal["mrkdwn"] = Field(
+        "mrkdwn", description="The type of object."
+    )
+
+    text: str = Field(..., description="The text to display.")
+
+    verbatim: bool = Field(
+        False,
+        description=(
+            "Indicates whether the text should be treated as verbatim. When "
+            "`True`, URLs will not be auto-converted into links and "
+            "channel names will not be auto-converted into links."
+        ),
+    )
 
 
 class BaseSlackEvent(BaseModel):
@@ -310,7 +361,23 @@ class SlackChannel(BaseModel):
     name: str = Field(description="Name of the channel.")
 
 
-class SlackBlockMessageAttachmentContainer(BaseModel):
+class SlackBlockActionsMessageContainer(BaseModel):
+    """A model for the container field in Slack interaction payloads triggered
+    by block actions in a message.
+    """
+
+    type: Literal["message"] = Field(
+        description="The type of container.",
+    )
+
+    message_ts: str = Field(description="The timestamp of the message.")
+
+    channel_id: str = Field(description="The ID of the channel.")
+
+    is_ephemeral: bool = Field(description="Whether the message is ephemeral.")
+
+
+class SlackBlockActionsMessageAttachmentContainer(BaseModel):
     """A model for the container field in Slack interaction payloads triggered
     by a block message attachment.
     """
@@ -330,7 +397,7 @@ class SlackBlockMessageAttachmentContainer(BaseModel):
     )
 
 
-class SlackBlockActionViewContainer(BaseModel):
+class SlackBlockActionsViewContainer(BaseModel):
     """A model for the container field in Slack interaction payloads triggered
     by a block action view.
     """
@@ -342,7 +409,7 @@ class SlackBlockActionViewContainer(BaseModel):
     view_id: str = Field(description="The ID of the view.")
 
 
-class SlackBlockActionMessage(BaseModel):
+class SlackBlockActionsMessage(BaseModel):
     """A model for the message field in Slack interaction payloads."""
 
     type: Literal["message"] = Field(description="The type of container.")
@@ -385,6 +452,14 @@ class SlackBlockActionBase(BaseModel):
 
 class SlackStaticSelectActionSelectedOption(BaseModel):
     """A model for the selected option in a static select action."""
+
+    text: SlackPlainTextObject = Field(
+        ...,
+        description=(
+            "The text of the selected option. This is only present for static "
+            "select actions."
+        ),
+    )
 
     value: str = Field(description="The value of the selected option.")
 
@@ -449,10 +524,12 @@ class SlackBlockActionsPayload(BaseModel):
     )
 
     container: (
-        SlackBlockMessageAttachmentContainer | SlackBlockActionViewContainer
+        SlackBlockActionsMessageContainer
+        | SlackBlockActionsMessageAttachmentContainer
+        | SlackBlockActionsViewContainer
     ) = Field(description="Container where this interaction occurred.")
 
-    message: SlackBlockActionMessage | None = Field(
+    message: SlackBlockActionsMessage | None = Field(
         None, description="The message where the interaction occurred."
     )
 
