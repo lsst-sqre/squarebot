@@ -15,6 +15,8 @@ from structlog.stdlib import BoundLogger
 
 from rubin.squarebot.models.kafka import (
     SquarebotSlackAppMentionValue,
+    SquarebotSlackBlockActionsKey,
+    SquarebotSlackBlockActionsValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
 )
@@ -326,6 +328,18 @@ class SlackService:
                 channel=block_action.channel.name
                 if block_action.channel
                 else None,
+            )
+            key = SquarebotSlackBlockActionsKey.from_block_actions(
+                block_action
+            )
+            value = SquarebotSlackBlockActionsValue.from_block_actions(
+                block_action, interaction_payload
+            )
+            publisher = self._block_actions_publisher
+            await publisher.publish(
+                message=value,
+                key=key.to_key_bytes(),
+                headers={"content-type": "application/json"},
             )
         else:
             self._logger.debug("Did not parse Slack interaction")
