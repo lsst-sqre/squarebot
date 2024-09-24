@@ -40,6 +40,7 @@ class SlackService:
         groups_publisher: Publisher,
         im_publisher: Publisher,
         mpim_publisher: Publisher,
+        block_actions_publisher: Publisher,
     ) -> None:
         self._logger = logger
         self._config = config
@@ -48,6 +49,7 @@ class SlackService:
         self._groups_publisher = groups_publisher
         self._im_publisher = im_publisher
         self._mpim_publisher = mpim_publisher
+        self._block_actions_publisher = block_actions_publisher
 
     @staticmethod
     def compute_slack_signature(
@@ -311,17 +313,19 @@ class SlackService:
             "type" in interaction_payload
             and interaction_payload["type"] == "block_actions"
         ):
-            action = SlackBlockActionsPayload.model_validate(
+            block_action = SlackBlockActionsPayload.model_validate(
                 interaction_payload
             )
             # Temporary placeholder; will serialize and publish to Kafka
             # in reality.
             self._logger.debug(
                 "Got a Slack interaction",
-                type=action.type,
-                trigger_id=action.trigger_id,
-                username=action.user.username,
-                channel=action.channel.name if action.channel else None,
+                type=block_action.type,
+                trigger_id=block_action.trigger_id,
+                username=block_action.user.username,
+                channel=block_action.channel.name
+                if block_action.channel
+                else None,
             )
         else:
             self._logger.debug("Did not parse Slack interaction")
