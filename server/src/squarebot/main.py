@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             "message_im": config.message_im_topic,
             "message_groups": config.message_groups_topic,
             "message_mpim": config.message_mpim_topic,
-            "interaction": config.interaction_topic,
+            "block_actions": config.block_actions_topic,
         },
     )
 
