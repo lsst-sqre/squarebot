@@ -1,0 +1,121 @@
+{
+  "type": "view_submission",
+  "team": {
+    "id": "ABCDEFG",
+    "domain": "lsstc"
+  },
+  "user": {
+    "id": "U2A73RVCL",
+    "username": "jonathansick",
+    "name": "jonathansick",
+    "team_id": "ABCDEFG"
+  },
+  "api_app_id": "APPID",
+  "trigger_id": "7771678089414.6444004512.0b2af9315b97b0e3babcc1f73cd23b15",
+  "view": {
+    "id": "V07NW911RBL",
+    "team_id": "ABCDEFG",
+    "type": "modal",
+    "blocks": [
+      {
+        "type": "section",
+        "block_id": "RRGN9",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Let's create a FastAPI project.",
+          "verbatim": false
+        }
+      },
+      {
+        "type": "input",
+        "block_id": "license",
+        "label": {
+          "type": "plain_text",
+          "text": "License",
+          "emoji": true
+        },
+        "hint": {
+          "type": "plain_text",
+          "text": "MIT is preferred.",
+          "emoji": true
+        },
+        "optional": false,
+        "dispatch_action": false,
+        "element": {
+          "type": "static_select",
+          "action_id": "select_license",
+          "placeholder": {
+            "type": "plain_text",
+            "text": "Choose a license\u2026",
+            "emoji": true
+          },
+          "options": [
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "MIT",
+                "emoji": true
+              },
+              "value": "mit"
+            },
+            {
+              "text": {
+                "type": "plain_text",
+                "text": "GPLv3",
+                "emoji": true
+              },
+              "value": "gplv3"
+            }
+          ],
+          "focus_on_load": false
+        }
+      }
+    ],
+    "private_metadata": "",
+    "callback_id": "",
+    "state": {
+      "values": {
+        "license": {
+          "select_license": {
+            "type": "static_select",
+            "selected_option": {
+              "text": {
+                "type": "plain_text",
+                "text": "MIT",
+                "emoji": true
+              },
+              "value": "mit"
+            }
+          }
+        }
+      }
+    },
+    "hash": "1727216577.fRLCN97Y",
+    "title": {
+      "type": "plain_text",
+      "text": "Set up your project",
+      "emoji": true
+    },
+    "clear_on_close": false,
+    "notify_on_close": false,
+    "close": {
+      "type": "plain_text",
+      "text": "Cancel",
+      "emoji": true
+    },
+    "submit": {
+      "type": "plain_text",
+      "text": "Create project",
+      "emoji": true
+    },
+    "previous_view_id": null,
+    "root_view_id": "V07NW911RBL",
+    "app_id": "APPID",
+    "external_id": "",
+    "app_installed_team_id": "ABCDEFG",
+    "bot_id": "BOTID"
+  },
+  "response_urls": [],
+  "is_enterprise_install": false,
+  "enterprise": null
+}
