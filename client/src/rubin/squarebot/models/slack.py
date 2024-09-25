@@ -8,8 +8,6 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 __all__ = [
-    "SlackPlainTextObject",
-    "SlackMrkdwnTextObject",
     "BaseSlackEvent",
     "SlackBlockActionBase",
     "SlackBlockActionsMessage",
@@ -25,11 +23,14 @@ __all__ = [
     "SlackMessageEventContent",
     "SlackMessageSubtype",
     "SlackMessageType",
+    "SlackMrkdwnTextObject",
+    "SlackPlainTextObject",
     "SlackStaticSelectAction",
     "SlackStaticSelectActionSelectedOption",
     "SlackTeam",
     "SlackUrlVerificationEvent",
     "SlackUser",
+    "SlackViewSubmissionPayload",
 ]
 
 
@@ -537,3 +538,34 @@ class SlackBlockActionsPayload(BaseModel):
     actions: list[SlackStaticSelectAction] = Field(
         description="The actions that were triggered."
     )
+
+
+class SlackViewSubmissionPayload(BaseModel):
+    """A model for a Slack view submission payload.
+
+    This isn't yet a full model for a view submission payload.
+
+    See https://api.slack.com/reference/interaction-payloads/views#view_submission
+    """
+
+    type: Literal["view_submission"] = Field(
+        description="Interaction payload type."
+    )
+
+    team: SlackTeam = Field(description="Information about the Slack team.")
+
+    user: SlackUser = Field(
+        description=(
+            "Information about the user that triggered the interaction."
+        )
+    )
+
+    api_app_id: str = Field(
+        description=(
+            "The unique identifier of your installed Slack application. Use "
+            "this to distinguish which app the event belongs to if you use "
+            "multiple apps with the same Request URL."
+        )
+    )
+
+    view: dict = Field(description="The view that was submitted.")

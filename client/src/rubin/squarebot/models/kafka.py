@@ -13,12 +13,15 @@ from .slack import (
     SlackMessageEvent,
     SlackMessageSubtype,
     SlackMessageType,
+    SlackViewSubmissionPayload,
 )
 
 __all__ = [
     "SquarebotSlackAppMentionValue",
     "SquarebotSlackBlockActionsKey",
     "SquarebotSlackBlockActionsValue",
+    "SquarebotSlackViewSubmissionKey",
+    "SquarebotSlackViewSubmissionValue",
     "SquarebotSlackMessageKey",
     "SquarebotSlackMessageValue",
 ]
@@ -283,7 +286,9 @@ class SquarebotSlackBlockActionsKey(BaseModel):
 
 
 class SquarebotSlackBlockActionsValue(SlackBlockActionsPayload):
-    """Kafka message value model for Slack block actions sent by Squarebot."""
+    """Kafka message value model for Slack block actions interactions sent by
+    Squarebot.
+    """
 
     slack_interaction: str = Field(
         ..., description="The original Slack block actions JSON string."
@@ -298,12 +303,87 @@ class SquarebotSlackBlockActionsValue(SlackBlockActionsPayload):
         Parameters
         ----------
         payload
-            The Slack block actions payload.
+            The Slack block action payload.
+        raw
+            The raw Slack block actions JSON.
 
         Returns
         -------
         value
-            The Squarebot block actions value.
+            The Squarebot block actions message value.
+        """
+        return cls(
+            **payload.model_dump(),
+            slack_interaction=json.dumps(raw),
+        )
+
+
+class SquarebotSlackViewSubmissionKey(BaseModel):
+    """Kafka message key model for Slack view submissions sent by Squarebot."""
+
+    user_id: str = Field(
+        ..., description="The Slack user ID that triggered the action."
+    )
+
+    team: str = Field(..., description="The Slack team ID.")
+
+    @classmethod
+    def from_view_submission(cls, payload: SlackViewSubmissionPayload) -> Self:
+        """Create a Kafka key for a Slack view submission from a payload.
+
+        Parameters
+        ----------
+        payload
+            The Slack view_submission payload.
+
+        Returns
+        -------
+        key
+            The Squarebot view submission message key key.
+        """
+        return cls(
+            user_id=payload.user.id,
+            team=payload.team.id,
+        )
+
+    def to_key_bytes(self) -> bytes:
+        """Serialize the key to bytes for use as a Kafka key.
+
+        Returns
+        -------
+        bytes
+            The serialized key.
+        """
+        key_str = f"{self.user_id}:{self.team}"
+        return key_str.encode("utf-8")
+
+
+class SquarebotSlackViewSubmissionValue(SlackViewSubmissionPayload):
+    """Kafka message value model for Slack view_submission events sent by
+    Squarebot.
+    """
+
+    slack_interaction: str = Field(
+        ..., description="The original Slack view_submission JSON string."
+    )
+
+    @classmethod
+    def from_view_submission(
+        cls, payload: SlackViewSubmissionPayload, raw: dict[str, Any]
+    ) -> Self:
+        """Create a Kafka value for a Slack view submission from a payload.
+
+        Parameters
+        ----------
+        payload
+            The Slack view submission payload.
+        raw
+            The raw Slack view submission JSON.
+
+        Returns
+        -------
+        value
+            The Squarebot view_submission message value.
         """
         return cls(
             **payload.model_dump(),
