@@ -19,12 +19,15 @@ from rubin.squarebot.models.kafka import (
     SquarebotSlackBlockActionsValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
+    SquarebotSlackViewSubmissionKey,
+    SquarebotSlackViewSubmissionValue,
 )
 from rubin.squarebot.models.slack import (
     SlackBlockActionsPayload,
     SlackChannelType,
     SlackMessageEvent,
     SlackMessageType,
+    SlackViewSubmissionPayload,
 )
 
 from ..config import Configuration
@@ -43,6 +46,7 @@ class SlackService:
         im_publisher: Publisher,
         mpim_publisher: Publisher,
         block_actions_publisher: Publisher,
+        view_submission_publisher: Publisher,
     ) -> None:
         self._logger = logger
         self._config = config
@@ -52,6 +56,7 @@ class SlackService:
         self._im_publisher = im_publisher
         self._mpim_publisher = mpim_publisher
         self._block_actions_publisher = block_actions_publisher
+        self._view_submission_publisher = view_submission_publisher
 
     @staticmethod
     def compute_slack_signature(
@@ -318,8 +323,6 @@ class SlackService:
             block_action = SlackBlockActionsPayload.model_validate(
                 interaction_payload
             )
-            # Temporary placeholder; will serialize and publish to Kafka
-            # in reality.
             self._logger.debug(
                 "Got a Slack interaction",
                 type=block_action.type,
@@ -341,6 +344,26 @@ class SlackService:
                 key=key.to_key_bytes(),
                 headers={"content-type": "application/json"},
             )
+        elif (
+            "type" in interaction_payload
+            and interaction_payload["type"] == "view_submission"
+        ):
+            payload = SlackViewSubmissionPayload.model_validate(
+                interaction_payload
+            )
+            await self._view_submission_publisher.publish(
+                message=SquarebotSlackViewSubmissionValue.from_view_submission(
+                    payload, interaction_payload
+                ),
+                key=SquarebotSlackViewSubmissionKey.from_view_submission(
+                    payload
+                ).to_key_bytes(),
+                headers={"content-type": "application/json"},
+            )
+
+            self._logger.debug("Got a Slack view submission")
         else:
-            self._logger.debug("Did not parse Slack interaction")
-            print(interaction_payload)  # noqa: T201
+            self._logger.debug(
+                "Did not parse Slack interaction",
+                raw_interaction=interaction_payload,
+            )

@@ -294,6 +294,16 @@ class Configuration(BaseSettings):
         ),
     )
 
+    view_submission_topic: str = Field(
+        "squarebot.interaction.view_submission",
+        title="View Submission interaction Kafka topic",
+        alias="SQUAREBOT_TOPIC_VIEW_SUBMISSION",
+        description=(
+            "Kafka topic name for `interaction` Slack events of type "
+            "`view_submission`."
+        ),
+    )
+
     # Slack signing secret
     slack_signing_secret: SecretStr = Field(
         title="Slack signing secret", alias="SQUAREBOT_SLACK_SIGNING"
