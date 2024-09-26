@@ -38,6 +38,12 @@ class ProcessContext:
     app_mentions_publisher: Publisher
     """A Kafka publisher for the Slack ``app_mention`` topic."""
 
+    block_actions_publisher: Publisher
+    """A Kafka publisher for the Slack block actions topic."""
+
+    view_submission_publisher: Publisher
+    """A Kafka publisher for the Slack view submissions topic."""
+
     @classmethod
     async def create(cls) -> Self:
         broker = kafka_router.broker
@@ -60,6 +66,14 @@ class ProcessContext:
             app_mentions_publisher=broker.publisher(
                 config.app_mention_topic,
                 description="Slack bot mention messages.",
+            ),
+            block_actions_publisher=broker.publisher(
+                config.block_actions_topic,
+                description="Slack block actions.",
+            ),
+            view_submission_publisher=broker.publisher(
+                config.view_submission_topic,
+                description="Slack view submission.",
             ),
         )
 
@@ -89,4 +103,6 @@ class Factory:
             im_publisher=self._process_context.im_publisher,
             mpim_publisher=self._process_context.mpim_publisher,
             groups_publisher=self._process_context.groups_publisher,
+            block_actions_publisher=self._process_context.block_actions_publisher,
+            view_submission_publisher=self._process_context.view_submission_publisher,
         )

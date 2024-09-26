@@ -3,22 +3,83 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 __all__ = [
     "BaseSlackEvent",
-    "SlackUrlVerificationEvent",
-    "SlackMessageEvent",
-    "SlackMessageType",
-    "SlackChannelType",
-    "SlackMessageSubtype",
-    "SlackMessageEventContent",
-    "SlackBlockAction",
-    "SlackUser",
-    "SlackTeam",
+    "SlackBlockActionBase",
+    "SlackBlockActionsMessage",
+    "SlackBlockActionsMessageAttachmentContainer",
+    "SlackBlockActionsMessageContainer",
+    "SlackBlockActionsPayload",
+    "SlackBlockActionsViewContainer",
     "SlackChannel",
+    "SlackChannelType",
+    "SlackMessageAttachment",
+    "SlackMessageAttachmentField",
+    "SlackMessageEvent",
+    "SlackMessageEventContent",
+    "SlackMessageSubtype",
+    "SlackMessageType",
+    "SlackMrkdwnTextObject",
+    "SlackPlainTextObject",
+    "SlackStaticSelectAction",
+    "SlackStaticSelectActionSelectedOption",
+    "SlackTeam",
+    "SlackUrlVerificationEvent",
+    "SlackUser",
+    "SlackViewSubmissionPayload",
 ]
+
+
+# SlackPlainTextObject and SlackMrkdwnTextObject are composition objects
+# that should belong to a Safir Block Kit models library. They are included
+# here for the interim.
+
+
+class SlackPlainTextObject(BaseModel):
+    """A plain_text composition object.
+
+    https://api.slack.com/reference/block-kit/composition-objects#text
+    """
+
+    type: Literal["plain_text"] = Field(
+        "plain_text", description="The type of object."
+    )
+
+    text: str = Field(..., description="The text to display.")
+
+    emoji: bool = Field(
+        True,
+        description=(
+            "Indicates whether emojis in text should be escaped into colon "
+            "emoji format."
+        ),
+    )
+
+
+class SlackMrkdwnTextObject(BaseModel):
+    """A mrkdwn text composition object.
+
+    https://api.slack.com/reference/block-kit/composition-objects#text
+    """
+
+    type: Literal["mrkdwn"] = Field(
+        "mrkdwn", description="The type of object."
+    )
+
+    text: str = Field(..., description="The text to display.")
+
+    verbatim: bool = Field(
+        False,
+        description=(
+            "Indicates whether the text should be treated as verbatim. When "
+            "`True`, URLs will not be auto-converted into links and "
+            "channel names will not be auto-converted into links."
+        ),
+    )
 
 
 class BaseSlackEvent(BaseModel):
@@ -301,17 +362,136 @@ class SlackChannel(BaseModel):
     name: str = Field(description="Name of the channel.")
 
 
-class SlackBlockAction(BaseModel):
+class SlackBlockActionsMessageContainer(BaseModel):
+    """A model for the container field in Slack interaction payloads triggered
+    by block actions in a message.
+    """
+
+    type: Literal["message"] = Field(
+        description="The type of container.",
+    )
+
+    message_ts: str = Field(description="The timestamp of the message.")
+
+    channel_id: str = Field(description="The ID of the channel.")
+
+    is_ephemeral: bool = Field(description="Whether the message is ephemeral.")
+
+
+class SlackBlockActionsMessageAttachmentContainer(BaseModel):
+    """A model for the container field in Slack interaction payloads triggered
+    by a block message attachment.
+    """
+
+    type: Literal["message_attachment"] = Field(
+        description="The type of container.",
+    )
+
+    message_ts: str = Field(description="The timestamp of the message.")
+
+    channel_id: str = Field(description="The ID of the channel.")
+
+    is_ephemeral: bool = Field(description="Whether the message is ephemeral.")
+
+    is_app_unfurl: bool = Field(
+        description="Whether the message is an app unfurl."
+    )
+
+
+class SlackBlockActionsViewContainer(BaseModel):
+    """A model for the container field in Slack interaction payloads triggered
+    by a block action view.
+    """
+
+    type: Literal["view"] = Field(
+        description="The type of container.",
+    )
+
+    view_id: str = Field(description="The ID of the view.")
+
+
+class SlackBlockActionsMessage(BaseModel):
+    """A model for the message field in Slack interaction payloads."""
+
+    type: Literal["message"] = Field(description="The type of container.")
+
+    ts: str = Field(..., description="The timestamp of the message.")
+
+    thread_ts: str | None = Field(
+        None,
+        description=(
+            "The timestamp of the parent message. This is only present in "
+            "threaded messages."
+        ),
+    )
+
+    user: str | None = Field(
+        None,
+        description=("The ID of the user or bot that sent the message."),
+    )
+
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The ID of the Slack App integration that sent the message. This "
+            "is null for non-bot messages."
+        ),
+    )
+
+
+class SlackBlockActionBase(BaseModel):
+    """A base model for a Slack block action."""
+
+    type: str = Field(description="The type of action.")
+
+    action_id: str = Field(description="The action ID.")
+
+    block_id: str = Field(description="The block ID.")
+
+    action_ts: str = Field(description="The timestamp of the action.")
+
+
+class SlackStaticSelectActionSelectedOption(BaseModel):
+    """A model for the selected option in a static select action."""
+
+    text: SlackPlainTextObject = Field(
+        ...,
+        description=(
+            "The text of the selected option. This is only present for static "
+            "select actions."
+        ),
+    )
+
+    value: str = Field(description="The value of the selected option.")
+
+
+class SlackStaticSelectAction(SlackBlockActionBase):
+    """A model for a static select action in a Slack block."""
+
+    type: Literal["static_select"] = Field(description="The type of action.")
+
+    selected_option: SlackStaticSelectActionSelectedOption = Field(
+        ...,
+        description=(
+            "The selected option. This is only present for static select "
+            "actions."
+        ),
+    )
+
+
+class SlackBlockActionsPayload(BaseModel):
     """A model for a Slack Block kit interaction.
 
-    This isn't yet a full model for a block action payload; experience is
+    This isn't yet a full model for a block actions payload; experience is
     needed to fully understand what the payloads are for the types of
     interactions we use.
 
     See https://api.slack.com/reference/interaction-payloads/block-actions
     """
 
-    type: str = Field(description="Should be `block_actions`.")
+    type: Literal["block_actions"] = Field(
+        description="Interaction payload type."
+    )
 
     trigger_id: str = Field(
         description="A short-lived ID used to launch modals."
@@ -325,11 +505,54 @@ class SlackBlockAction(BaseModel):
         )
     )
 
-    response_url: str = Field(
+    user: SlackUser = Field(
         description=(
-            "A short-lived URL to send message in response to interactions."
+            "Information about the user that triggered the interaction."
         )
     )
+
+    team: SlackTeam | None = Field(
+        description=(
+            "Information about the Slack team. Null for org-installed apps."
+        )
+    )
+
+    channel: SlackChannel | None = Field(
+        description=(
+            "Information about the Slack channel where the interaction "
+            "occurred."
+        )
+    )
+
+    container: (
+        SlackBlockActionsMessageContainer
+        | SlackBlockActionsMessageAttachmentContainer
+        | SlackBlockActionsViewContainer
+    ) = Field(description="Container where this interaction occurred.")
+
+    message: SlackBlockActionsMessage | None = Field(
+        None, description="The message where the interaction occurred."
+    )
+
+    # Add more action types as needed.
+    actions: list[SlackStaticSelectAction] = Field(
+        description="The actions that were triggered."
+    )
+
+
+class SlackViewSubmissionPayload(BaseModel):
+    """A model for a Slack view submission payload.
+
+    This isn't yet a full model for a view submission payload.
+
+    See https://api.slack.com/reference/interaction-payloads/views#view_submission
+    """
+
+    type: Literal["view_submission"] = Field(
+        description="Interaction payload type."
+    )
+
+    team: SlackTeam = Field(description="Information about the Slack team.")
 
     user: SlackUser = Field(
         description=(
@@ -337,8 +560,12 @@ class SlackBlockAction(BaseModel):
         )
     )
 
-    team: SlackTeam = Field(description="Information about the Slack team.")
-
-    channel: SlackChannel = Field(
-        description="Information about the Slack channel."
+    api_app_id: str = Field(
+        description=(
+            "The unique identifier of your installed Slack application. Use "
+            "this to distinguish which app the event belongs to if you use "
+            "multiple apps with the same Request URL."
+        )
     )
+
+    view: dict = Field(description="The view that was submitted.")

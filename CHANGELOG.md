@@ -2,6 +2,30 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.10.0'></a>
+
+## 0.10.0 (2024-09-26)
+
+### Backwards-incompatible changes
+
+- `SquarebotSlackMessageValue.user` is now nullable. It will be `null` if the message is a `bot_message` subtype.
+
+### New features
+
+- Added `SquarebotSlackMessageValue.bot_id` to capture the ID of the app that send a bot message.
+
+- Support for Slack [block actions](https://api.slack.com/reference/interaction-payloads/block-actions) interactions. These interactions happen when a user interacts with a message's interactive elements (e.g., buttons, menus). These Slack payloads are parsed into `SlackBlockActionsPayload` objects and published to a block action Kafka topic (`$SQUAREBOT_TOPIC_BLOCK_ACTIONS`) with `SquarebotSlackBlockActionsKey` key and `SquarebotSlackBlockActionsValue` value models.
+
+- Support for Slack [view submission](https://api.slack.com/reference/interaction-payloads/views) interactions. These interactions happen when a modal is submitted. These Slack payloads are parsed into `SlackViewSubmissionPayload` objects and published to a view submission Kafka topic (`$SQUAREBOT_TOPIC_VIEW_SUBMISSION`) with `SquarebotSlackViewSubmissionKey` key and `SquarebotSlackViewSubmissionValue` value models. The value model doesn't yet fully parse the view into Pydantic models; clients will need to inspect the JSON object to get the submitted state of the model. Once more Pydantic modeling of Slack views and Block Kit blocks and elements is implemented, we can update the value model to provide more fully typed messages.
+
+- Publish AsyncAPI documentation to the `/asyncapi` endpoint. This documentation site is generated automatically through Faststream.
+
+### Bug fixes
+
+- Fix setting the `is_bot` property of `SquarebotSlackMessageValue` to account for messages without the `bot_message` subtype, but which still have a `bot_id` set.
+
+- Improved the Slack message verification so that it now handles both JSON-formatted posts and url-encoded form posts. This change is necessary because Slack sends JSON-formatted posts for messages and url-encoded form posts for interactions. The verification now works for both types of posts.
+
 <a id='changelog-0.9.0'></a>
 
 ## 0.9.0 (2024-07-25)

@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import math
 import time
+import urllib.parse
 from typing import Any
 
 from fastapi import HTTPException, Request, status
@@ -14,14 +15,19 @@ from structlog.stdlib import BoundLogger
 
 from rubin.squarebot.models.kafka import (
     SquarebotSlackAppMentionValue,
+    SquarebotSlackBlockActionsKey,
+    SquarebotSlackBlockActionsValue,
     SquarebotSlackMessageKey,
     SquarebotSlackMessageValue,
+    SquarebotSlackViewSubmissionKey,
+    SquarebotSlackViewSubmissionValue,
 )
 from rubin.squarebot.models.slack import (
-    SlackBlockAction,
+    SlackBlockActionsPayload,
     SlackChannelType,
     SlackMessageEvent,
     SlackMessageType,
+    SlackViewSubmissionPayload,
 )
 
 from ..config import Configuration
@@ -39,6 +45,8 @@ class SlackService:
         groups_publisher: Publisher,
         im_publisher: Publisher,
         mpim_publisher: Publisher,
+        block_actions_publisher: Publisher,
+        view_submission_publisher: Publisher,
     ) -> None:
         self._logger = logger
         self._config = config
@@ -47,6 +55,8 @@ class SlackService:
         self._groups_publisher = groups_publisher
         self._im_publisher = im_publisher
         self._mpim_publisher = mpim_publisher
+        self._block_actions_publisher = block_actions_publisher
+        self._view_submission_publisher = view_submission_publisher
 
     @staticmethod
     def compute_slack_signature(
@@ -132,14 +142,22 @@ class SlackService:
                 },
             )
 
-        # Ensure that no special decoding is done on the body
-        body_bytes = await request.body()
-        body = body_bytes.decode(encoding="utf-8")
+        content_type = request.headers.get("Content-Type", "")
+
+        # Get the payload from the request. This can either be from a form
+        # (like in interaction endpoint) or from the body (like in events
+        # endpoints.) See
+        # https://github.com/encode/starlette/discussions/1933#discussioncomment-8387206
+        payload = (
+            urllib.parse.urlencode(await request.form())
+            if content_type == "application/x-www-form-urlencoded"
+            else (await request.body()).decode("utf-8")
+        )
 
         # Compute the hash of the message and compare it ot X-Slack-Signature
         signing_secret = self._config.slack_signing_secret.get_secret_value()
         signature_hash = SlackService.compute_slack_signature(
-            signing_secret, body, timestamp
+            signing_secret, payload, timestamp
         )
         if hmac.compare_digest(
             signature_hash, request.headers.get("X-Slack-Signature", "")
@@ -302,13 +320,50 @@ class SlackService:
             "type" in interaction_payload
             and interaction_payload["type"] == "block_actions"
         ):
-            action = SlackBlockAction.model_validate(interaction_payload)
-            # Temporary placeholder; will serialize and publish to Kafka
-            # in reality.
+            block_action = SlackBlockActionsPayload.model_validate(
+                interaction_payload
+            )
             self._logger.debug(
                 "Got a Slack interaction",
-                type=action.type,
-                trigger_id=action.trigger_id,
-                username=action.user.username,
-                channel=action.channel.name,
+                type=block_action.type,
+                trigger_id=block_action.trigger_id,
+                username=block_action.user.username,
+                channel=block_action.channel.name
+                if block_action.channel
+                else None,
+            )
+            key = SquarebotSlackBlockActionsKey.from_block_actions(
+                block_action
+            )
+            value = SquarebotSlackBlockActionsValue.from_block_actions(
+                block_action, interaction_payload
+            )
+            publisher = self._block_actions_publisher
+            await publisher.publish(
+                message=value,
+                key=key.to_key_bytes(),
+                headers={"content-type": "application/json"},
+            )
+        elif (
+            "type" in interaction_payload
+            and interaction_payload["type"] == "view_submission"
+        ):
+            payload = SlackViewSubmissionPayload.model_validate(
+                interaction_payload
+            )
+            await self._view_submission_publisher.publish(
+                message=SquarebotSlackViewSubmissionValue.from_view_submission(
+                    payload, interaction_payload
+                ),
+                key=SquarebotSlackViewSubmissionKey.from_view_submission(
+                    payload
+                ).to_key_bytes(),
+                headers={"content-type": "application/json"},
+            )
+
+            self._logger.debug("Got a Slack view submission")
+        else:
+            self._logger.debug(
+                "Did not parse Slack interaction",
+                raw_interaction=interaction_payload,
             )
