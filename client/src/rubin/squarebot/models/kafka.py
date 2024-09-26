@@ -68,11 +68,20 @@ class SquarebotSlackMessageValue(BaseModel):
         ..., description="The Slack channel type."
     )
 
-    user: str = Field(
-        ...,
+    user: str | None = Field(
+        None,
         description=(
             "The ID of the user or bot that sent the message. See the "
-            "is_bot field to determine if the user is a bot."
+            "is_bot field to determine if the user is a bot. For bot_message "
+            "subtypes this may be null."
+        ),
+    )
+
+    bot_id: str | None = Field(
+        None,
+        description=(
+            "The ID of the Slack App integration that sent the message. This "
+            "is null for non-bot messages."
         ),
     )
 
@@ -126,6 +135,8 @@ class SquarebotSlackMessageValue(BaseModel):
                 "event that lacks a channel_type. Is this an app_mention?"
             )
 
+        is_bot = False
+
         if (
             event.event.subtype is not None
             and event.event.subtype == SlackMessageSubtype.bot_message
@@ -136,21 +147,20 @@ class SquarebotSlackMessageValue(BaseModel):
                     "Cannot create a SquarebotSlackMessageValue from a Slack "
                     "bot_message event that lacks a bot_id."
                 )
-            user_id = event.event.bot_id
-        else:
-            is_bot = False
-            if event.event.user is None:
-                raise ValueError(
-                    "Cannot create a SquarebotSlackMessageValue from a Slack "
-                    "message event that lacks a user."
-                )
-            user_id = event.event.user
+        elif event.event.bot_id is not None:
+            is_bot = True
+        elif event.event.user is None:
+            raise ValueError(
+                "Cannot create a SquarebotSlackMessageValue from a Slack "
+                "message event that lacks a user if not a bot message."
+            )
 
         return cls(
             type=event.event.type,
             channel=event.event.channel,
             channel_type=event.event.channel_type,
-            user=user_id,
+            user=event.event.user,
+            bot_id=event.event.bot_id,
             ts=event.event.ts,
             thread_ts=event.event.thread_ts,
             text=event.event.combined_text_content,
