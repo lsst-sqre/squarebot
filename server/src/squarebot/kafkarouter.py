@@ -12,5 +12,7 @@ __all__ = ["kafka_router"]
 
 kafka_security = BaseSecurity(ssl_context=config.kafka.ssl_context)
 kafka_router = KafkaRouter(
-    config.kafka.bootstrap_servers, security=kafka_security
+    config.kafka.bootstrap_servers,
+    security=kafka_security,
+    schema_url=f"{config.path_prefix}/asyncapi",
 )
