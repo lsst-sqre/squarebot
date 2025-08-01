@@ -6,7 +6,7 @@ import ssl
 from enum import Enum
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, DirectoryPath, Field, FilePath, SecretStr
+from pydantic import DirectoryPath, Field, FilePath, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from safir.logging import LogLevel, Profile
 
@@ -221,14 +221,6 @@ class Configuration(BaseSettings):
         description=(
             "The URL prefix where the application's externally-accessible "
             "endpoints are hosted."
-        ),
-    )
-
-    environment_url: AnyHttpUrl = Field(
-        ...,
-        title="Base URL of the environment",
-        description=(
-            "The base URL of the environment where the application is hosted."
         ),
     )
 

@@ -55,7 +55,6 @@ def _make_env_vars() -> dict[str, str]:
     """
     return {
         "SQUAREBOT_LOG_LEVEL": "DEBUG",
-        "SQUAREBOT_ENVIRONMENT_URL": "http://example.org",
         "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
         "KAFKA_SECURITY_PROTOCOL": "PLAINTEXT",
         "SQUAREBOT_SLACK_SIGNING": "1234",
