@@ -1,8 +1,8 @@
 ---
 name: stoker-prd-followup
-description: Add follow-up `prd-task` issues to an existing PRD so the stoker AFK loop picks them up and appends commits to the open PR. Use for review-derived fix-ups on an open PR, or for ad-hoc adjust/refactor ideas that should feed back into the AFK loop instead of being done interactively — and you are working in a stoker-installed repo.
+description: Add follow-up `prd-task` issues to an existing PRD so the stoker AFK loop picks them up and appends commits to the open PR, propagating the Jira Key/URL and commenting back on Jira. Use for review-derived fix-ups on an open PR, or for ad-hoc adjust/refactor ideas that should feed back into the AFK loop instead of being done interactively — in a Rubin stoker-installed repo.
 ---
-<!-- stoker-managed: skills:.agents/skills/stoker-prd-followup/SKILL.md:ae2bfa9c14dda406 -->
+<!-- stoker-managed: skills:.agents/skills/stoker-prd-followup/SKILL.md:7c8eeef82e2b61d5 -->
 
 # stoker-prd-followup — append tasks to an existing PRD
 
@@ -23,6 +23,22 @@ Use this skill for two input sources, one unified flow:
 The skill does **not** parse review output or fetch PR comments. The
 user pastes the curated list themselves.
 
+This is the Rubin variant of the default `stoker-prd-followup`. It
+keeps the default's inherited-field detection and sub-issue /
+blocker-edge plumbing verbatim, and layers the Rubin workflow on top:
+`### Jira Key` / `### Jira URL` propagation onto each follow-up and a
+Jira linkback comment.
+
+## Jira via the Atlassian MCP
+
+The Jira **read** happens off the PRD's / existing tasks' `### Jira Key`
+/ `### Jira URL` body fields (no MCP needed). The Jira **comment** at
+the end uses the Atlassian MCP server
+(`mcp__atlassian__jira_add_comment`), which the user configures (see
+the repo's AGENTS.md). **Degrade gracefully:** if the MCP is
+unavailable, print the comment text so the user can paste it into
+Jira. Skip every Jira touch for a ticket-less PRD.
+
 ## Workflow
 
 ### 1. Identify the parent PRD
@@ -38,6 +54,10 @@ Detect the repo:
 ```
 gh repo view --json nameWithOwner -q .nameWithOwner
 ```
+
+Extract the `### Jira Key` and `### Jira URL` from the PRD body (also
+recoverable from any existing `prd-task`'s body in step 2). An
+empty/absent Jira Key means a ticket-less PRD — skip every Jira touch.
 
 ### 2. Detect inherited fields from existing tasks
 
@@ -57,9 +77,13 @@ PRD's `#N`. From those, extract:
   single-branch PRD share it. If branches diverge across tasks, the
   PRD is using task-specific branches; ask the user which branch each
   new follow-up should target (or whether each follow-up should get
-  its own new branch).
+  its own new branch, named per the Rubin convention:
+  `tickets/DM-XXXXX-<short-desc>`, or `u/<login>/<short-desc>` for a
+  ticket-less PRD).
 - **Max Task Order** — largest numeric `Task Order` across existing
   tasks. New follow-ups start at `max + 1`, incrementing per item.
+- **Jira Key / Jira URL** — confirm against the PRD's values from
+  step 1.
 
 If no existing `prd-task` issues are found, abort with an
 explanation — this skill is for adding to an existing breakdown,
@@ -132,10 +156,10 @@ gh label create prd-task --description "Implementation task from a PRD" --color 
 
 Create issues in dependency order so real issue numbers populate
 `### Blocked by` fields. Use the same body shape as
-`stoker-prd-to-issues`, plus an `### Origin` section documenting
-where the follow-up came from. The `### Origin` section is extra
-context — `stoker.github.issue` ignores fields it doesn't
-recognize.
+`stoker-prd-to-issues` (including the inherited `### Jira Key` /
+`### Jira URL`), plus an `### Origin` section documenting where the
+follow-up came from. The `### Origin` section is extra context —
+`stoker.github.issue` ignores fields it doesn't recognize.
 
 Each task gets a **coupled sequence** of commands: a
 `gh issue create`, followed *immediately* by a sub-issue link
@@ -159,6 +183,11 @@ shortlist's blocker enumeration falls back to when the native
 `dependencies/blocked_by` edge is missing (a follow-up that
 pre-dates the migration, or whose dependency-add call failed).
 
+Propagate the parent PRD's `### Jira Key` / `### Jira URL` onto
+every follow-up body verbatim (empty for a ticket-less PRD), so
+`stoker-create-pr` keeps the `Jira:` reference correct as the
+follow-up commits append to the open PR.
+
 Each follow-up is assigned to **you** (the operator) via
 `--assignee @me` in the `gh issue create` below. This is
 load-bearing: the loop's self-scoped shortlist
@@ -171,7 +200,8 @@ GitHub login (`--assignee <login>`); otherwise always default to
 
 ```
 TASK_URL=$(gh issue create --repo <owner/repo> --title "<title>" --label "prd-task" --assignee @me --body "$(cat <<'EOF'
-<body, including `### Parent PRD\n\n#<prd_number>` and
+<body, including `### Jira Key`, `### Jira URL`,
+`### Parent PRD\n\n#<prd_number>`, and
 `### Blocked by\n\n#<n>, #<m>` verbatim>
 EOF
 )")
@@ -279,9 +309,9 @@ The unlinked tasks remain loop-eligible (and their blockers stay
 resolved) via the body-field fallbacks in the meantime, so the
 operator can repair on their own cadence.
 
-### 9. Linkback comment
+### 9. Linkback comments
 
-Post one comment on the parent PRD summarizing the batch:
+**GitHub.** Post one comment on the parent PRD summarizing the batch:
 
 ```
 gh issue comment <prd_number> --repo <owner/repo> --body "$(cat <<'EOF'
@@ -298,6 +328,21 @@ EOF
 Where `<origin>` is `review of PR #<n>` or `a follow-up suggestion
 batch`.
 
+**Jira.** When the PRD has a Jira key, mirror the GitHub comment to
+the Jira ticket. Include a `Type` column for parity with the original
+breakdown comment, though the value is always `AFK`:
+
+```
+mcp__atlassian__jira_add_comment(
+  issue_key="DM-XXXXX",
+  body="Follow-up tasks added to PRD <prd_issue_url> from <origin>:\n\n| # | Task | Type | Blocked by |\n|---|------|------|------------|\n| 1 | [<title>](<url>) | AFK | None |\n| 2 | [<title>](<url>) | AFK | #<n> |"
+)
+```
+
+If the Atlassian MCP is unavailable, print the comment text so the
+user can paste it into Jira. Skip the Jira comment entirely for a
+ticket-less PRD.
+
 ## Task body template
 
 ```markdown
@@ -308,6 +353,14 @@ batch`.
 ### Type
 
 AFK
+
+### Jira Key
+
+DM-XXXXX
+
+### Jira URL
+
+https://rubinobs.atlassian.net/browse/DM-XXXXX
 
 ### Blocked by
 
@@ -345,11 +398,19 @@ sections of the parent PRD rather than duplicating content.
 ```markdown
 ### Branch
 
-feature/run-harness-flag
+tickets/DM-45678-run-harness-flag
 
 ### Type
 
 AFK
+
+### Jira Key
+
+DM-45678
+
+### Jira URL
+
+https://rubinobs.atlassian.net/browse/DM-45678
 
 ### Blocked by
 
@@ -393,5 +454,6 @@ harnesses, not just say "unknown". The reviewer flagged the bare
   record it as a `Blocked by` reference to the task issue that will
   deliver it (not to the PR). The loop gates on closed blocker
   issues, not on merge state.
-- Profile-specific skills (e.g. Rubin's Jira-aware variant) replace
-  this skill entirely when their profile is installed.
+- Jira touches are interactive and host-side only — the sandbox AFK
+  loop never calls Jira. It reads the Jira key/URL from the GitHub
+  task metadata propagated above.

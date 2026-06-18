@@ -1,8 +1,8 @@
 ---
 name: stoker-prd-to-issues
-description: Break a PRD GitHub issue into independently-grabbable `prd-task` issues using tracer-bullet vertical slices, with the metadata fields the stoker AFK loop's shortlist builder consumes. Use when the user wants to break a PRD into tasks, convert a PRD to issues, or create implementation tickets — and you are working in a stoker-installed repo.
+description: Break a PRD GitHub issue into independently-grabbable `prd-task` issues using tracer-bullet vertical slices, applying Rubin branch naming and propagating the Jira Key/URL onto each task, then comment back on Jira. Use when the user wants to break a PRD into tasks, convert a PRD to issues, or create implementation tickets — in a Rubin stoker-installed repo.
 ---
-<!-- stoker-managed: skills:.agents/skills/stoker-prd-to-issues/SKILL.md:f08afcdf97bf9930 -->
+<!-- stoker-managed: skills:.agents/skills/stoker-prd-to-issues/SKILL.md:5ed1e53c37a0c61c -->
 
 # stoker-prd-to-issues — turn a PRD into AFK-eligible task issues
 
@@ -17,6 +17,22 @@ the loop. Use `Type: MANUAL` only when human judgement is required
 (architectural call, design review, schema migration the user wants
 to drive interactively); the loop skips those.
 
+This is the Rubin variant of the default `stoker-prd-to-issues`. It
+keeps the default's tracer-bullet slicing, pressure-test axes,
+approval gate, and sub-issue / blocker-edge plumbing verbatim, and
+layers the Rubin workflow on top: Rubin branch naming, `### Jira Key`
+/ `### Jira URL` propagation onto each task, and a Jira linkback
+comment.
+
+## Jira via the Atlassian MCP
+
+The Jira **read** happens off the PRD's `### Jira Key` / `### Jira URL`
+body fields (no MCP needed). The Jira **comment** at the end uses the
+Atlassian MCP server (`mcp__atlassian__jira_add_comment`), which the
+user configures (see the repo's AGENTS.md). **Degrade gracefully:** if
+the MCP is unavailable, print the comment text so the user can paste
+it into Jira. Skip every Jira touch for a ticket-less PRD.
+
 ## Workflow
 
 ### 1. Locate the parent PRD
@@ -26,6 +42,10 @@ Ask the user for the PRD GitHub issue number. Fetch it:
 ```
 gh issue view <prd_number> --json number,title,body
 ```
+
+Extract the `### Jira Key` and `### Jira URL` from the PRD body. A
+PRD with an empty/absent Jira Key is a ticket-less PRD — use
+`u/<login>/<desc>` branches (step 4) and skip every Jira touch.
 
 If the PRD is not already in your context, fetch it now.
 
@@ -38,7 +58,7 @@ that what the PRD describes still matches the tree.
 
 Push on:
 
-- Which layers does this PRD touch (data, service, API, UI, tests)?
+- Which layers does this PRD touch (data, service, API, client, UI, tests)?
 - Are there existing patterns to follow?
 - What's the riskiest slice?
 - Any ordering constraints already known?
@@ -73,7 +93,26 @@ For each slice, decide:
 - `Task Order` — integer ordering within the parent PRD; lower runs
   first within a tier.
 - Branch name — proposed at draft time, pressure-tested per slice
-  in step 5.
+  in step 5, using **Rubin branch naming** (below).
+
+#### Rubin branch naming
+
+- **With a Jira key** (the common case): branches use a `tickets/`
+  prefix.
+  - **Single-branch PRD** (all slices land on one branch / one PR):
+    `tickets/DM-XXXXX`.
+  - **Task-specific branches** (each slice its own branch / PR):
+    `tickets/DM-XXXXX-<short-desc>`, dash-separated
+    (e.g. `tickets/DM-12345-add-foo`, `tickets/DM-12345-add-bar`).
+- **Ticket-less PRD** (no Jira key): use the operator's GitHub login,
+  `u/<login>/<short-desc>`. Resolve the login once:
+
+  ```
+  gh api user --jq .login
+  ```
+
+The loop just checks out whatever the `### Branch` field says, so the
+naming is purely a Rubin convention — but apply it consistently.
 
 ### 5. Pressure-test the slicing
 
@@ -115,7 +154,8 @@ The canonical axes:
   the default the AFK loop's `stoker-implement` was designed
   around; task-specific branches are right when slices are
   independent and benefit from separate review. Decide per
-  slice, not PRD-wide — a PRD can mix strategies.
+  slice, not PRD-wide — a PRD can mix strategies. Branch names
+  follow the Rubin convention in step 4.
 - **Dependency reality** — for every recorded `Blocked by` ref,
   is the dependency real (the later slice genuinely cannot start
   until the earlier one ships) or an artifact of how the slices
@@ -169,7 +209,7 @@ question. When an axis is fully resolved by reading the seed PRD
 or the breakdown table, skip the axis entirely.
 
 After resolving every axis, present the final table with branches
-filled in:
+filled in (Rubin naming from step 4):
 
 | # | Title | Type | Blocked by | Parallel with | Task Order | Branch |
 |---|-------|------|------------|---------------|------------|--------|
@@ -266,6 +306,12 @@ shortlist's blocker enumeration falls back to when the native
 the migration, or whose dependency-add call failed). Do not drop
 the body field on the assumption that the edge replaces it.
 
+Propagate the parent PRD's `### Jira Key` / `### Jira URL` onto
+every task body verbatim (empty for a ticket-less PRD). The Rubin
+`stoker-create-pr` reads the task's `### Jira URL` to add the
+`Jira:` reference to the PR; the sandbox loop never touches Jira
+itself.
+
 Each task is assigned to **you** (the operator) via `--assignee @me`
 in the `gh issue create` below. This is load-bearing: the loop's
 self-scoped shortlist (`[selection].scope_to_self`, default on) only
@@ -279,7 +325,8 @@ For each approved slice:
 
 ```
 TASK_URL=$(gh issue create --repo <owner/repo> --title "<title>" --label "prd-task" --assignee @me --body "$(cat <<'EOF'
-<body, including `### Parent PRD\n\n#<prd_number>` and
+<body, including `### Jira Key`, `### Jira URL`,
+`### Parent PRD\n\n#<prd_number>`, and
 `### Blocked by\n\n#<n>, #<m>` verbatim>
 EOF
 )")
@@ -395,10 +442,10 @@ The unlinked tasks remain loop-eligible (and their blockers stay
 resolved) via the body-field fallbacks in the meantime, so the
 operator is free to repair on their own cadence.
 
-### 10. Linkback comment
+### 10. Linkback comments
 
-Post one comment on the parent PRD GitHub issue summarizing the
-batch:
+**GitHub.** Post one comment on the parent PRD GitHub issue
+summarizing the batch:
 
 ```
 gh issue comment <prd_number> --repo <owner/repo> --body "$(cat <<'EOF'
@@ -412,6 +459,20 @@ EOF
 )"
 ```
 
+**Jira.** When the PRD has a Jira key, post the same table to the
+Jira ticket so stakeholders get visibility into the planned work:
+
+```
+mcp__atlassian__jira_add_comment(
+  issue_key="DM-XXXXX",
+  body="Implementation tasks created from PRD <prd_issue_url>:\n\n| # | Task | Type | Blocked by |\n|---|------|------|------------|\n| 1 | [<title>](<url>) | AFK | None |\n| 2 | [<title>](<url>) | AFK | #1 |"
+)
+```
+
+If the Atlassian MCP is unavailable, print the comment text so the
+user can paste it into Jira. Skip the Jira comment entirely for a
+ticket-less PRD.
+
 ## Task body template
 
 ```markdown
@@ -422,6 +483,14 @@ EOF
 ### Type
 
 AFK
+
+### Jira Key
+
+DM-XXXXX
+
+### Jira URL
+
+https://rubinobs.atlassian.net/browse/DM-XXXXX
 
 ### Blocked by
 
@@ -454,6 +523,8 @@ sections of the parent PRD rather than duplicating content.
 Rules:
 
 - Use `Type: AFK` unless this slice genuinely needs human judgement.
+- `Jira Key` / `Jira URL` are inherited from the parent PRD. Leave
+  both empty for a ticket-less PRD.
 - For "no blockers" leave the field empty rather than writing "None"
   — empty parses to `[]` cleanly.
 - Same for `Parallel with`.
@@ -468,11 +539,19 @@ Rules:
 ```markdown
 ### Branch
 
-feature/run-harness-flag
+tickets/DM-45678-run-harness-flag
 
 ### Type
 
 AFK
+
+### Jira Key
+
+DM-45678
+
+### Jira URL
+
+https://rubinobs.atlassian.net/browse/DM-45678
 
 ### Blocked by
 
@@ -515,5 +594,6 @@ PRD §Scope bullet 1 for the override semantics.
   record it as a `Blocked by` reference to the task issue that will
   deliver it (not to the PR). The loop gates on closed blocker
   issues, not on merge state.
-- Profile-specific skills (e.g. Rubin's Jira-aware variant) replace
-  this skill entirely when their profile is installed.
+- Jira touches are interactive and host-side only — the sandbox AFK
+  loop never calls Jira. It reads the Jira key/URL from the GitHub
+  task metadata propagated above.

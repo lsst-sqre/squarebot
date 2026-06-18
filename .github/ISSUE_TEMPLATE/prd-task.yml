@@ -1,4 +1,4 @@
-# stoker-managed: issue-templates:.github/ISSUE_TEMPLATE/prd-task.yml:b15c39fe35ee676c
+# stoker-managed: issue-templates:.github/ISSUE_TEMPLATE/prd-task.yml:c28a82ce56e32dbb
 name: prd-task
 description: A single implementation task the stoker AFK loop can pick up.
 title: "<task title>"
@@ -17,8 +17,8 @@ body:
     id: branch
     attributes:
       label: Branch
-      description: Branch name the AFK iteration should work on (e.g. `feature/foo` or `tickets/DM-123-add-foo`).
-      placeholder: feature/your-branch
+      description: Branch name the AFK iteration should work on (e.g. `tickets/DM-12345` or `tickets/DM-12345-add-foo`; `u/<login>/<desc>` for a ticket-less task).
+      placeholder: tickets/DM-12345
     validations:
       required: true
 
@@ -35,6 +35,24 @@ body:
       default: 0
     validations:
       required: true
+
+  - type: input
+    id: jira_key
+    attributes:
+      label: Jira Key
+      description: Optional Rubin/DM Jira ticket this task implements (e.g. `DM-12345`). Inherited from the parent PRD; leave blank for a ticket-less task.
+      placeholder: DM-12345
+    validations:
+      required: false
+
+  - type: input
+    id: jira_url
+    attributes:
+      label: Jira URL
+      description: Optional link to the Jira ticket. The Rubin `stoker-create-pr` skill reads this to add a `Jira:` reference to the PR.
+      placeholder: https://rubinobs.atlassian.net/browse/DM-12345
+    validations:
+      required: false
 
   - type: input
     id: blocked_by

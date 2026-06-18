@@ -1,42 +1,82 @@
 ---
 name: stoker-prd
-description: Write a Product Requirements Document by interviewing the user, exploring the codebase, sketching modules, then submitting it as a GitHub issue using the stoker `prd` Issue Form. Use when the user wants to write a PRD, plan a feature, or create a product requirements document — and you are working in a stoker-installed repo.
+description: Write a Product Requirements Document seeded from a Rubin/DM Jira ticket (via the Atlassian MCP), interviewing the user and exploring the codebase, then submit it as a GitHub issue using the stoker `prd` Issue Form and comment back on Jira. Use when the user wants to write a PRD, plan a feature, or create a product requirements document — especially from a `DM-` ticket — in a Rubin stoker-installed repo.
 ---
-<!-- stoker-managed: skills:.claude/skills/stoker-prd/SKILL.md:455035934c372d85 -->
+<!-- stoker-managed: skills:.claude/skills/stoker-prd/SKILL.md:937c8da6dd0c33cc -->
 
-# stoker-prd — write a PRD and file it as a GitHub issue
+# stoker-prd — write a PRD from a Jira ticket and file it as a GitHub issue
 
-Drive the user through a structured PRD interview, explore the
-codebase to ground assumptions, sketch the module-level design, then
-submit the result as a GitHub issue via the repo's `prd` Issue Form.
+Drive the user through a structured PRD interview, **seeded from the
+Rubin/DM Jira ticket**, explore the codebase to ground assumptions,
+sketch the module-level design, then submit the result as a GitHub
+issue via the repo's `prd` Issue Form — and finally comment back on
+the Jira ticket linking the PRD so stakeholders can follow along.
 
 The output is a `prd`-labeled issue whose body matches
 `.github/ISSUE_TEMPLATE/prd.yml`. Downstream skills (`stoker-prd-to-issues`,
 `stoker-prd-followup`, the AFK loop) consume the issue by parsing those
 section headers, so emit them verbatim.
 
+This is the Rubin variant of the default `stoker-prd`. It keeps the
+default's relentless design-tree interview and Open-questions
+self-check, and layers the Rubin workflow on top: a Jira-ticket seed,
+`### Jira Key` / `### Jira URL` body fields, a `DM-XXXXX:`-prefixed
+title, and a Jira linkback comment.
+
+## Jira via the Atlassian MCP
+
+This skill reads and comments on Jira through the **Atlassian MCP
+server** (tools `mcp__atlassian__jira_get_issue` and
+`mcp__atlassian__jira_add_comment`), which the user configures (see
+the repo's AGENTS.md). Jira touches happen **interactively, on the
+host** — never in the sandbox AFK loop.
+
+**Degrade gracefully when the MCP is absent.** If the Atlassian MCP
+tools are not available (no `mcp__atlassian__*` tools in this
+session), do not fail: ask the user to paste the Jira ticket's
+summary / description / acceptance criteria instead, proceed with the
+PRD, and at the end print the comment you *would* have posted so the
+user can paste it into Jira themselves.
+
 ## Workflow
 
 You may skip steps when they are not necessary for the situation
-(e.g., the user already gave you a long problem statement).
+(e.g. the user already pasted a long problem statement, or there is
+no Jira ticket at all).
 
-### 1. Gather the seed problem
+### 1. Get the Jira ticket (the seed)
 
-Ask the user for a long, detailed description of the problem they
-want to solve and any solution ideas they have in mind.
+Ask the user for the Jira issue key (e.g. `DM-12345`). Fetch it:
+
+```
+mcp__atlassian__jira_get_issue(issue_key="DM-12345")
+```
+
+Extract the summary, description, and acceptance criteria. Jira
+tickets are **high-level** — they describe the stakeholder-facing
+problem, not the technical design. Your job across the rest of this
+workflow is to translate that high-level ticket into a technical,
+actionable PRD. Present a concise read-back of the ticket and confirm
+you understand it before drilling in.
+
+If the MCP is unavailable, ask the user to paste the ticket contents
+(per the graceful-degradation note above). If there is genuinely no
+ticket (a small, ticket-less PRD per AGENTS.md), skip straight to
+gathering the seed problem from the user.
 
 ### 2. Explore the repo
 
-Read the relevant code to verify the user's assertions and understand
-the current state of the system. The PRD's Scope section should
-reflect what's actually in the tree, not assumptions.
+Read the relevant code to verify the ticket's and the user's
+assertions and understand the current state of the system. The PRD's
+Scope section should reflect what's actually in the tree, not
+assumptions or the ticket's aspirational framing.
 
 ### 3. Interview relentlessly
 
 Walk down each branch of the design tree, resolving dependencies
-between decisions one-by-one. Push beyond the seed description —
-high-level asks usually hide implementation choices the user has
-already made implicitly.
+between decisions one-by-one. Push beyond the ticket — high-level
+asks usually hide implementation choices the user has already made
+implicitly.
 
 Keep going until you have a shared understanding. Do not move on
 while ambiguity remains.
@@ -46,8 +86,8 @@ while ambiguity remains.
 Before composing the PRD body, walk every canonical decision axis
 below and push on each one until either (a) the user has made the
 choice, or (b) the choice is genuinely deferred to a stakeholder
-who is not in this conversation. **Silent assumptions on these axes
-are how PRDs ship with a non-empty Open Questions section that
+who is not in this conversation. **Silent assumptions on these
+axes are how PRDs ship with a non-empty Open Questions section that
 nobody owns.**
 
 The canonical axes:
@@ -128,8 +168,7 @@ AskUserQuestion(
 When an axis has only one unresolved decision (or none), skip the
 batch — a one-question batch is the same as a plain prose question
 and the structured form adds no value. When an axis is fully
-resolved by reading the seed problem statement or the repo, skip
-it entirely.
+resolved by reading the seed ticket or the repo, skip it entirely.
 
 ### 5. Sketch the modules
 
@@ -141,12 +180,15 @@ their expectations and ask which modules they want test coverage on.
 
 ### 6. Compose the PRD body
 
-Use the template below. The four section headers
-(`### Summary`, `### Scope`, `### Acceptance criteria`,
-`### Open questions`) must match the Issue Form field labels exactly
-so the parser picks them up. Within each section, write narrative
-prose or bullets — the form's free-text fields don't constrain inner
-structure.
+Use the template below. The section headers must match the Issue Form
+field labels exactly so the parser picks them up — including the
+`### Jira Key` and `### Jira URL` fields, which `stoker-prd-to-issues`
+reads to propagate the ticket onto each task. Within each free-text
+section, write narrative prose or bullets.
+
+For a ticket-less PRD, write `### Jira Key` / `### Jira URL` with an
+empty value (or omit the fields) — downstream skills treat a missing
+key as "no Jira" and skip every Jira touch.
 
 ### 7. Self-check: Open questions before filing
 
@@ -189,11 +231,12 @@ gh label create prd --description "Product Requirements Document" --color "0e8a1
 
 `--force` makes the command idempotent.
 
-Create the issue with a `PRD: <title>` title prefix, the `prd`
-label, and assigned to yourself (the operator):
+Create the issue, the `prd` label, and assign it to yourself (the
+operator). **Title:** prefix with the Jira key when there is one —
+`DM-XXXXX: <title>`; for a ticket-less PRD use `PRD: <title>`:
 
 ```
-gh issue create --repo <owner/repo> --title "PRD: <title>" --label "prd" --assignee @me --body "$(cat <<'EOF'
+gh issue create --repo <owner/repo> --title "DM-XXXXX: <title>" --label "prd" --assignee @me --body "$(cat <<'EOF'
 <body>
 EOF
 )"
@@ -218,9 +261,33 @@ was skipped or the label was deleted — re-run
 Report the issue URL to the user. Do not break the PRD into tasks
 yourself — that's `stoker-prd-to-issues`' job, in a follow-up turn.
 
+### 9. Comment back on Jira
+
+When a Jira key exists, post a comment on the ticket linking the PRD
+so stakeholders can follow progress:
+
+```
+mcp__atlassian__jira_add_comment(
+  issue_key="DM-XXXXX",
+  body="Technical PRD created: <github_issue_url>"
+)
+```
+
+If the Atlassian MCP is unavailable, print the comment text and the
+ticket key so the user can paste it into Jira themselves. Skip this
+step entirely for a ticket-less PRD.
+
 ## PRD body template
 
 ```markdown
+### Jira Key
+
+DM-XXXXX
+
+### Jira URL
+
+https://rubinobs.atlassian.net/browse/DM-XXXXX
+
 ### Summary
 
 1–3 sentences describing what this PRD proposes and why.
@@ -254,6 +321,14 @@ Anything that needs human decision before tasks can be cut:
 ## Example output
 
 ```markdown
+### Jira Key
+
+DM-45678
+
+### Jira URL
+
+https://rubinobs.atlassian.net/browse/DM-45678
+
 ### Summary
 
 Add a CLI flag to `stoker run` so a single iteration can be locked
@@ -281,8 +356,7 @@ Out of scope:
 
 ### Open questions
 
-- Should `--harness` apply only to implement, or every phase in the
-  iteration? (Tentatively: every phase.)
+- None — ready to break into tasks.
 ```
 
 ## Notes
@@ -292,6 +366,6 @@ Out of scope:
 - If the host repo doesn't have `.github/ISSUE_TEMPLATE/prd.yml`, the
   fields will still parse correctly (Issue Forms are an authoring
   convenience; the body shape is what matters).
-- Profile-specific skills (e.g. Rubin's Jira-aware variant) replace
-  this skill entirely when their profile is installed. Stay focused
-  on the generic flow here.
+- Jira touches are interactive and host-side only. The sandbox AFK
+  loop never calls Jira; it reads the key/URL from the GitHub issue
+  metadata `stoker-prd-to-issues` propagates.

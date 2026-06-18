@@ -1,19 +1,25 @@
 ---
 name: stoker-create-pr
-description: Create or update a pull request with a Summary / Validation steps / References body, including `Closes #<task_issue>` and `PRD: #<parent_prd>` trailers. Use when invoked from `stoker-implement`'s PR step or when the user asks to create a PR, open a pull request, or update a PR body — and you are working in a stoker-installed repo.
+description: Create or update a pull request with a Summary / Validation steps / References body, including `Closes #<task_issue>`, `PRD: #<parent_prd>`, and `Jira: <url>` trailers, and a `DM-XXXXX:`-prefixed title for ticket branches. Use when invoked from `stoker-implement`'s PR step or when the user asks to create a PR, open a pull request, or update a PR body — and you are working in a Rubin stoker-installed repo.
 ---
-<!-- stoker-managed: skills:.agents/skills/stoker-create-pr/SKILL.md:9531c3d8c9b6c187 -->
+<!-- stoker-managed: skills:.agents/skills/stoker-create-pr/SKILL.md:7d81a5cae898a687 -->
 
-# stoker-create-pr — the PR-creation primitive
+# stoker-create-pr — the Rubin PR-creation primitive
 
 Create a pull request (or update one that already exists on this
 branch) using a fixed body template that the AFK loop and humans
 both produce identically. This skill is the single source of truth
-for stoker's PR shape: title format, body sections, and the
-`Closes #N` / `PRD: #N` trailer conventions.
+for the Rubin profile's PR shape: title format, body sections, and
+the `Closes #N` / `PRD: #N` / `Jira: <url>` trailer conventions.
 
 `stoker-implement` delegates here for its PR step. Humans invoke it
 directly for hand-driven PRs.
+
+This is the Rubin variant of the default `stoker-create-pr`. It keeps
+the default's create-vs-update logic and multi-task `Closes #N`
+regeneration verbatim, and layers two Rubin conventions on top: a
+`DM-XXXXX:`-prefixed title for `tickets/DM-XXXXX...` branches, and a
+`Jira: <url>` line in References.
 
 ## Workflow
 
@@ -28,6 +34,14 @@ Collect these values. Use the first available source for each:
 - **Parent PRD** — the task issue's `### Parent PRD` field, when the
   task is part of a PRD breakdown. Optional.
 - **Branch** — the current branch (`git branch --show-current`).
+- **Jira key** — sources in order: current conversation context >
+  the branch name when it matches `tickets/<KEY>...` (the `<KEY>`
+  segment, e.g. `tickets/DM-12345-add-foo` → `DM-12345`) > the task
+  issue's `### Jira Key` field > none. Optional — `u/<login>/<desc>`
+  branches and ticket-less PRDs have no Jira key.
+- **Jira URL** — sources in order: the task issue's `### Jira URL`
+  field > constructed as `https://rubinobs.atlassian.net/browse/<key>`
+  when a Jira key is known > none.
 
 #### Auto-detecting the task issue
 
@@ -38,7 +52,8 @@ gh issue list --label prd-task --state open --json number,title,body --limit 50
 ```
 
 Find the issue whose `### Branch` field matches the current branch
-name. Extract `### Parent PRD` from that issue's body.
+name. Extract `### Parent PRD`, `### Jira Key`, and `### Jira URL`
+from that issue's body.
 
 ### 2. Push the branch
 
@@ -73,8 +88,13 @@ Three cases:
 
 ### 4. Create a new PR
 
-**Title.** A concise descriptive title under 70 characters that
-summarizes what this PR accomplishes.
+**Title.**
+
+- When a **Jira key** is known, prefix the title: `DM-XXXXX: <concise
+  description>`. The description is a concise summary of what this PR
+  accomplishes; keep the whole title under 70 characters.
+- With **no Jira key** (a `u/<login>/<desc>` branch or ticket-less
+  work), use a plain concise descriptive title under 70 characters.
 
 **Body.** Use the template below verbatim.
 
@@ -111,7 +131,9 @@ not just the first.
    ```
 
    Pull manual-QA bullets from the issue's `### Acceptance criteria`
-   field (if present) for the Validation steps section.
+   field (if present) for the Validation steps section. Also re-read
+   the `### Jira Key` / `### Jira URL` fields here so the `Jira:`
+   reference stays correct after the first task.
 
 4. Compose a fresh body using the template:
 
@@ -122,8 +144,9 @@ not just the first.
      referenced task. Drop bullets CI already covers and bullets
      superseded by later commits.
    - **References** — one `Closes #N` per referenced task, sorted
-     ascending; then `PRD: #<parent_prd>` (omit if none). Sorted +
-     deduped is idempotent by construction.
+     ascending; then `PRD: #<parent_prd>` (omit if none); then
+     `Jira: <url>` (omit if no Jira key). Sorted + deduped is
+     idempotent by construction.
 
 5. Apply:
 
@@ -133,6 +156,9 @@ not just the first.
    EOF
    )"
    ```
+
+   Leave the existing PR **title** unchanged on update — it already
+   carries the `DM-XXXXX:` prefix from creation.
 
 ### 6. Report the URL
 
@@ -158,6 +184,7 @@ suite items). Only manual verification.>
 
 - Closes #<task_issue>
 - PRD: #<parent_prd>   <!-- omit if no parent PRD -->
+- Jira: <jira_url>     <!-- omit if no Jira key -->
 ```
 
 Rules for the References section:
@@ -166,10 +193,14 @@ Rules for the References section:
 - Omit the `PRD:` line if there is no parent PRD.
 - Omit the `Closes #` line if there is no task issue (a hand-driven
   PR with no tracked task).
+- Omit the `Jira:` line if there is no Jira key.
 - For multi-task branches, include one `Closes #N` per referenced
-  task, sorted ascending.
+  task, sorted ascending. There is a single `Jira:` line per PR (all
+  tasks on a branch share one ticket).
 
 ## Example output
+
+For a branch `tickets/DM-45678-run-harness-flag`:
 
 ```markdown
 ## Summary
@@ -191,7 +222,11 @@ Rules for the References section:
 
 - Closes #45
 - PRD: #41
+- Jira: https://rubinobs.atlassian.net/browse/DM-45678
 ```
+
+The PR title for that branch would be
+`DM-45678: Add --harness flag to stoker run`.
 
 ## Notes
 
@@ -199,10 +234,12 @@ Rules for the References section:
   and direct human use. Keep the body shape stable — the AFK loop's
   multi-task PR-update logic depends on the exact section names and
   trailer format above.
+- This skill never calls Jira. The Jira URL comes entirely from the
+  task issue's `### Jira URL` field (written interactively by
+  `stoker-prd-to-issues`) or is constructed from the key in the branch
+  name. The sandbox AFK loop is GitHub-only — it has no Jira creds,
+  MCP, or firewall egress to Jira.
 - No `Co-authored-by:` trailer (signing, if configured, is
   self-identifying).
 - No "Files changed" section — `git show` and the GitHub UI cover
   that.
-- Profile-specific skills (e.g. Rubin's Jira-aware variant that adds
-  `Jira: <url>` to References) replace this skill entirely when their
-  profile is installed.

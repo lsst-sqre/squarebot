@@ -1,4 +1,4 @@
-# stoker-managed: issue-templates:.github/ISSUE_TEMPLATE/prd.yml:e15f3f839db7fdb7
+# stoker-managed: issue-templates:.github/ISSUE_TEMPLATE/prd.yml:425779d2fabe8928
 name: PRD
 description: A product / feature requirements document. Spawns task issues for the AFK loop.
 title: "PRD: <title>"
@@ -10,6 +10,24 @@ body:
       value: |
         Use this form to write a PRD. After it lands, break it into
         `prd-task` issues using your repo's PRD-to-tasks workflow.
+
+  - type: input
+    id: jira_key
+    attributes:
+      label: Jira Key
+      description: Optional Rubin/DM Jira ticket this PRD implements (e.g. `DM-12345`). Leave blank for a ticket-less PRD.
+      placeholder: DM-12345
+    validations:
+      required: false
+
+  - type: input
+    id: jira_url
+    attributes:
+      label: Jira URL
+      description: Optional link to the Jira ticket (e.g. `https://rubinobs.atlassian.net/browse/DM-12345`).
+      placeholder: https://rubinobs.atlassian.net/browse/DM-12345
+    validations:
+      required: false
 
   - type: textarea
     id: summary
