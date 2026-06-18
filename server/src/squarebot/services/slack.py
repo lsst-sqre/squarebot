@@ -10,7 +10,7 @@ import urllib.parse
 from typing import Any
 
 from fastapi import HTTPException, Request, status
-from faststream.kafka.asyncapi import Publisher
+from faststream.kafka.publisher.usecase import DefaultPublisher
 from structlog.stdlib import BoundLogger
 
 from rubin.squarebot.models.kafka import (
@@ -40,13 +40,13 @@ class SlackService:
         self,
         logger: BoundLogger,
         config: Configuration,
-        app_mentions_publisher: Publisher,
-        channel_publisher: Publisher,
-        groups_publisher: Publisher,
-        im_publisher: Publisher,
-        mpim_publisher: Publisher,
-        block_actions_publisher: Publisher,
-        view_submission_publisher: Publisher,
+        app_mentions_publisher: DefaultPublisher,
+        channel_publisher: DefaultPublisher,
+        groups_publisher: DefaultPublisher,
+        im_publisher: DefaultPublisher,
+        mpim_publisher: DefaultPublisher,
+        block_actions_publisher: DefaultPublisher,
+        view_submission_publisher: DefaultPublisher,
     ) -> None:
         self._logger = logger
         self._config = config
