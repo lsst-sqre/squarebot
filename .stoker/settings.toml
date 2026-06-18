@@ -1,0 +1,5 @@
+[profile]
+source = "builtin:default"
+
+[sandbox]
+repo = "lsst-sqre/squarebot"

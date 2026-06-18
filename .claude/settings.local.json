@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(tree:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "mcp__deepwiki__read_wiki_structure",
+      "mcp__deepwiki__read_wiki_contents",
+      "WebSearch",
+      "WebFetch(domain:safir.lsst.io)",
+      "WebFetch(domain:testcontainers-python.readthedocs.io)",
+      "Bash(nox:*)",
+      "WebFetch(domain:faststream.ag2.ai)",
+      "WebFetch(domain:faststream.airt.ai)",
+      "Bash(python3:*)",
+      "Bash(git add:*)",
+      "Bash(git mv:*)",
+      "Bash(nox -s lint:*)",
+      "Bash(nox -s typing:*)",
+      "Bash(git commit:*)",
+      "Bash(chmod:*)",
+      "Bash(git rm:*)",
+      "Bash(uv --version:*)",
+      "Bash(uv lock:*)",
+      "Bash(make init:*)",
+      "Bash(uv run:*)",
+      "Bash(docker build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

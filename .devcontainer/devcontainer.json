@@ -1,0 +1,33 @@
+{
+  "name": "Squarebot dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "features": {
+    // Lets you run `docker compose -f kafka-compose.yaml up` for the test broker.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  // One-time setup, matching the README: install nox, then build the dev
+  // .venv (all dev deps) and install the pre-commit hooks.
+  "postCreateCommand": "pip install nox && nox -s venv-init",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        }
+      }
+    }
+  }
+}

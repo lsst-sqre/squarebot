@@ -1,0 +1,36 @@
+# stoker-managed: sandbox:stoker/firewall-allowlist.txt:f9cceff94be83563
+github.com
+api.github.com
+codeload.github.com
+objects.githubusercontent.com
+raw.githubusercontent.com
+# GitHub anycast IP ranges — FALLBACK only. The live source of truth
+# is https://api.github.com/meta, which init-firewall.sh fetches on
+# every run via `gh api meta` (or `curl`) and merges into the v4/v6
+# ipsets. These static CIDRs are used when that fetch can't succeed
+# (no network, parse error, gh/curl/jq missing) so the firewall still
+# has a viable seed without the dynamic refresh.
+192.30.252.0/22
+185.199.108.0/22
+140.82.112.0/20
+143.55.64.0/20
+2a0a:a440::/29
+2606:50c0::/32
+api.anthropic.com
+console.anthropic.com
+claude.ai
+api.openai.com
+auth.openai.com
+chatgpt.com
+registry-1.docker.io
+auth.docker.io
+production.cloudflare.docker.com
+pypi.org
+files.pythonhosted.org
+registry.npmjs.org
+nodejs.org
+deb.debian.org
+security.debian.org
+cli.github.com
+downloads.1password.com
+astral.sh
