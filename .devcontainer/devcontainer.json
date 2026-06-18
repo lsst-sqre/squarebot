@@ -1,0 +1,51 @@
+{
+  "name": "Squarebot dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "features": {
+    // Node 22+ provides npm, which stoker's derived AFK sandbox uses to install
+    // the agent CLIs (claude-code / codex / copilot) in its postCreateCommand.
+    // stoker's derive inherits these Features into .devcontainer/stoker/.
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    },
+    // Lets you run `docker compose -f kafka-compose.yaml up` for the test broker.
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  // DinD requires the container to START as root: the docker-in-docker
+  // Feature's docker-init.sh runs as PID 1 and only starts dockerd cleanly
+  // when it is root, and --privileged lets dockerd manage iptables/cgroups.
+  // remoteUser stays "vscode" so lifecycle/agent commands run unprivileged.
+  // Drop containerUser and the sandbox dies on startup with
+  // "Shell server terminated (code: 126)" / "no users found".
+  // Stoker's derive carries containerUser/privileged into its AFK sandbox.
+  "containerUser": "root",
+  "remoteUser": "vscode",
+  "privileged": true,
+  // One-time setup: build the dev .venv with all dev deps and install the
+  // pre-commit hooks. Mirrors the `nox -s venv-init` session directly (without
+  // nox, whose `uv` venv backend isn't present here): create .venv, install uv
+  // into it, then uv-install the pinned requirements + editable packages.
+  "postCreateCommand": "python -m venv .venv --clear && .venv/bin/python -m pip install --upgrade pip uv && .venv/bin/python -m uv pip install -r server/requirements/main.txt -r server/requirements/dev.txt -e client -e server nox pre-commit && .venv/bin/pre-commit install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.formatOnSave": true,
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+          }
+        }
+      }
+    }
+  }
+}
