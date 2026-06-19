@@ -12,14 +12,14 @@ from safir.logging import LogLevel, Profile
 
 __all__ = [
     "Configuration",
-    "KafkaSecurityProtocol",
-    "KafkaSaslMechanism",
     "KafkaConnectionSettings",
+    "KafkaSaslMechanism",
+    "KafkaSecurityProtocol",
     "config",
 ]
 
 
-class KafkaSecurityProtocol(str, Enum):
+class KafkaSecurityProtocol(str, Enum):  # noqa: UP042
     """Kafka security protocols understood by aiokafka."""
 
     PLAINTEXT = "PLAINTEXT"
@@ -29,7 +29,7 @@ class KafkaSecurityProtocol(str, Enum):
     """TLS-encrypted connection."""
 
 
-class KafkaSaslMechanism(str, Enum):
+class KafkaSaslMechanism(str, Enum):  # noqa: UP042
     """Kafka SASL mechanisms understood by aiokafka."""
 
     PLAIN = "PLAIN"

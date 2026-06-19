@@ -2,6 +2,13 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.10.1'></a>
+## 0.10.1 (2026-06-19)
+
+### Other changes
+
+- Upgraded FastStream to the 0.7.x release line (from the previous `<0.5.0` pin). The publisher type moved from `faststream.kafka.asyncapi.Publisher` to `faststream.kafka.publisher.DefaultPublisher`, and the application now starts and stops the Kafka broker with `broker.start()` / `broker.stop()` because the FastStream FastAPI router's `lifespan_context` is no longer re-callable. The `KafkaRouter` plus served-AsyncAPI-schema design is unchanged.
+
 <a id='changelog-0.10.0'></a>
 
 ## 0.10.0 (2024-09-26)

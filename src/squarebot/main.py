@@ -51,9 +51,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     await context_dependency.initialize()
 
-    async with kafka_router.lifespan_context(app):
-        logger.info("Square Bot start up complete.")
-        yield
+    # Start the FastStream Kafka broker directly rather than via
+    # ``kafka_router.lifespan_context``. As of FastStream 0.7 the router's
+    # lifespan context is one-shot: it stops the broker on exit but does not
+    # restart it if the lifespan is entered again, whereas ``broker.start()``
+    # and ``broker.stop()`` are re-callable. The test suite drives the app
+    # lifespan once per test against the module-level app, so the broker must
+    # restart cleanly between tests.
+    await kafka_router.broker.start()
+    logger.info("Square Bot start up complete.")
+    yield
+    await kafka_router.broker.stop()
 
     # Any code here will be run when the application shuts down.
     await http_client_dependency.aclose()

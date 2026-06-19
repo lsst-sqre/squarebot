@@ -6,11 +6,10 @@
 name: Periodic CI
 
 env:
-  # Current supported Python version. For applications, there is generally no
-  # reason to support multiple Python versions, so all actions are run with
-  # this version. Quote the version to avoid interpretation as a floating
-  # point number.
-  PYTHON_VERSION: "3.12"
+  # Current supported uv version. The uv documentation recommends pinning
+  # this. The version should match the version used in .pre-commit-config.yaml
+  # and frozen in uv.lock. It is updated by make update-deps.
+  UV_VERSION: "0.11.21"
 
 "on":
   schedule:
@@ -23,36 +22,23 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          version: ${{ env.UV_VERSION }}
 
       - name: Update dependencies
-        run: |
-          pip install --upgrade uv
-          uv venv
-          source .venv/bin/activate
-          uv pip install nox
-          nox -s update-deps
-        shell: bash
+        run: make update-deps
 
-      - name: Start Kafka
-        run: docker compose -f kafka-compose.yaml up -d
-
-      - name: Run tests in nox
-        uses: lsst-sqre/run-nox@v1
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          nox-sessions: "lint typing test"
-
-      - name: Stop Kafka
-        run: docker compose -f kafka-compose.yaml down
+      # Kafka is provided by testcontainers, which the nox test session starts
+      # against the runner's Docker daemon. No docker-compose broker is needed.
+      - name: Run tests
+        run: uv run --only-group=nox nox -s lint typing test docs
 
       - name: Report status
-        if: failure()
+        if: always()
         uses: ravsamhq/notify-slack-action@v2
         with:
           status: ${{ job.status }}

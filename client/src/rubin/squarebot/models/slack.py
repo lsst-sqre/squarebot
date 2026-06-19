@@ -106,7 +106,7 @@ class SlackUrlVerificationEvent(BaseSlackEvent):
     challenge: str = Field(..., description="URL challenge content.")
 
 
-class SlackMessageType(str, Enum):
+class SlackMessageType(str, Enum):  # noqa: UP042
     """An enumeration of the different types of Slack messages."""
 
     app_mention = "app_mention"
@@ -116,7 +116,7 @@ class SlackMessageType(str, Enum):
     """A regular message."""
 
 
-class SlackChannelType(str, Enum):
+class SlackChannelType(str, Enum):  # noqa: UP042
     """Represents the type of a Slack channel."""
 
     channel = "channel"
@@ -132,7 +132,7 @@ class SlackChannelType(str, Enum):
     """A multi-person direct message."""
 
 
-class SlackMessageSubtype(str, Enum):
+class SlackMessageSubtype(str, Enum):  # noqa: UP042
     """Represents the subtype of a Slack message.
 
     See https://api.slack.com/events/message#subtypes
@@ -231,8 +231,7 @@ class SlackMessageEventContent(BaseModel):
 
     channel: str = Field(
         description=(
-            "ID of the channel where the message was sent "
-            "(e.g., C0LAN2Q65)."
+            "ID of the channel where the message was sent (e.g., C0LAN2Q65)."
         )
     )
 

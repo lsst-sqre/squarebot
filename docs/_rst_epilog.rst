@@ -7,3 +7,6 @@
 .. _venv: https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment
 .. _semver: https://semver.org/
 .. _mypy: https://mypy.readthedocs.io/en/stable/
+.. _uv: https://docs.astral.sh/uv/
+.. _ruff: https://docs.astral.sh/ruff/
+.. _testcontainers: https://testcontainers-python.readthedocs.io/en/latest/

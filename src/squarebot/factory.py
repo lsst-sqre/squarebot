@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Self
 
 from faststream.kafka import KafkaBroker
-from faststream.kafka.asyncapi import Publisher
+from faststream.kafka.publisher import DefaultPublisher
 from structlog.stdlib import BoundLogger
 
 from .config import config
@@ -23,25 +23,25 @@ class ProcessContext:
     kafka_broker: KafkaBroker
     """The aiokafka broker provided through the FastStream Kafka router."""
 
-    channel_publisher: Publisher
+    channel_publisher: DefaultPublisher
     """A Kafka publisher for the message channels topic."""
 
-    im_publisher: Publisher
+    im_publisher: DefaultPublisher
     """A Kafka publisher for the Slack IM channels topic."""
 
-    mpim_publisher: Publisher
+    mpim_publisher: DefaultPublisher
     """A Kafka publisher for the Slack multi-person IM channels topic."""
 
-    groups_publisher: Publisher
+    groups_publisher: DefaultPublisher
     """A Kafka publisher for the Slack private channels topic."""
 
-    app_mentions_publisher: Publisher
+    app_mentions_publisher: DefaultPublisher
     """A Kafka publisher for the Slack ``app_mention`` topic."""
 
-    block_actions_publisher: Publisher
+    block_actions_publisher: DefaultPublisher
     """A Kafka publisher for the Slack block actions topic."""
 
-    view_submission_publisher: Publisher
+    view_submission_publisher: DefaultPublisher
     """A Kafka publisher for the Slack view submissions topic."""
 
     @classmethod

@@ -20,10 +20,10 @@ __all__ = [
     "SquarebotSlackAppMentionValue",
     "SquarebotSlackBlockActionsKey",
     "SquarebotSlackBlockActionsValue",
-    "SquarebotSlackViewSubmissionKey",
-    "SquarebotSlackViewSubmissionValue",
     "SquarebotSlackMessageKey",
     "SquarebotSlackMessageValue",
+    "SquarebotSlackViewSubmissionKey",
+    "SquarebotSlackViewSubmissionValue",
 ]
 
 

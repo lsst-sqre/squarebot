@@ -7,6 +7,7 @@ This information is only useful for maintainers.
 
 Squarebot's releases are largely automated through GitHub Actions (see the `ci.yaml`_ workflow file for details).
 When a semantic version tag is pushed to GitHub, Squarebot Docker images are published on `GitHub Container Registry <https://github.com/orgs/lsst-sqre/packages?repo_name=squarebot>`__ and the client-side models library is published to PyPI as `rubin-squarebot`_.
+Both the Docker image and the client share a single release tag (versioning is unified via setuptools_scm_).
 
 .. _`ci.yaml`: https://github.com/lsst-sqre/squarebot/blob/main/.github/workflows/ci.yaml
 
@@ -37,9 +38,21 @@ Squarebot follows semver_, so follow its rules to pick the next version:
 
 Run the nox scriv-collect session with the version number you decided on:
 
-.. code-block:: sh
+.. tab-set::
 
-   nox -s scriv-collect X.Y.Z
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s scriv-collect X.Y.Z
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s scriv-collect X.Y.Z
 
 This will delete the fragment files and collect them into :file:`CHANGELOG.md` under an entry for the new release.
 Review that entry and edit it as needed (proofread, change the order to put more important things first, etc.).
@@ -61,7 +74,7 @@ In particular, **don't** prefix the tag with ``v``.
 
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm
 
-The `ci.yaml`_ GitHub Actions workflow uploads the new release to Docker Hub.
+The `ci.yaml`_ GitHub Actions workflow publishes the Docker image to the GitHub Container Registry and the ``rubin-squarebot`` client to PyPI.
 
 3. Create a GitHub release
 --------------------------

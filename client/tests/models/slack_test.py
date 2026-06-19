@@ -15,7 +15,7 @@ from rubin.squarebot.models.slack import (
 @pytest.fixture
 def samples_dir() -> Path:
     """Get the path to the samples directory for interactions."""
-    return Path(__file__).parent / "../../slack_messages/interactions"
+    return Path(__file__).parent.parent / "data"
 
 
 def test_parse_block_actions_static_select(samples_dir: Path) -> None:

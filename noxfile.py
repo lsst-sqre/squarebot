@@ -1,59 +1,76 @@
+from __future__ import annotations
+
+import json
+import logging
+import os
+import re
+import subprocess
+
 import nox
+from nox_uv import session
 
 # Default sessions
-nox.options.sessions = ["lint", "typing", "test", "docs"]
+nox.options.sessions = ["lint", "typing", "test", "client_test"]
 
 # Other nox defaults
 nox.options.default_venv_backend = "uv"
 nox.options.reuse_existing_virtualenvs = True
 
 
-# Pip installable dependencies for the client and server packages
-PIP_DEPENDENCIES = [
-    ("-r", "server/requirements/main.txt"),
-    ("-r", "server/requirements/dev.txt"),
-    ("-e", "client"),
-    ("-e", "server"),
-]
+def _setup_testcontainers_logging() -> None:
+    """Configure logging to reduce testcontainers noise."""
+    logging.getLogger("testcontainers").setLevel(logging.ERROR)
+    logging.getLogger("docker").setLevel(logging.ERROR)
+    logging.getLogger("urllib3").setLevel(logging.ERROR)
 
 
-def _install(session: nox.Session) -> None:
-    """Install the application and all dependencies into the session."""
-    session.install("--upgrade", "uv")
-    for deps in PIP_DEPENDENCIES:
-        session.install(*deps)
+def _setup_testcontainers_env() -> None:
+    """Configure testcontainers environment variables for Colima on macOS.
 
-
-def _install_dev(session: nox.Session, bin_prefix: str = "") -> None:
-    """Install the application and all development dependencies into the
-    specified virtual environment.
+    This must be called before any containers are started to ensure the
+    Reaper can connect properly when using Colima as the Docker runtime.
     """
-    python = f"{bin_prefix}python"
-    precommit = f"{bin_prefix}pre-commit"
+    # Set testcontainers host override for Colima on macOS. This fixes
+    # "nodename nor servname provided, or not known" errors.
+    docker_host = os.getenv("DOCKER_HOST", "")
+    m = re.search(r"\.colima/(?P<profile>[^/]+)/docker\.sock$", docker_host)
+    if m:
+        # Extract the Colima VM IP address for the active profile.
+        # colima ls -j emits one JSON object per line (one per profile).
+        try:
+            result = subprocess.run(
+                ["colima", "ls", "-j"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            for line in result.stdout.splitlines():
+                if not line.strip():
+                    continue
+                colima_info = json.loads(line)
+                if colima_info.get("name") == m["profile"] and colima_info.get(
+                    "address"
+                ):
+                    os.environ["TESTCONTAINERS_HOST_OVERRIDE"] = colima_info[
+                        "address"
+                    ]
+                    break
+        except (
+            subprocess.CalledProcessError,
+            json.JSONDecodeError,
+            KeyError,
+        ):
+            # If we can't get the Colima address, don't set the override.
+            pass
 
-    # Install dev dependencies
-    session.run(python, "-m", "pip", "install", "uv", external=True)
-    for deps in PIP_DEPENDENCIES:
-        session.run(python, "-m", "uv", "pip", "install", *deps, external=True)
-    session.run(
-        python,
-        "-m",
-        "uv",
-        "pip",
-        "install",
-        "nox",
-        "pre-commit",
-        external=True,
-    )
-    # Install pre-commit hooks
-    session.run(precommit, "install", external=True)
 
+def _make_env_vars(overrides: dict[str, str] | None = None) -> dict[str, str]:
+    """Create an environment variable dictionary that lets the app start up.
 
-def _make_env_vars() -> dict[str, str]:
-    """Create a environment variable dictionary for test sessions that enables
-    the app to start up.
+    ``config`` and ``kafka_router`` are built at import time, so these must be
+    set in the pytest subprocess environment before squarebot is imported.
     """
-    return {
+    env_vars = {
         "SQUAREBOT_LOG_LEVEL": "DEBUG",
         "KAFKA_BOOTSTRAP_SERVERS": "localhost:9092",
         "KAFKA_SECURITY_PROTOCOL": "PLAINTEXT",
@@ -61,68 +78,89 @@ def _make_env_vars() -> dict[str, str]:
         "SQUAREBOT_SLACK_TOKEN": "1234",
         "SQUAREBOT_SLACK_APP_ID": "1234",
     }
+    if overrides:
+        env_vars.update(overrides)
+    return env_vars
 
 
-@nox.session(name="venv-init")
-def init_dev(session: nox.Session) -> None:
-    """Set up a development venv."""
-    # Create a venv in the current directory, replacing any existing one
-    session.run("python", "-m", "venv", ".venv", "--clear")
-    _install_dev(session, bin_prefix=".venv/bin/")
-
-    print(
-        "\nTo activate this virtual env, run:\n\n\tsource .venv/bin/activate\n"
-    )
-
-
-@nox.session(name="init", python=False)
-def init(session: nox.Session) -> None:
-    """Set up the development environment in the current virtual env."""
-    _install_dev(session, bin_prefix="")
-
-
-@nox.session
+@session(uv_only_groups=["lint"], uv_no_install_project=True)
 def lint(session: nox.Session) -> None:
     """Run pre-commit hooks."""
-    session.install("pre-commit")
     session.run("pre-commit", "run", "--all-files", *session.posargs)
 
 
-@nox.session
+@session(uv_groups=["typing", "dev"])
 def typing(session: nox.Session) -> None:
     """Run mypy."""
-    _install(session)
-    session.install("mypy")
-    session.run("mypy", "noxfile.py")
-    with session.chdir("server"):
-        session.run("mypy", "src", "tests", *session.posargs)
-    with session.chdir("client"):
-        session.run("mypy", "src", *session.posargs)
+    session.run(
+        "mypy",
+        "noxfile.py",
+        "src",
+        "tests",
+        "client/src",
+        *session.posargs,
+    )
 
 
-@nox.session
+@session(uv_groups=["dev"])
 def test(session: nox.Session) -> None:
-    """Run pytest."""
-    _install(session)
-    with session.chdir("server"):
+    """Run the server test suite against a testcontainers Kafka broker."""
+    _setup_testcontainers_logging()
+    _setup_testcontainers_env()
+
+    # Import after setting environment variables so config is read correctly.
+    from testcontainers.kafka import KafkaContainer  # noqa: PLC0415
+
+    with KafkaContainer().with_kraft() as kafka:
+        env_vars = _make_env_vars(
+            {"KAFKA_BOOTSTRAP_SERVERS": kafka.get_bootstrap_server()}
+        )
         session.run(
             "pytest",
             "--cov=squarebot",
             "--cov-branch",
             *session.posargs,
-            env=_make_env_vars(),
+            env=env_vars,
         )
 
 
-@nox.session
+@session(uv_groups=["dev"])
+def client_test(session: nox.Session) -> None:
+    """Run the client test suite in the workspace environment."""
+    session.run("pytest", "client/tests", *session.posargs)
+
+
+@nox.session(name="client_test_compat", python=["3.13", "3.14"])
+def client_test_compat(session: nox.Session) -> None:
+    """Test the client against its supported Python versions."""
+    session.install("-e", "./client", "pytest")
+    session.run("pytest", "client/tests", *session.posargs)
+
+
+@nox.session(name="client_test_oldest", python=["3.13"])
+def client_test_oldest(session: nox.Session) -> None:
+    """Test the client with the oldest supported direct dependencies."""
+    session.install(
+        "-e",
+        "./client",
+        "pytest>=8",
+        env={"UV_RESOLUTION": "lowest-direct"},
+    )
+    session.run("pytest", "client/tests", *session.posargs)
+
+
+@session(uv_groups=["docs"])
 def docs(session: nox.Session) -> None:
-    """Build the docs."""
-    _install(session)
+    """Build the docs.
+
+    ``squarebot.main:create_openapi`` imports the app (but does not start the
+    lifespan), so the app config env vars must be present; no live broker is
+    required.
+    """
     doctree_dir = (session.cache_dir / "doctrees").absolute()
     with session.chdir("docs"):
         session.run(
             "sphinx-build",
-            # "-W",
             "--keep-going",
             "-n",
             "-T",
@@ -136,19 +174,18 @@ def docs(session: nox.Session) -> None:
         )
 
 
-@nox.session(name="docs-linkcheck")
+@session(name="docs-linkcheck", uv_groups=["docs"])
 def docs_linkcheck(session: nox.Session) -> None:
     """Linkcheck the docs."""
-    _install(session)
     doctree_dir = (session.cache_dir / "doctrees").absolute()
     with session.chdir("docs"):
         session.run(
             "sphinx-build",
-            # "-W",
             "--keep-going",
             "-n",
             "-T",
-            "-b" "linkcheck",
+            "-b",
+            "linkcheck",
             "-d",
             str(doctree_dir),
             ".",
@@ -171,48 +208,22 @@ def scriv_collect(session: nox.Session) -> None:
     session.run("scriv", "collect", "--add", "--version", *session.posargs)
 
 
-@nox.session(name="update-deps")
-def update_deps(session: nox.Session) -> None:
-    """Update pinned server dependencies and pre-commit hooks."""
-    session.install(
-        "--upgrade", "pip-tools", "pip", "setuptools", "wheel", "pre-commit"
-    )
-    session.run("pre-commit", "autoupdate")
-
-    # Dependencies are unpinned for compatibility with the unpinned client
-    # dependency.
-    session.run(
-        "uv",
-        "pip",
-        "compile",
-        "--upgrade",
-        "--output-file",
-        "server/requirements/main.txt",
-        "server/requirements/main.in",
-    )
-
-    session.run(
-        "uv",
-        "pip",
-        "compile",
-        "--upgrade",
-        "--output-file",
-        "server/requirements/dev.txt",
-        "server/requirements/dev.in",
-    )
-
-    print("\nTo refresh the development venv, run:\n\n\tnox -s init\n")
-
-
-@nox.session(name="run")
+@session(uv_groups=["dev"], name="run")
 def run(session: nox.Session) -> None:
-    """Run the application in development mode."""
-    # Note this doesn't work right now because Kafka is needed for the app.
-    _install(session)
-    with session.chdir("server"):
+    """Run the application in development mode with a Kafka container."""
+    _setup_testcontainers_logging()
+    _setup_testcontainers_env()
+
+    # Import after setting environment variables so config is read correctly.
+    from testcontainers.kafka import KafkaContainer  # noqa: PLC0415
+
+    with KafkaContainer().with_kraft() as kafka:
+        env_vars = _make_env_vars(
+            {"KAFKA_BOOTSTRAP_SERVERS": kafka.get_bootstrap_server()}
+        )
         session.run(
             "uvicorn",
             "squarebot.main:app",
             "--reload",
-            env=_make_env_vars(),
+            env=env_vars,
         )
