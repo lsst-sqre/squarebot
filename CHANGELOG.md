@@ -2,6 +2,13 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.10.2'></a>
+## 0.10.2 (2026-06-19)
+
+### Other changes
+
+- Fixed the PyPI publish workflow for the uv workspace layout. The `rubin-squarebot` client is a uv workspace member, and `uv build` writes a member's artifacts to the workspace-root `dist/`. The release workflow now builds the client by name from the workspace root (`uv build --no-sources --package rubin-squarebot`) and publishes from there, rather than running the build-and-publish action in `client/`, where `uv publish` looked in `client/dist/` and found nothing. This is why the `rubin-squarebot` 0.10.1 client failed to upload to PyPI; 0.10.2 is the first PyPI release on the modernized uv-workspace layout.
+
 <a id='changelog-0.10.1'></a>
 ## 0.10.1 (2026-06-19)
 
