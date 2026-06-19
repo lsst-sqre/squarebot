@@ -10,7 +10,7 @@ import urllib.parse
 from typing import Any
 
 from fastapi import HTTPException, Request, status
-from faststream.kafka.publisher.usecase import DefaultPublisher
+from faststream.kafka.publisher import DefaultPublisher
 from structlog.stdlib import BoundLogger
 
 from rubin.squarebot.models.kafka import (

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Self
 
 from faststream.kafka import KafkaBroker
-from faststream.kafka.publisher.usecase import DefaultPublisher
+from faststream.kafka.publisher import DefaultPublisher
 from structlog.stdlib import BoundLogger
 
 from .config import config
