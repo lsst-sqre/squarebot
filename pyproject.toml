@@ -68,12 +68,8 @@ nox = [
     "testcontainers[kafka]",
 ]
 docs = [
-    "documenteer[guide]>=1,<2",
+    "documenteer[guide]>=2.4.0,<3",
     "autodoc_pydantic",
-    # documenteer's redoc OpenAPI renderer (sphinxcontrib-redoc) still imports
-    # pkg_resources, which setuptools 81+ no longer ships. Pin setuptools below
-    # 81 so the ``docs`` nox session can render the OpenAPI page on Python 3.14.
-    "setuptools<81",
 ]
 
 # The repo is a uv workspace: the published rubin-squarebot client is the lone
