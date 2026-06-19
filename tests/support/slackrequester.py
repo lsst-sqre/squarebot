@@ -63,7 +63,10 @@ class SlackServer:
             The response to the client request.
         """
         body = json.dumps(json_data)
-        headers: dict[str, str] = {}
+        # Send the body as raw content (so the signed bytes match exactly) but
+        # declare it as JSON the way the real Slack Events API does; FastAPI
+        # requires the Content-Type to parse the request body model.
+        headers: dict[str, str] = {"Content-Type": "application/json"}
         timestamp = str(int(time()))
         if bad_timestamp:
             # throw off the timestamp to force an error

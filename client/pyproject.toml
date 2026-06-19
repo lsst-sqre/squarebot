@@ -11,21 +11,20 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Intended Audience :: Developers",
     "Natural Language :: English",
     "Operating System :: POSIX",
     "Typing :: Typed",
 ]
-requires-python = ">=3.11"
-dependencies = ["pydantic>=2", "safir"]
+# The client only imports pydantic; the previous unused ``safir`` dependency
+# was dropped during modernization so the published wheel stays lean and the
+# ``client_test_oldest`` lowest-direct resolution is clean. The floor is set so
+# the oldest resolvable pydantic ships cp313 wheels.
+requires-python = ">=3.13"
+dependencies = ["pydantic>=2.10"]
 dynamic = ["version"]
-
-[project.optional-dependencies]
-dev = [
-    # Testing
-    "mypy",
-]
 
 [project.urls]
 Homepage = "https://github.com/lsst-sqre/squarebot"
@@ -35,11 +34,19 @@ Source = "https://github.com/lsst-sqre/squarebot"
 requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+dev = [
+    "pytest",
+]
+
 [tool.setuptools.packages.find]
 where = ["src"] # for namespace package discovery
 
+# Versioning stays unified with the server: the client reads the same repo git
+# tags (``root = ".."``) so one release tag versions both the Docker image and
+# the published client.
 [tool.setuptools_scm]
-root = "../"
+root = ".."
 
 [tool.coverage.run]
 parallel = true
@@ -47,7 +54,7 @@ branch = true
 source = ["rubin.squarebot"]
 
 [tool.coverage.paths]
-source = ["src", "../.nox/test/lib/*/site-packages"]
+source = ["src"]
 
 [tool.coverage.report]
 show_missing = true
@@ -64,27 +71,17 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-extend = "../pyproject.toml"
+extend = "../ruff-shared.toml"
+
+# Per-file-ignores inherited from ruff-shared.toml resolve relative to that
+# file's directory (the repo root), so the client's own ``tests`` tree needs
+# its ignores declared here, where they resolve relative to ``client/``.
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/**" = [
+    "D101",    # tests don't need docstrings
+    "D103",    # tests don't need docstrings
+    "S101",    # tests should use assert
+]
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
 python_files = ["tests/*.py", "tests/*/*.py"]
-
-[tool.mypy]
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-ignore_missing_imports = true
-local_partial_types = true
-plugins = ["pydantic.mypy"]
-no_implicit_reexport = true
-show_error_codes = true
-strict_equality = true
-warn_redundant_casts = true
-warn_unreachable = true
-warn_unused_ignores = true
-
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-warn_untyped_fields = true
