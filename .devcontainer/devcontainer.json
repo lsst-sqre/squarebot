@@ -11,7 +11,7 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "22"
     },
-    // Lets you run `docker compose -f kafka-compose.yaml up` for the test broker.
+    // The test suite stands up Kafka with testcontainers, which needs Docker.
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
   // DinD requires the container to START as root: the docker-in-docker
@@ -24,11 +24,11 @@
   "containerUser": "root",
   "remoteUser": "vscode",
   "privileged": true,
-  // One-time setup: build the dev .venv with all dev deps and install the
-  // pre-commit hooks. Mirrors the `nox -s venv-init` session directly (without
-  // nox, whose `uv` venv backend isn't present here): create .venv, install uv
-  // into it, then uv-install the pinned requirements + editable packages.
-  "postCreateCommand": "python -m venv .venv --clear && .venv/bin/python -m pip install --upgrade pip uv && .venv/bin/python -m uv pip install -r server/requirements/main.txt -r server/requirements/dev.txt -e client -e server nox pre-commit && .venv/bin/pre-commit install",
+  // One-time setup: sync the dev environment from the committed uv.lock with
+  // all dependency groups and install the pre-commit hooks. `make init` runs
+  // `uv sync --frozen --all-groups` followed by `pre-commit install`; uv is
+  // provided by the dev container image (see Dockerfile).
+  "postCreateCommand": "make init",
   "customizations": {
     "vscode": {
       "extensions": [

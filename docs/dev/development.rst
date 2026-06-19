@@ -21,103 +21,222 @@ Squarebot is developed by the Rubin Observatory SQuaRE team.
 Setting up a local development environment
 ==========================================
 
-Squarebot is a Python project that should be developed within a virtual environment.
-You can either manage this virtual environment yourself, or use :command:`nox -s venv-init` to create one for you.
+Local development requires:
 
-.. tab-set::
+- Python 3.14
+- Uv_
+- Docker or a compatible container runtime (used by the test suite to run Kafka via testcontainers_)
 
-   .. tab-item:: Self-managed
+First, clone the Squarebot repository:
 
-      If you already have a Python virtual environment set up in your shell, you can use the :command:`nox -s init` command to install Squarebot and its development dependencies into it:
+.. code-block:: sh
 
-      .. code-block:: sh
+   git clone https://github.com/lsst-sqre/squarebot.git
+   cd squarebot
 
-         git clone https://github.com/lsst-sqre/squarebot.git
-         cd squarebot
-         pip install nox
-         nox -s init
+Squarebot is a uv_ workspace with two packages: the ``squarebot`` server application at the repository root and the published ``rubin-squarebot`` client in :file:`client`.
+Set up the development environment, which installs both packages and all dependency groups from the committed :file:`uv.lock` and installs the pre-commit hooks:
 
-      This init step does two things:
+.. code-block:: sh
 
-      1. Installs Squarebot along with its runtime and development dependencies.
-      2. Installs the pre-commit hooks.
+   make init
 
-   .. tab-item:: Managed venv
+``make init`` runs ``uv sync --frozen --all-groups`` to create the :file:`.venv` virtual environment and ``pre-commit install`` to set up the Git hooks.
+Activate the environment in any shell where you want the ``nox``, ``mypy``, and other tools on your path:
 
-      Nox can create the virtual environment for you and install Squarebot and its development dependencies init it:
+.. code-block:: sh
 
-      .. code-block:: sh
-
-         git clone https://github.com/lsst-sqre/squarebot.git
-         cd squarebot
-         pip install nox
-         nox -s venv-init
-         source .venv/bin/activate
-
-      This init step does three things:
-
-      1. Creates a `venv`_ virtual environment in the ``.venv`` subdirectory.
-      2. Installs Squarebot along with its runtime and development dependencies.
-      3. Installs the pre-commit hooks.
-
-      Whenever you return to the project in a new shell you will need to activate the virtual environment:
-
-      .. code-block:: sh
-
-         source .venv/bin/activate
+   source .venv/bin/activate
 
 .. _pre-commit-hooks:
 
 Pre-commit hooks
 ================
 
-The pre-commit hooks, which are automatically installed by running the :command:`nox -s init-dev` command on :ref:`set up <dev-environment>`, ensure that files are valid and properly formatted.
-Some pre-commit hooks automatically reformat code:
-
-``isort``
-    Sorts Python imports.
-
-``black``
-    Automatically formats Python code.
+The pre-commit hooks ensure that files are valid and properly formatted.
+The hooks are automatically installed by running :command:`make init`.
 
 When these hooks fail, your Git commit will be aborted.
 To proceed, stage the new modifications and proceed with your Git commit.
+
+Refer to the :file:`.pre-commit-config.yaml` file for the list of hooks that are run.
+You can run the hooks over the whole tree at any time with:
+
+.. tab-set::
+
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s lint
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s lint
 
 .. _dev-run-tests:
 
 Running tests
 =============
 
-To test all components of Squarebot, run nox_, which tests the library the same way that the GitHub Actions CI workflow does:
+To test all components of Squarebot, run nox_, which tests the library the same way that the GitHub Actions CI workflow does.
+The ``test`` session stands up a Kafka broker with testcontainers_, so Docker must be running, but you do **not** need to start a broker yourself.
 
-.. code-block:: sh
+.. tab-set::
 
-   nox
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox
+
+File linting, type checking, and unit tests are run as separate nox sessions:
+
+.. tab-set::
+
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s lint
+         nox -s typing
+         nox -s test
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s lint
+         uv run --only-group=nox nox -s typing
+         uv run --only-group=nox nox -s test
+
+With the ``test`` session, you can run a specific test file or directory by passing pytest arguments after ``--``:
+
+.. tab-set::
+
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s test -- tests/handlers/post_message_test.py
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s test -- tests/handlers/post_message_test.py
+
+The ``rubin-squarebot`` client has its own test sessions, including compatibility runs against its supported Python versions and a lowest-direct dependency resolution:
+
+.. tab-set::
+
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s client_test
+         nox -s client_test_compat
+         nox -s client_test_oldest
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s client_test
+         uv run --only-group=nox nox -s client_test_compat
+         uv run --only-group=nox nox -s client_test_oldest
 
 To see a listing of specific nox sessions, run:
 
+.. tab-set::
+
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox --list
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox --list
+
+.. _dev-update-deps:
+
+Updating dependencies
+=====================
+
+Pinned dependencies live in the root :file:`uv.lock`.
+To upgrade the locked dependencies and the pre-commit hooks, run:
+
 .. code-block:: sh
 
-   nox -s
+   make update-deps
+
+To upgrade the dependencies and re-sync your local environment in one step, run ``make update`` (which runs ``make update-deps`` followed by ``make init``).
 
 Building documentation
 ======================
 
 Documentation is built with Sphinx_:
 
-.. _Sphinx: https://www.sphinx-doc.org/en/master/
+.. tab-set::
 
-.. code-block:: sh
+   .. tab-item:: In venv
+      :sync: venv
 
-   nox -s docs
+      .. code-block:: sh
 
-The build documentation is located in the :file:`docs/_build/html` directory.
+         nox -s docs
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s docs
+
+The built documentation is located in the :file:`docs/_build/html` directory.
+The ``docs`` session also regenerates the OpenAPI schema by importing the application, so the session sets dummy ``KAFKA_BOOTSTRAP_SERVERS`` and Slack secrets; no running broker is required.
 
 To check the documentation for broken links, run:
 
-.. code-block:: sh
+.. tab-set::
 
-   nox -s docs-linkcheck
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s docs-linkcheck
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s docs-linkcheck
 
 .. _dev-change-log:
 
@@ -128,9 +247,21 @@ Squarebot uses scriv_ to maintain its change log.
 
 When preparing a pull request, run
 
-.. code-block:: sh
+.. tab-set::
 
-   nox -s scriv-create
+   .. tab-item:: In venv
+      :sync: venv
+
+      .. code-block:: sh
+
+         nox -s scriv-create
+
+   .. tab-item:: Without pre-installation
+      :sync: uv
+
+      .. code-block:: sh
+
+         uv run --only-group=nox nox -s scriv-create
 
 This will create a change log fragment in :file:`changelog.d`.
 Edit that fragment, removing the sections that do not apply and adding entries for your pull request.
@@ -161,7 +292,7 @@ Style guide
 Code
 ----
 
-- The code style follows :pep:`8`, though in practice lean on Black and isort to format the code for you. Use :sqr:`072` for for architectural guidance. Use :sqr:`075` for the client-server monorepo architecture and :sqr:`076` for the Pydantic-based Avro schemas.
+- The code style follows :pep:`8`, though in practice lean on Ruff_ to format the code for you. Use :sqr:`072` for architectural guidance. Use :sqr:`075` for the client-server monorepo architecture and :sqr:`076` for the Pydantic-based Avro schemas.
 
 - Use :pep:`484` type annotations.
   The ``nox -s typing`` test session, which runs mypy_, ensures that the project's types are consistent.
