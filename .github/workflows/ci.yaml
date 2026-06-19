@@ -1,7 +1,10 @@
 name: CI
 
 env:
-  PYTHON_VERSION: "3.12"
+  # Current supported uv version. The uv documentation recommends pinning
+  # this. The version should match the version used in .pre-commit-config.yaml
+  # and frozen in uv.lock. It is updated by make update-deps.
+  UV_VERSION: "0.11.21"
 
 "on":
   merge_group: {}
@@ -24,54 +27,84 @@ env:
 
 jobs:
   lint:
-
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          version: ${{ env.UV_VERSION }}
 
       - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+        run: uv run --only-group=lint pre-commit run --all-files
 
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          fetch-depth: 0 # full history for setuptools_scm
 
-      - name: Start Kafka
-        run: docker compose -f kafka-compose.yaml up -d
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: ${{ env.UV_VERSION }}
 
+      # Kafka is provided by testcontainers, which the nox test session starts
+      # against the runner's Docker daemon. No docker-compose broker is needed.
       - name: Run nox
-        uses: lsst-sqre/run-nox@v1
-        with:
-          cache-dependency: "*/pyproject.toml"
-          nox-sessions: "typing test"
-          python-version: ${{ env.PYTHON_VERSION }}
+        run: uv run --only-group=nox nox -s typing test
 
-      - name: Stop Kafka
-        run: docker compose -f kafka-compose.yaml down
+  client-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # full history for setuptools_scm
+
+      # The client_test_compat and client_test_oldest sessions create their own
+      # uv-backed virtualenvs for specific Python versions, so make those
+      # interpreters available on the runner.
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: |
+            3.13
+            3.14
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Run client tests
+        run: >-
+          uv run --only-group=nox nox -s
+          client_test
+          client_test_compat
+          client_test_oldest
 
   docs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Ensure the documentation gets the right version.
           fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: ${{ env.UV_VERSION }}
 
       - name: Update package lists
         run: sudo apt-get update
@@ -79,17 +112,8 @@ jobs:
       - name: Install extra packages
         run: sudo apt install -y graphviz
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
       - name: Run nox
-        uses: lsst-sqre/run-nox@v1
-        with:
-          cache-dependency: "*/pyproject.toml"
-          nox-sessions: "docs"
-          python-version: ${{ env.PYTHON_VERSION }}
+        run: uv run --only-group=nox nox -s docs
 
       # Only attempt documentation uploads for long-lived branches, tagged
       # releases, and pull requests from ticket branches.  This avoids version
@@ -108,9 +132,11 @@ jobs:
             || startsWith(github.head_ref, 'tickets/'))
 
   build:
-
-    runs-on: ubuntu-latest
     needs: [lint, test]
+    secrets: inherit
+    uses: lsst-sqre/multiplatform-build-and-push/.github/workflows/build.yaml@v4
+    with:
+      images: ghcr.io/${{ github.repository }}
 
     # Only do Docker builds of tagged releases and pull requests from ticket
     # branches.  This will still trigger on pull requests from untrusted
@@ -118,35 +144,22 @@ jobs:
     # but in this case the build will fail with an error since the secret
     # won't be set.
     if: >
-      startsWith(github.ref, 'refs/tags/')
-      || startsWith(github.head_ref, 'tickets/')
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # full history for setuptools_scm
-
-      - uses: lsst-sqre/build-and-push-to-ghcr@v1
-        id: build
-        with:
-          image: ${{ github.repository }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - run: echo Pushed ghcr.io/${{ github.repository }}/${{ steps.build.outputs.tag }}
+      (github.event_name == 'release' && github.event.action == 'published')
+      || (github.event_name != 'merge_group'
+          && startsWith(github.head_ref, 'tickets/'))
 
   test-package:
     name: Test PyPI package build
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # full history for setuptools_scm
 
       - name: Build and publish
-        uses: lsst-sqre/build-and-publish-to-pypi@v2
+        uses: lsst-sqre/build-and-publish-to-pypi@v3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
           upload: "false"
           working-directory: "client"
 
@@ -161,12 +174,11 @@ jobs:
     if: github.event_name == 'release' && github.event.action == 'published'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0 # full history for setuptools_scm
 
       - name: Build and publish
-        uses: lsst-sqre/build-and-publish-to-pypi@v2
+        uses: lsst-sqre/build-and-publish-to-pypi@v3
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
           working-directory: "client"
