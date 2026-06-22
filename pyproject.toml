@@ -24,7 +24,7 @@ dependencies = [
     "uvicorn[standard]>=0.30",
     "python-multipart",
     "pydantic>=2",
-    "pydantic-settings>=2",
+    "pydantic-settings>=2.14.2",
     "safir>=13",
     "faststream[kafka]>=0.7,<0.8",
     "rubin-squarebot",
