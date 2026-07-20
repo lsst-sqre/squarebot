@@ -2,6 +2,15 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.10.3'></a>
+## 0.10.3 (2026-07-20)
+
+### Other changes
+
+- The CI `build` job now also runs (without pushing images) for `dependabot/**` pull requests. Previously the Docker build only ran for `tickets/**` branches and releases, so the required `build / manifest` status check was never reported on dependabot PRs and they could not be merged. The reusable build workflow is now passed an explicit `push` expression that is `true` only for tagged releases and `tickets/**` branches, so dependabot PRs build the Dockerfile on both architectures (real coverage for base-image bumps) while the `manifest` job is skipped — satisfying the required check without pushing images or needing registry secrets.
+
+- Update pinned dependencies and pre-commit hooks.
+
 <a id='changelog-0.10.2'></a>
 ## 0.10.2 (2026-06-19)
 
