@@ -45,14 +45,14 @@ Run the nox scriv-collect session with the version number you decided on:
 
       .. code-block:: sh
 
-         nox -s scriv-collect X.Y.Z
+         nox -s scriv-collect -- X.Y.Z
 
    .. tab-item:: Without pre-installation
       :sync: uv
 
       .. code-block:: sh
 
-         uv run --only-group=nox nox -s scriv-collect X.Y.Z
+         uv run --only-group=nox nox -s scriv-collect -- X.Y.Z
 
 This will delete the fragment files and collect them into :file:`CHANGELOG.md` under an entry for the new release.
 Review that entry and edit it as needed (proofread, change the order to put more important things first, etc.).
