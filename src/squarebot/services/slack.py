@@ -38,6 +38,7 @@ class SlackService:
 
     def __init__(
         self,
+        *,
         logger: BoundLogger,
         config: Configuration,
         app_mentions_publisher: DefaultPublisher,
