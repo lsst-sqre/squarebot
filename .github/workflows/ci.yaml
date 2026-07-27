@@ -73,7 +73,7 @@ jobs:
       # uv-backed virtualenvs for specific Python versions, so make those
       # interpreters available on the runner.
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: |
             3.13
