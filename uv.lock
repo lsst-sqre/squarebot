@@ -2281,7 +2281,7 @@ typing = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", specifier = ">=0.115" },
+    { name = "fastapi", specifier = ">=0.115,<0.140" },
     { name = "faststream", extras = ["kafka"], specifier = ">=0.7,<0.8" },
     { name = "pydantic", specifier = ">=2" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
