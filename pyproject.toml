@@ -130,6 +130,7 @@ python_files = ["tests/*.py", "tests/*/*.py"]
 
 [tool.ruff]
 extend = "ruff-shared.toml"
+target-version = "py314"
 
 [tool.ruff.lint.extend-per-file-ignores]
 "noxfile.py" = [
@@ -153,7 +154,6 @@ extend = "ruff-shared.toml"
 
 [tool.ruff.lint.isort]
 known-first-party = ["squarebot", "rubin.squarebot", "tests"]
-split-on-trailing-comma = false
 
 [tool.mypy]
 disallow_untyped_defs = true
