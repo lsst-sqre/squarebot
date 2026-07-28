@@ -54,14 +54,10 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
+    "uv",
 ]
 lint = [
-    # pre-commit-uv is intentionally omitted: on Python 3.14 its uv-created
-    # hook venvs write a pyvenv.cfg ``version_info`` that fails pre-commit's
-    # health check ("python version did not match created version"). Plain
-    # pre-commit (virtualenv backend) works; revisit once pre-commit-uv
-    # supports 3.14.
-    "pre-commit",
+    "prek",
 ]
 typing = [
     "mypy",

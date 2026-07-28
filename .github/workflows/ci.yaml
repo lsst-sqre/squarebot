@@ -38,8 +38,8 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
 
-      - name: Run pre-commit
-        run: uv run --only-group=lint pre-commit run --all-files
+      - name: Run prek
+        run: uv run --only-group=lint prek run --all-files
 
   test:
     runs-on: ubuntu-latest
