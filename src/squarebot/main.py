@@ -16,6 +16,7 @@ from importlib.metadata import metadata, version
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from faststream_fastapi import FastStreamAPI
 from safir.dependencies.http_client import http_client_dependency
 from safir.logging import configure_logging, configure_uvicorn_logging
 from safir.middleware.x_forwarded import XForwardedMiddleware
@@ -25,14 +26,21 @@ from .config import config
 from .dependencies.requestcontext import context_dependency
 from .handlers.external.handlers import external_router
 from .handlers.internal.handlers import internal_router
-from .kafkarouter import kafka_router
+from .kafkarouter import kafka_broker
 
 __all__ = ["app", "create_openapi"]
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Set up and tear down the application."""
+async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
+    """Set up and tear down the application.
+
+    Note
+    ----
+    The FastStream Kafka broker is started and stopped by ``FastStreamAPI``
+    around this lifespan, so by the time this runs the broker is already
+    connected.
+    """
     # Any code here will be run when the application starts up.
     logger = get_logger()
     logger.info("Square Bot is starting up.")
@@ -51,17 +59,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     await context_dependency.initialize()
 
-    # Start the FastStream Kafka broker directly rather than via
-    # ``kafka_router.lifespan_context``. As of FastStream 0.7 the router's
-    # lifespan context is one-shot: it stops the broker on exit but does not
-    # restart it if the lifespan is entered again, whereas ``broker.start()``
-    # and ``broker.stop()`` are re-callable. The test suite drives the app
-    # lifespan once per test against the module-level app, so the broker must
-    # restart cleanly between tests.
-    await kafka_router.broker.start()
     logger.info("Square Bot start up complete.")
     yield
-    await kafka_router.broker.stop()
 
     # Any code here will be run when the application shuts down.
     await http_client_dependency.aclose()
@@ -76,7 +75,7 @@ configure_logging(
 )
 configure_uvicorn_logging(config.log_level)
 
-app = FastAPI(
+fastapi_app = FastAPI(
     title="SQuaRE Bot",
     description=metadata("squarebot")["Summary"],
     version=version("squarebot"),
@@ -85,23 +84,33 @@ app = FastAPI(
     redoc_url=f"{config.path_prefix}/redoc",
     lifespan=lifespan,
 )
-"""The main FastAPI application for squarebot."""
+"""The inner FastAPI application for squarebot."""
 
 # Attach the routers.
-app.include_router(internal_router)
-app.include_router(external_router, prefix=config.path_prefix)
-app.include_router(kafka_router)
+fastapi_app.include_router(internal_router)
+fastapi_app.include_router(external_router, prefix=config.path_prefix)
 
 # Set up middleware
-app.add_middleware(XForwardedMiddleware)
+fastapi_app.add_middleware(XForwardedMiddleware)
+
+# Wrap the FastAPI app with the FastStream Kafka broker. This must come
+# after all subscriber modules are imported (none are used by squarebot
+# today, but the broker is still owned here so publishers share its
+# connection).
+app = FastStreamAPI(
+    kafka_broker,
+    application=fastapi_app,
+    asyncapi_path=f"{config.path_prefix}/asyncapi",
+)
+"""The ASGI application for squarebot, serving both HTTP and Kafka."""
 
 
 def create_openapi() -> str:
     """Create the OpenAPI spec for static documentation."""
     spec = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
+        title=fastapi_app.title,
+        version=fastapi_app.version,
+        description=fastapi_app.description,
+        routes=fastapi_app.routes,
     )
     return json.dumps(spec)

@@ -10,7 +10,7 @@ from faststream.kafka.publisher import DefaultPublisher
 from structlog.stdlib import BoundLogger
 
 from .config import config
-from .kafkarouter import kafka_router
+from .kafkarouter import kafka_broker
 from .services.slack import SlackService
 
 
@@ -21,7 +21,7 @@ class ProcessContext:
     """
 
     kafka_broker: KafkaBroker
-    """The aiokafka broker provided through the FastStream Kafka router."""
+    """The aiokafka broker provided through the FastStream Kafka broker."""
 
     channel_publisher: DefaultPublisher
     """A Kafka publisher for the message channels topic."""
@@ -46,7 +46,7 @@ class ProcessContext:
 
     @classmethod
     async def create(cls) -> Self:
-        broker = kafka_router.broker
+        broker = kafka_broker
         return cls(
             kafka_broker=broker,
             channel_publisher=broker.publisher(

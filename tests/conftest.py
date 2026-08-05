@@ -8,18 +8,19 @@ from pathlib import Path
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
-from fastapi import FastAPI
+from faststream_fastapi import FastStreamAPI
 from httpx import ASGITransport, AsyncClient
 
 from squarebot import main
 
 
 @pytest_asyncio.fixture
-async def app() -> AsyncIterator[FastAPI]:
+async def app() -> AsyncIterator[FastStreamAPI]:
     """Return a configured test application.
 
     Wraps the application in a lifespan manager so that startup and shutdown
-    events are sent during test execution.
+    events are sent during test execution. This also starts and stops the
+    Kafka broker around the app's own lifespan.
     """
     async with LifespanManager(main.app):
         yield main.app
@@ -32,7 +33,7 @@ async def http_client() -> AsyncIterator[AsyncClient]:
 
 
 @pytest_asyncio.fixture
-async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
+async def client(app: FastStreamAPI) -> AsyncIterator[AsyncClient]:
     """Return an ``httpx.AsyncClient`` configured to talk to the test app."""
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="https://example.com/"
