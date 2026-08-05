@@ -614,21 +614,34 @@ wheels = [
 
 [[package]]
 name = "faststream"
-version = "0.7.2"
+version = "0.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "fast-depends", extra = ["pydantic"] },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/94/bf/41ed52f57a2e7552982b0772fd4aa3bd381ecc4addb181c52dbf41d4189d/faststream-0.7.2.tar.gz", hash = "sha256:ff03f3e8435f64e033f669bb52faf6731b2d87572d42cc0f6113dff1a46211d4", size = 332093, upload-time = "2026-07-14T12:45:04.948Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/fc/1e817ff0c5fe4bf992473b5179e3e5e892624fb68cf91eeabc20dcbdc2bb/faststream-0.7.3.tar.gz", hash = "sha256:f53015a6eedd11bfecf31ce63d7d650eb19c4ee7a009c3e0583392674fb67535", size = 333766, upload-time = "2026-07-28T20:47:57.442Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/af/34a2f255c36c6bedd59b63b84eb05a59f1398c31a77f98edfcd1421a9080/faststream-0.7.2-py3-none-any.whl", hash = "sha256:5c6130493855c57758d48a434f54cc887c734f5cba7b19632e323daf3bc516ea", size = 559352, upload-time = "2026-07-14T12:45:03.382Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/cc/f4deb57be7349adc0f0e8a133e937b13bac2737fcbaaae5353bba48d8df3/faststream-0.7.3-py3-none-any.whl", hash = "sha256:10e6b5cf46aea1fe0be0112b99607c85b6bd56f8e448ebb68e8c56cad165a325", size = 561336, upload-time = "2026-07-28T20:47:55.861Z" },
 ]
 
 [package.optional-dependencies]
 kafka = [
     { name = "aiokafka" },
+]
+
+[[package]]
+name = "faststream-fastapi"
+version = "1.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fastapi" },
+    { name = "faststream" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/13/59/76b140ed8d6f66e9e8b8e1f5f341ee8b24376356ba712cab904be9670319/faststream_fastapi-1.2.1.tar.gz", hash = "sha256:f34e39439bb008dd8df3a616d41ca2dda2cd76726585476f204526e1f76bda1e", size = 12239, upload-time = "2026-07-30T10:25:03.621Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/4c/2e80037d4fc563148dd06ac01e72a09a6b8a90e9a7687db7a060f57a24b5/faststream_fastapi-1.2.1-py3-none-any.whl", hash = "sha256:f1fec6f8de29f72289065308d4f3954b60d4e36c5f04d3b09f62152a461e9af8", size = 19923, upload-time = "2026-07-30T10:25:02.397Z" },
 ]
 
 [[package]]
@@ -2226,6 +2239,7 @@ source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
     { name = "faststream", extra = ["kafka"] },
+    { name = "faststream-fastapi" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-multipart" },
@@ -2263,8 +2277,9 @@ typing = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", specifier = ">=0.115,<0.140" },
-    { name = "faststream", extras = ["kafka"], specifier = ">=0.7,<0.8" },
+    { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "faststream", extras = ["kafka"], specifier = ">=0.7.3,<0.8" },
+    { name = "faststream-fastapi", specifier = ">=1.2.1,<2" },
     { name = "pydantic", specifier = ">=2" },
     { name = "pydantic-settings", specifier = ">=2.14.2" },
     { name = "python-multipart" },

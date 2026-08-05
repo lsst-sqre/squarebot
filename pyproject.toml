@@ -19,18 +19,15 @@ classifiers = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    # FastAPI 0.140 made Dependant a slots dataclass; FastStream's FastAPI
-    # plugin monkey-patches attributes onto Dependant instances, which now
-    # raises AttributeError.
-    # TODO: remove when ag2ai/faststream#2959 is fixed
-    "fastapi>=0.115,<0.140",
+    "fastapi>=0.115,<1",
     "starlette",
     "uvicorn[standard]>=0.30",
     "python-multipart",
     "pydantic>=2",
     "pydantic-settings>=2.14.2",
     "safir>=13",
-    "faststream[kafka]>=0.7,<0.8",
+    "faststream[kafka]>=0.7.3,<0.8",
+    "faststream-fastapi>=1.2.1,<2",
     "rubin-squarebot",
 ]
 dynamic = ["version"]
