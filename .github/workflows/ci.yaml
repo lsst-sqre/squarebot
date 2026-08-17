@@ -145,7 +145,8 @@ jobs:
       # available and we don't want dependency-bump images in the registry.
       push: >-
         ${{ (github.event_name == 'release' && github.event.action == 'published')
-            || startsWith(github.head_ref, 'tickets/') }}
+            || startsWith(github.head_ref, 'tickets/')
+            || startsWith(github.head_ref, 't/') }}
 
     # Build on releases, ticket-branch PRs (build + push), and dependabot PRs
     # (build only) so the required "build / manifest" check is reported.
