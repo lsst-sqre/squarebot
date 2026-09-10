@@ -37,9 +37,10 @@ async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
 
     Note
     ----
-    The FastStream Kafka broker is started and stopped by ``FastStreamAPI``
-    around this lifespan, so by the time this runs the broker is already
-    connected.
+    ``FastStreamAPI`` starts the FastStream Kafka broker inside this
+    lifespan: after the startup code here has run, and it stops the broker
+    before the shutdown code here runs. Nothing in this lifespan may rely on
+    the broker being connected.
     """
     # Any code here will be run when the application starts up.
     logger = get_logger()
