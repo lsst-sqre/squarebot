@@ -20,7 +20,7 @@ async def app() -> AsyncIterator[FastStreamAPI]:
 
     Wraps the application in a lifespan manager so that startup and shutdown
     events are sent during test execution. This also starts and stops the
-    Kafka broker around the app's own lifespan.
+    Kafka broker, inside the app's own lifespan.
     """
     async with LifespanManager(main.app):
         yield main.app
