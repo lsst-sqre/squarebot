@@ -2,6 +2,21 @@
 
 <!-- scriv-insert-here -->
 
+<a id='changelog-0.10.5'></a>
+## 0.10.5 (2026-10-21)
+
+### Other changes
+
+- Update to faststream 0.7.5 and faststream-fastapi 1.3.1. faststream-fastapi 1.3.1 also now starts the broker inside the application lifespan rather than around it, so nothing in Squarebot's startup may rely on a connected broker (nothing did).
+
+- Update to faststream 0.7.6. That release gives `KafkaBroker` a broker-config type argument that faststream-fastapi 1.3.1's `FastStreamAPI` signature does not accept yet, so the `FastStreamAPI(...)` call in `squarebot.main` now carries a documented `# type: ignore[arg-type,unused-ignore]`. This is a type-checking accommodation only; there is no change in behavior.
+
+- Update certifi to 2026.10.19 and uv to 0.13.4 ([GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2), [GHSA-hq85-5cpj-mr62](https://github.com/advisories/GHSA-hq85-5cpj-mr62)). Earlier versions of both trust the `emSign ECC Root CA - G3` root certificate, whose intermediate CAs have compromised private keys. uv is updated in the Dockerfile, CI, and pre-commit configuration as well as `uv.lock`. The rebuilt image also picks up Debian's `ca-certificates` security update ([DSA-6572-1](https://security-tracker.debian.org/tracker/DSA-6572-1)), which removes the same root from the system trust store.
+
+- Include the Dependabot security updates for PyJWT 2.15.0.
+
+- The Docker base image is now `python:3.14.7-slim-trixie` (Debian 13).
+
 <a id='changelog-0.10.4'></a>
 ## 0.10.4 (2026-08-13)
 
