@@ -115,7 +115,7 @@
 
 ### New features
 
-- Squarebot now uses [FastStream](https://faststream.airt.ai/) to publish messages. This approach drops the Confluent Schema Registry integration because messages are now published in JSON from Pydantic models, and those Pydantic models are versioned and published through the `rubin-squarebot` PyPI package.
+- Squarebot now uses [FastStream](https://faststream.ag2.ai/latest/) to publish messages. This approach drops the Confluent Schema Registry integration because messages are now published in JSON from Pydantic models, and those Pydantic models are versioned and published through the `rubin-squarebot` PyPI package.
 
 - New fields in the `SquarebotSlackMessageValue` Pydantic model:
 
@@ -171,7 +171,7 @@
 
 - Updated avro-python3 (a test dependency) to 1.9.1.
 
-[DM-22408](https://jira.lsstcorp.org/browse/DM-22408)
+[DM-22408](https://rubinobs.atlassian.net/browse/DM-22408)
 
 ## 0.5.0 (2019-11-29)
 
@@ -217,7 +217,7 @@ This release focuses on improving the deployment and configuration of SQuaRE Bot
   - `SQRBOTJR_ENABLE_TOPIC_CONFIG`: set to `"0"` to disable configuring topics if they do not already exist.
     It makes sense to disable topic configuration if a separate process is used to configure topics, such as Strimzi's TopicOperator.
 
-[DM-22099](https://jira.lsstcorp.org/browse/DM-22099)
+[DM-22099](https://rubinobs.atlassian.net/browse/DM-22099)
 
 ## 0.4.0 (2019-05-03)
 
@@ -229,7 +229,7 @@ The default is 30 minutes so that consumers can query recent history for context
 The `com.slack.dialog_submission_v1` schema now permits the value from a field to be `null`.
 This is true if a Slack dialog field is optional and the user does not set a value.
 
-[DM-18503](https://jira.lsstcorp.org/browse/DM-18503)
+[DM-18503](https://rubinobs.atlassian.net/browse/DM-18503)
 
 ## 0.3.0 (2019-02-21)
 
@@ -246,13 +246,13 @@ This is true if a Slack dialog field is optional and the user does not set a val
 
 - The Kubernetes deployment includes a `SQRBOTJR_TOKEN` secret that other apps in api.lsst.codes can use to send messages to Slack as SQuaRE Bot Jr through Slack's Web API.
 
-[DM-17941](https://jira.lsstcorp.org/browse/DM-17941)
+[DM-17941](https://rubinobs.atlassian.net/browse/DM-17941)
 
 ## 0.2.0 (2019-02-15)
 
 This release adds the ability to serialize [message events](https://api.slack.com/events/message) into Avro from the [Slack Events API](https://api.slack.com/events-api) and produce Kafka messages to matching topics.
 
-[DM-17054](https://jira.lsstcorp.org/browse/DM-17054)
+[DM-17054](https://rubinobs.atlassian.net/browse/DM-17054)
 
 ## 0.1.0 (2019-01-07)
 
@@ -265,4 +265,4 @@ Main initial features:
 - Respond to the [Slack URL challenge](https://api.slack.com/events-api#subscriptions).
 - Implements Slack message verification based on the [signing secret](https://api.slack.com/docs/verifying-requests-from-slack).
 
-[DM-17024](https://jira.lsstcorp.org/browse/DM-17024)
+[DM-17024](https://rubinobs.atlassian.net/browse/DM-17024)

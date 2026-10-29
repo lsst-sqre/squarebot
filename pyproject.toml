@@ -65,7 +65,7 @@ nox = [
     "testcontainers[kafka]",
 ]
 docs = [
-    "documenteer[guide]>=2.4.0,<3",
+    "documenteer[guide]==2.5.0b4",
     "autodoc_pydantic",
 ]
 
