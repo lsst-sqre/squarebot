@@ -44,7 +44,7 @@ Slack integration is implemented at the time.
 We plan to add support for other event sources, such as GitHub, in the future.
 
 Squarebot is built on top of [FastAPI](https://fastapi.tiangolo.com/), a modern Python web framework, with the Rubin/SQuaRE [Safir](https://safir.lsst.io) library.
-Squarebot uses [FastStream](https://faststream.airt.ai/latest/) to publish messages to Kafka with the [aiokafka](https://aiokafka.readthedocs.io/en/stable/) library.
+Squarebot uses [FastStream](https://faststream.ag2.ai/latest/) to publish messages to Kafka with the [aiokafka](https://aiokafka.readthedocs.io/en/stable/) library.
 
 ## Development set up
 
